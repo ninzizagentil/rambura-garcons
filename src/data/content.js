@@ -1,0 +1,92 @@
+export const PROGRAMS = [
+  {
+    slug: 'electrical-technology',
+    title: 'Electrical Technology',
+    level: 'Level 3–5',
+    duration: '3 years',
+    summary: 'Domestic and industrial wiring, installation, and maintenance of electrical systems.',
+    details:
+      'Students learn circuit theory, safe wiring practice, motor control, and industrial installation, finishing with a supervised workshop placement.',
+  },
+  {
+    slug: 'welding-fabrication',
+    title: 'Welding & Fabrication',
+    level: 'Level 3–5',
+    duration: '3 years',
+    summary: 'Metal joining techniques, structural fabrication, and workshop safety.',
+    details:
+      'Covers arc and gas welding, metal cutting, structural assembly, and quality inspection, with strong emphasis on workshop safety practice.',
+  },
+  {
+    slug: 'construction',
+    title: 'Construction',
+    level: 'Level 3–5',
+    duration: '3 years',
+    summary: 'Masonry, concrete work, and building technology fundamentals.',
+    details:
+      'Trains students in site setup, masonry, concrete work, reading building plans, and modern construction techniques used across Rwanda.',
+  },
+  {
+    slug: 'automobile-mechanics',
+    title: 'Automobile Mechanics',
+    level: 'Level 3–5',
+    duration: '3 years',
+    summary: 'Engine systems, diagnostics, and vehicle maintenance.',
+    details:
+      'Focuses on engine systems, electrical diagnostics, transmission repair, and preventive maintenance across common vehicle makes.',
+  },
+];
+
+export const DEPARTMENTS = [
+  { slug: 'electrical', name: 'Electrical Technology Department', head: 'Eng. Callixte Bizimana', staffCount: 6 },
+  { slug: 'welding', name: 'Welding & Fabrication Department', head: 'Mr. Vincent Habyarimana', staffCount: 5 },
+  { slug: 'construction', name: 'Construction Department', head: 'Eng. Solange Mukashyaka', staffCount: 5 },
+  { slug: 'automobile', name: 'Automobile Mechanics Department', head: 'Mr. Fabrice Nsengiyumva', staffCount: 4 },
+];
+
+export const STAFF = [
+  { id: 's1', name: 'Bro. Alphonse Ntawuruhunga', role: 'School Director', department: 'Management', bio: 'Over 15 years leading TVET institutions across Western Province.' },
+  { id: 's2', name: 'Eng. Callixte Bizimana', role: 'Head of Electrical Department', department: 'Electrical Technology', bio: 'Licensed electrical engineer with industry and teaching experience.' },
+  { id: 's3', name: 'Mr. Vincent Habyarimana', role: 'Head of Welding Department', department: 'Welding & Fabrication', bio: 'Certified welding instructor and workshop safety examiner.' },
+  { id: 's4', name: 'Eng. Solange Mukashyaka', role: 'Head of Construction Department', department: 'Construction', bio: 'Civil engineer specialising in building technology instruction.' },
+  { id: 's5', name: 'Mr. Fabrice Nsengiyumva', role: 'Head of Automobile Department', department: 'Automobile Mechanics', bio: 'Automotive technician trainer with dealership diagnostics background.' },
+  { id: 's6', name: 'Marie Claire Uwase', role: 'School Librarian', department: 'Library', bio: 'Manages the school library and reading programs for all trades.' },
+];
+
+export const NEWS = [
+  {
+    slug: 'district-skills-competition-2026',
+    title: 'Rambura Garçons Wins District Skills Competition',
+    date: '2026-08-04',
+    excerpt: 'Our welding and electrical teams took top honours at the Nyabihu District Skills Competition.',
+    content:
+      'Students from the welding and electrical technology departments represented Rambura Garçons at this year\'s Nyabihu District Skills Competition, taking first place in both categories. The competition tested speed, precision, and safety compliance across live workshop tasks. Preparation began three months earlier under close supervision from department heads, and the results reflect the school\'s continued investment in hands-on trade instruction.',
+  },
+  {
+    slug: 'new-welding-workshop-2026',
+    title: 'New Welding Workshop Officially Opened',
+    date: '2026-07-21',
+    excerpt: 'A newly equipped welding workshop was inaugurated, doubling practical training capacity.',
+    content:
+      'The school officially opened its expanded welding workshop this month, adding modern equipment and doubling the number of students who can train at once. The facility was funded through a partnership between the school and local industry sponsors, and reflects a broader push to strengthen practical training capacity across all four trade departments.',
+  },
+  {
+    slug: 'admissions-2026-open',
+    title: '2026 Admissions Window Now Open',
+    date: '2026-07-10',
+    excerpt: 'Applications for the next intake are open across all four trade programs.',
+    content:
+      'Rambura Garçons has opened its admissions window for the coming intake. Prospective students can apply across Electrical Technology, Welding & Fabrication, Construction, and Automobile Mechanics. Full requirements, important dates, and the application process are available on the Admissions page.',
+  },
+];
+
+export const GALLERY = [
+  { id: 'g1', caption: 'Electrical workshop practical session' },
+  { id: 'g2', caption: 'Welding & fabrication bay' },
+  { id: 'g3', caption: 'Construction site training' },
+  { id: 'g4', caption: 'Automobile mechanics workshop' },
+  { id: 'g5', caption: 'Annual skills competition' },
+  { id: 'g6', caption: 'Library reading hall' },
+  { id: 'g7', caption: 'Graduation ceremony' },
+  { id: 'g8', caption: 'Campus front view' },
+];

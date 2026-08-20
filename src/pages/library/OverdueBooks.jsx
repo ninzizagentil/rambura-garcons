@@ -1,0 +1,76 @@
+import { useState, useMemo } from 'react';
+import { RotateCcw, Bell } from 'lucide-react';
+import PageHeader from '../../components/layout/PageHeader';
+import DataTable from '../../components/tables/DataTable';
+import { Badge } from '../../components/common/Badge';
+import IconButton from '../../components/common/IconButton';
+import ConfirmModal from '../../components/modals/ConfirmModal';
+import { EmptyState } from '../../components/feedback/States';
+import { useToast } from '../../context/ToastContext';
+import { getLoans, returnBook, daysOverdue } from '../../services/bookService';
+
+export default function OverdueBooks() {
+  const { showToast } = useToast();
+  const [loans, setLoans] = useState(() => getLoans().filter((l) => l.status !== 'returned' && daysOverdue(l.dueDate) > 0));
+  const [confirmLoan, setConfirmLoan] = useState(null);
+  const [processing, setProcessing] = useState(false);
+
+  const refresh = () => setLoans(getLoans().filter((l) => l.status !== 'returned' && daysOverdue(l.dueDate) > 0));
+
+  const handleReturn = () => {
+    if (!confirmLoan) return;
+    setProcessing(true);
+    setTimeout(() => {
+      returnBook(confirmLoan.id);
+      setProcessing(false);
+      showToast(`"${confirmLoan.bookTitle}" returned successfully.`, 'success');
+      refresh();
+      setConfirmLoan(null);
+    }, 400);
+  };
+
+  const handleNotify = (loan) => showToast(`Overdue reminder sent to ${loan.borrower}.`, 'info');
+
+  const rows = useMemo(() => loans.map((l) => ({ ...l, overdueDays: daysOverdue(l.dueDate) })), [loans]);
+
+  const columns = [
+    { key: 'borrower', header: 'Borrower' },
+    { key: 'bookTitle', header: 'Book' },
+    { key: 'dueDate', header: 'Due Date' },
+    { key: 'overdueDays', header: 'Days Overdue', render: (l) => <Badge tone="red">{l.overdueDays} days</Badge> },
+    { key: 'status', header: 'Status', render: () => <Badge tone="red">Overdue</Badge> },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (l) => (
+        <div className="flex items-center gap-1">
+          <IconButton icon={RotateCcw} label={`Return ${l.bookTitle}`} onClick={() => setConfirmLoan(l)} />
+          <IconButton icon={Bell} label={`Notify ${l.borrower}`} onClick={() => handleNotify(l)} />
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div>
+      <PageHeader
+        title="Overdue Books"
+        description="Loans past their due date."
+        breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Overdue Books' }]}
+      />
+      <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
+        <DataTable columns={columns} data={rows} emptyState={<EmptyState title="No overdue books" message="Nice — every loan is within its due date." />} />
+      </div>
+
+      <ConfirmModal
+        open={!!confirmLoan}
+        onClose={() => setConfirmLoan(null)}
+        onConfirm={handleReturn}
+        loading={processing}
+        title="Return book"
+        message={confirmLoan ? `Confirm that "${confirmLoan.bookTitle}" has been returned by ${confirmLoan.borrower}.` : ''}
+        confirmLabel="Confirm Return"
+      />
+    </div>
+  );
+}

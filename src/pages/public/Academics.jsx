@@ -1,0 +1,76 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Clock, GraduationCap, ArrowRight, X } from 'lucide-react';
+import { getPrograms } from '../../services/contentService';
+import Modal from '../../components/modals/Modal';
+import Button from '../../components/common/Button';
+import PageHero from '../../components/common/PageHero';
+
+export default function Academics() {
+  const [selected, setSelected] = useState(null);
+  const programs = getPrograms();
+
+  return (
+    <div>
+      <PageHero title="Academics">
+        <p className="text-white/80 mt-3">Four trade programs, each built for real workplace readiness.</p>
+      </PageHero>
+
+      <section className="max-w-6xl mx-auto px-4 md:px-6 py-14">
+        <div className="grid sm:grid-cols-2 gap-6">
+          {programs.map((p) => (
+            <div key={p.slug} className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] overflow-hidden hover:shadow-card-hover transition-shadow">
+              <div className="aspect-[16/9]">
+                <img
+                  src={p.image}
+                  alt={p.title}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div className="p-6">
+              <h2 className="font-display text-xl font-semibold text-[var(--color-dark-gray)]">{p.title}</h2>
+              <div className="flex items-center gap-4 text-xs text-[var(--color-mid-gray)] mt-2">
+                <span className="flex items-center gap-1"><GraduationCap className="w-3.5 h-3.5" /> {p.level}</span>
+                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {p.duration}</span>
+              </div>
+              <p className="text-sm text-[var(--color-mid-gray)] mt-3">{p.summary}</p>
+              <div className="flex gap-4 mt-5">
+                <button
+                  type="button"
+                  onClick={() => setSelected(p)}
+                  className="text-sm font-semibold text-[var(--color-medium-green)] hover:underline flex items-center gap-1"
+                >
+                  Learn More <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <Link to="/admissions" className="text-sm font-semibold text-[var(--color-gold)] hover:underline">
+                  Apply
+                </Link>
+                <Link to="/contact" className="text-sm font-semibold text-[var(--color-mid-gray)] hover:underline">
+                  Contact
+                </Link>
+              </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.title} size="md">
+        {selected && (
+          <div>
+            <div className="flex items-center gap-4 text-xs text-[var(--color-mid-gray)] mb-4">
+              <span className="flex items-center gap-1"><GraduationCap className="w-3.5 h-3.5" /> {selected.level}</span>
+              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {selected.duration}</span>
+            </div>
+            <p className="text-sm text-[var(--color-dark-gray)] leading-relaxed">{selected.details}</p>
+            <div className="flex gap-3 mt-6">
+              <Link to="/admissions"><Button variant="primary">Apply Now</Button></Link>
+              <Button variant="ghost" onClick={() => setSelected(null)} icon={X}>Close</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}
