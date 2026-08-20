@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, GraduationCap, LogIn, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, GraduationCap, LogIn, ArrowLeft, AlertCircle, User, Lock } from 'lucide-react';
 import { Input } from '../../components/forms/FormField';
 import Button from '../../components/common/Button';
-import Alert from '../../components/feedback/Alert';
 import { useAuth } from '../../context/AuthContext';
 import { ROLE_HOME } from '../../data/roles';
 import { getSiteImage } from '../../services/imageService';
@@ -41,7 +40,6 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
-  const [showForm, setShowForm] = useState(false);
 
   const fillDemoAccount = (account) => {
     setError('');
@@ -84,179 +82,142 @@ export default function Login() {
           initial="initial"
           animate="animate"
           exit="exit"
-          className="fixed inset-0 z-50 overflow-y-auto grid lg:grid-cols-2 bg-[var(--color-off-white)]"
+          className="fixed inset-0 z-50 overflow-y-auto grid lg:grid-cols-2 bg-gradient-to-b from-[var(--color-navy-800)] to-[var(--color-navy-900)]"
         >
-      {/* Left — login form */}
-      <div className="flex items-center justify-center px-4 py-10 lg:py-16 order-2 lg:order-1">
-        <div className="w-full max-w-md">
-          <button
-            type="button"
-            onClick={handleBackToWebsite}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-mid-gray)] hover:text-[var(--color-deep-green)] mb-8"
-          >
-            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-            Back to school website
-          </button>
-
-          <div className="mb-8">
-            <span className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--color-deep-green)] mb-4">
-              <GraduationCap className="w-7 h-7 text-[var(--color-gold)]" aria-hidden="true" />
-            </span>
-            <h1 className="font-display text-2xl font-semibold text-[var(--color-deep-green)]">Rambura Garçons</h1>
-            <p className="text-sm text-[var(--color-mid-gray)] mt-1">School Management System</p>
+          {/* Left — campus photo, dark overlay (hidden on mobile) */}
+          <div className="relative hidden lg:block overflow-hidden order-1">
+            <img
+              src={getSiteImage('home.hero')}
+              alt="Rambura Garçons campus, Nyabihu"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-navy-900)] via-[var(--color-navy-900)]/50 to-[var(--color-navy-900)]/20" />
+            <div className="relative h-full flex flex-col justify-end p-10 xl:p-14">
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl p-7">
+                <span className="inline-block text-xs font-semibold tracking-wide uppercase text-[var(--color-gold)] mb-3">
+                  Nyabihu District · TVET School
+                </span>
+                <h2 className="font-display text-3xl font-semibold leading-tight max-w-md text-white">
+                  Skilled hands. Disciplined minds. Built on Nyabihu's hills.
+                </h2>
+                <p className="text-white/70 mt-4 max-w-sm text-sm">
+                  Sign in to manage the library, stock, staff, and school records.
+                </p>
+              </div>
+            </div>
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card p-7"
-            noValidate
-          >
-            <motion.h2
-              layout="position"
-              className="font-display text-lg font-semibold text-[var(--color-dark-gray)]"
-            >
-              Sign in to your account
-            </motion.h2>
-
-            <motion.div layout className="overflow-hidden">
-              <AnimatePresence mode="wait" initial={false}>
-                {!showForm ? (
-                  <motion.div
-                    key="reveal-prompt"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                    className="pt-5"
-                  >
-                    <p className="text-sm text-[var(--color-mid-gray)] mb-5">
-                      Sign in to access the library, stock, staff, and school records.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="primary"
-                      size="lg"
-                      className="w-full"
-                      icon={LogIn}
-                      onClick={() => setShowForm(true)}
-                    >
-                      Login
-                    </Button>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="login-fields"
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                    className="pt-5 space-y-5"
-                  >
-                    {error && <Alert type="error">{error}</Alert>}
-
-                    <Input
-                      label="Username or Email"
-                      required
-                      autoComplete="username"
-                      autoFocus
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
-                      placeholder="e.g. librarian"
-                    />
-
-                    <div className="relative">
-                      <Input
-                        label="Password"
-                        type={showPassword ? 'text' : 'password'}
-                        required
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((v) => !v)}
-                        className="absolute right-3 top-[38px] text-[var(--color-mid-gray)] hover:text-[var(--color-dark-gray)]"
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-
-                    <div className="flex justify-end">
-                      <Link to="/forgot-password" className="text-sm font-medium text-[var(--color-medium-green)] hover:underline">
-                        Forgot password?
-                      </Link>
-                    </div>
-
-                    <Button type="submit" variant="primary" size="lg" className="w-full" loading={loading} icon={LogIn}>
-                      Login
-                    </Button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </form>
-
-          <AnimatePresence>
-            {showForm && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-                className="mt-6 bg-[var(--color-light-green-100)] rounded-[var(--radius-card)] p-4 text-xs text-[var(--color-dark-gray)]"
+          {/* Right — login form, dark panel to match the Admission form styling */}
+          <div className="flex items-center justify-center px-4 py-10 sm:px-6 lg:px-10 lg:py-16 order-2">
+            <div className="w-full max-w-md">
+              <button
+                type="button"
+                onClick={handleBackToWebsite}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-white/60 hover:text-white transition-colors mb-8"
               >
-                <p className="font-semibold mb-1.5">Demo accounts</p>
-                <p className="text-[var(--color-mid-gray)] mb-2">Tap an account to fill in the form.</p>
+                <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+                Back to school website
+              </button>
+
+              <div className="mb-8">
+                <span className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--color-gold)] mb-4">
+                  <GraduationCap className="w-7 h-7 text-white" aria-hidden="true" />
+                </span>
+                <h1 className="font-display text-2xl font-semibold text-white">Rambura Garçons</h1>
+                <p className="text-sm text-white/60 mt-1">School Management System</p>
+              </div>
+
+              <form
+                onSubmit={handleSubmit}
+                className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/10 shadow-xl p-6 sm:p-8"
+                noValidate
+              >
+                <h2 className="font-display text-xl font-semibold text-white">Sign in to your account</h2>
+                <span className="block w-10 h-1 rounded-full bg-[var(--color-gold)] mt-2 mb-6" aria-hidden="true" />
+
+                <div className="space-y-5">
+                  {error && (
+                    <div
+                      role="alert"
+                      className="flex items-start gap-2.5 rounded-[var(--radius-control)] border border-red-500/30 bg-red-500/10 p-3.5 text-sm text-red-300"
+                    >
+                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
+                  <Input
+                    dark
+                    icon={User}
+                    label="Username or Email"
+                    required
+                    autoComplete="username"
+                    autoFocus
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="e.g. librarian"
+                  />
+
+                  <div className="relative">
+                    <Input
+                      dark
+                      icon={Lock}
+                      label="Password"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-[38px] text-white/45 hover:text-white transition-colors"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Link to="/forgot-password" className="text-sm font-medium text-[var(--color-gold)] hover:underline">
+                      Forgot password?
+                    </Link>
+                  </div>
+
+                  <Button type="submit" variant="gold" size="lg" className="w-full" loading={loading} icon={LogIn}>
+                    Login
+                  </Button>
+                </div>
+              </form>
+
+              <div className="mt-6 bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-4 text-xs text-white/70">
+                <p className="font-semibold text-white mb-1.5">Demo accounts</p>
+                <p className="text-white/50 mb-2">Tap an account to fill in the form.</p>
                 <ul className="space-y-1">
                   {DEMO_ACCOUNTS.map((account) => (
                     <li key={account.identifier}>
                       <button
                         type="button"
                         onClick={() => fillDemoAccount(account)}
-                        className="w-full flex items-center justify-between gap-2 rounded-[var(--radius-control)] px-2 py-1.5 -mx-2 text-left text-[var(--color-mid-gray)] hover:bg-white hover:text-[var(--color-dark-gray)] transition-colors"
+                        className="w-full flex items-center justify-between gap-2 rounded-[var(--radius-control)] px-2 py-1.5 -mx-2 text-left text-white/60 hover:bg-white/10 hover:text-white transition-colors"
                       >
                         <span>
-                          <span className="font-medium text-[var(--color-dark-gray)]">{account.identifier}</span>
+                          <span className="font-medium text-white">{account.identifier}</span>
                           {' / '}
                           {account.password}
                         </span>
-                        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-medium-green)]">
+                        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[var(--color-gold)]">
                           {account.role}
                         </span>
                       </button>
                     </li>
                   ))}
                 </ul>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* Right — same campus photo used on the home page background, image only */}
-      <div className="relative hidden lg:block order-1 lg:order-2 overflow-hidden">
-        <img
-          src={getSiteImage('home.hero')}
-          alt="Rambura Garçons campus, Nyabihu"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="relative h-full flex flex-col justify-end p-10">
-          <div className="bg-[var(--color-deep-green)]/70 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl p-7 text-white">
-            <span className="inline-block text-xs font-semibold tracking-wide uppercase text-[var(--color-gold)] mb-3">
-              Nyabihu District · TVET School
-            </span>
-            <h2 className="font-display text-3xl font-semibold leading-tight max-w-md">
-              Skilled hands. Disciplined minds. Built on Nyabihu's hills.
-            </h2>
-            <p className="text-white/85 mt-4 max-w-sm text-sm">
-              Sign in to manage the library, stock, staff, and school records.
-            </p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
         </motion.div>
       )}
     </AnimatePresence>

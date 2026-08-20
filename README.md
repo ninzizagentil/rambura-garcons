@@ -108,5 +108,3 @@ This project was assembled without network access to npm, so
 `npm install` / `npm run build` have **not** been run against this exact
 snapshot. Please run both locally after downloading to confirm a clean
 build before deploying.
-"# rambura-garcons" 
-"# rambura-garcons" 
