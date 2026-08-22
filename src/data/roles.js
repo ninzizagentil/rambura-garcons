@@ -31,7 +31,17 @@ export const NAV_BY_ROLE = {
     { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
     { label: 'Website', to: '/admin/website', icon: Globe },
     { label: 'Library MIS', to: '/library', icon: BookOpen },
-    { label: 'Stock MIS', to: '/stock', icon: Package },
+    {
+      label: 'Stock MIS',
+      to: '/stock',
+      icon: Package,
+      children: [
+        { label: 'All Items', to: '/stock/items', icon: Boxes },
+        { label: 'Transactions', to: '/stock/transactions', icon: ArrowLeftRight },
+        { label: 'Low Stock', to: '/stock/low-stock', icon: TrendingDown },
+        { label: 'Stock Reports', to: '/stock/reports', icon: FileBarChart },
+      ],
+    },
     { label: 'Reports', to: '/admin/reports', icon: FileBarChart },
     { label: 'Users & Roles', to: '/admin/users', icon: Users },
     { label: 'Roles & Permissions', to: '/admin/roles', icon: ShieldCheck },

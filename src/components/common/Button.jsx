@@ -6,7 +6,7 @@ const VARIANTS = {
   primary:
     'bg-[var(--color-medium-green)] text-white hover:bg-[var(--color-deep-green-600)] disabled:opacity-50',
   secondary:
-    'bg-white text-[var(--color-deep-green)] border border-[var(--color-border-gray)] hover:bg-[var(--color-off-white)] disabled:opacity-50',
+    'bg-[var(--color-white)] text-[var(--color-heading)] border border-[var(--color-border-gray)] hover:bg-[var(--color-off-white)] disabled:opacity-50',
   outline:
     'bg-transparent text-[var(--color-medium-green)] border border-[var(--color-medium-green)] hover:bg-[var(--color-light-green-100)] disabled:opacity-50',
   danger:

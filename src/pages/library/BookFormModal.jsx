@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../components/modals/Modal';
 import { Input, Select, Textarea } from '../../components/forms/FormField';
+import ImageField from '../../components/forms/ImageField';
 import Button from '../../components/common/Button';
 import Alert from '../../components/feedback/Alert';
 import { useToast } from '../../context/ToastContext';
 import { BOOK_CATEGORIES } from '../../data/library';
 import { createBook, updateBook } from '../../services/bookService';
 
-const EMPTY_FORM = { title: '', author: '', category: '', bookCode: '', description: '', totalCopies: '' };
+const EMPTY_FORM = { title: '', author: '', category: '', bookCode: '', description: '', totalCopies: '', coverImage: '' };
 
 export default function BookFormModal({ open, onClose, book, onSaved }) {
   const { showToast } = useToast();
@@ -77,6 +78,12 @@ export default function BookFormModal({ open, onClose, book, onSaved }) {
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {serverError && <Alert type="error">{serverError}</Alert>}
+        <ImageField
+          label="Cover Photo"
+          hint="Optional — shown on the book's catalogue entry and details page."
+          value={form.coverImage}
+          onChange={(dataUrl) => setForm((f) => ({ ...f, coverImage: dataUrl }))}
+        />
         <Input label="Title" required value={form.title} onChange={update('title')} error={errors.title} />
         <div className="grid sm:grid-cols-2 gap-4">
           <Input label="Author" required value={form.author} onChange={update('author')} error={errors.author} />

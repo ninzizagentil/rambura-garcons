@@ -5,12 +5,16 @@ import PageHeader from '../../components/layout/PageHeader';
 import { StatusBadge, Badge } from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import { EmptyState } from '../../components/feedback/States';
+import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
+import { useModuleAccess } from '../../hooks/useModuleAccess';
+import { ROLES } from '../../data/roles';
 import { getItemById, getTransactionsForItem } from '../../services/stockService';
 import StockItemFormModal from './StockItemFormModal';
 
 export default function StockItemDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
   const [searchParams, setSearchParams] = useSearchParams();
   const [item, setItem] = useState(() => getItemById(id));
   const [transactions, setTransactions] = useState(() => getTransactionsForItem(id));
@@ -38,16 +42,20 @@ export default function StockItemDetails() {
         description={item.category}
         breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'All Items', to: '/stock/items' }, { label: item.name }]}
         actions={
-          <>
-            <Button variant="secondary" icon={Pencil} onClick={() => { setSearchParams({}); setEditOpen(true); }}>Edit Item</Button>
-            <Button variant="outline" icon={PackageMinus} onClick={() => navigate(`/stock/stock-out?item=${item.id}`)}>Stock Out</Button>
-            <Button icon={PackagePlus} onClick={() => navigate(`/stock/stock-in?item=${item.id}`)}>Stock In</Button>
-          </>
+          !viewOnly && (
+            <>
+              <Button variant="secondary" icon={Pencil} onClick={() => { setSearchParams({}); setEditOpen(true); }}>Edit Item</Button>
+              <Button variant="outline" icon={PackageMinus} onClick={() => navigate(`/stock/stock-out?item=${item.id}`)}>Stock Out</Button>
+              <Button icon={PackagePlus} onClick={() => navigate(`/stock/stock-in?item=${item.id}`)}>Stock In</Button>
+            </>
+          )
         }
       />
 
+      {viewOnly && <ViewOnlyBanner module="Stock MIS" />}
+
       <div className="grid lg:grid-cols-3 gap-5 mb-6">
-        <div className="lg:col-span-2 bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
+        <div className="lg:col-span-2 bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
           <div className="flex items-center gap-3 mb-4">
             <StatusBadge status={item.status} />
             <span className="text-xs text-[var(--color-mid-gray)]">Unit: {item.unit}</span>
@@ -60,7 +68,7 @@ export default function StockItemDetails() {
           </dl>
         </div>
 
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
           <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Recent Activity</p>
           {transactions.length === 0 ? (
             <p className="text-sm text-[var(--color-mid-gray)]">No stock movements recorded yet.</p>
@@ -78,7 +86,7 @@ export default function StockItemDetails() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-5">
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
           <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Stock In History</p>
           {stockInHistory.length === 0 ? (
             <EmptyState title="No Stock In records" message="This item hasn't received any stock yet." />
@@ -106,7 +114,7 @@ export default function StockItemDetails() {
           )}
         </div>
 
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
           <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Stock Out History</p>
           {stockOutHistory.length === 0 ? (
             <EmptyState title="No Stock Out records" message="This item hasn't been issued yet." />
@@ -139,7 +147,7 @@ export default function StockItemDetails() {
         Back to All Items
       </Button>
 
-      <StockItemFormModal open={editOpen} onClose={() => setEditOpen(false)} item={item} onSaved={() => { refresh(); setEditOpen(false); }} />
+      <StockItemFormModal open={editOpen && !viewOnly} onClose={() => setEditOpen(false)} item={item} onSaved={() => { refresh(); setEditOpen(false); }} />
     </div>
   );
 }

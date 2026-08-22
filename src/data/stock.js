@@ -6,21 +6,25 @@ export const STOCK_CATEGORIES = ['Foods', 'Electronic Devices'];
 
 export const STOCK_UNITS = ['kg', 'litres', 'bags', 'cartons', 'boxes', 'pieces', 'units', 'sets'];
 
-// quantity/minLevel are tuned so several items sit at/under minimum (Low Stock)
-// and several sit comfortably above it (Normal). "today" for demo purposes is 2026-08-18.
+// quantity/minLevel are tuned so several items sit at/under minimum (Low Stock),
+// one sits at zero (Out of Stock), and several sit comfortably above it (Normal).
+// "today" for demo purposes is 2026-08-18.
+//
+// `code` — short catalogue code shown in the inventory table (category prefix + index).
+// `unitPrice` — RWF price per unit, used to derive each item's stock value (quantity × unitPrice).
 export const SEED_ITEMS = [
-  { id: 'i1', name: 'Rice', category: 'Foods', unit: 'kg', quantity: 40, minLevel: 50, description: 'Kitchen staple for student meals.' },
-  { id: 'i2', name: 'Dry Beans', category: 'Foods', unit: 'kg', quantity: 120, minLevel: 60, description: 'Kitchen staple for student meals.' },
-  { id: 'i3', name: 'Maize Flour', category: 'Foods', unit: 'kg', quantity: 25, minLevel: 40, description: 'Used for porridge and ugali.' },
-  { id: 'i4', name: 'Cooking Oil', category: 'Foods', unit: 'litres', quantity: 18, minLevel: 20, description: 'Vegetable cooking oil for the kitchen.' },
-  { id: 'i5', name: 'Sugar', category: 'Foods', unit: 'kg', quantity: 60, minLevel: 25, description: 'For tea and porridge.' },
-  { id: 'i6', name: 'Salt', category: 'Foods', unit: 'kg', quantity: 30, minLevel: 10, description: 'Cooking salt.' },
-  { id: 'i7', name: 'Desktop Computers', category: 'Electronic Devices', unit: 'units', quantity: 22, minLevel: 5, description: 'ICT lab workstations.' },
-  { id: 'i8', name: 'Classroom Projectors', category: 'Electronic Devices', unit: 'units', quantity: 4, minLevel: 5, description: 'Portable projectors for teaching.' },
-  { id: 'i9', name: 'Laser Printers', category: 'Electronic Devices', unit: 'units', quantity: 3, minLevel: 2, description: 'Administration office printers.' },
-  { id: 'i10', name: 'UPS Backup Units', category: 'Electronic Devices', unit: 'units', quantity: 6, minLevel: 6, description: 'Power backup for server and ICT lab.' },
-  { id: 'i11', name: 'Laptops', category: 'Electronic Devices', unit: 'units', quantity: 15, minLevel: 8, description: 'Staff and lab laptops.' },
-  { id: 'i12', name: 'Extension Cables', category: 'Electronic Devices', unit: 'pieces', quantity: 9, minLevel: 10, description: 'Power extension cables for labs and offices.' },
+  { id: 'i1', name: 'Rice', code: 'RCE-001', category: 'Foods', unit: 'kg', quantity: 40, minLevel: 50, unitPrice: 2000, description: 'Kitchen staple for student meals.' },
+  { id: 'i2', name: 'Dry Beans', code: 'DBN-002', category: 'Foods', unit: 'kg', quantity: 120, minLevel: 60, unitPrice: 1500, description: 'Kitchen staple for student meals.' },
+  { id: 'i3', name: 'Maize Flour', code: 'MZF-003', category: 'Foods', unit: 'kg', quantity: 25, minLevel: 40, unitPrice: 2500, description: 'Used for porridge and ugali.' },
+  { id: 'i4', name: 'Cooking Oil', code: 'COL-004', category: 'Foods', unit: 'litres', quantity: 18, minLevel: 20, unitPrice: 2500, description: 'Vegetable cooking oil for the kitchen.' },
+  { id: 'i5', name: 'Sugar', code: 'SGR-005', category: 'Foods', unit: 'kg', quantity: 60, minLevel: 25, unitPrice: 600, description: 'For tea and porridge.' },
+  { id: 'i6', name: 'Salt', code: 'SLT-006', category: 'Foods', unit: 'kg', quantity: 30, minLevel: 10, unitPrice: 350, description: 'Cooking salt.' },
+  { id: 'i7', name: 'Desktop Computers', code: 'DCP-007', category: 'Electronic Devices', unit: 'units', quantity: 22, minLevel: 5, unitPrice: 450000, description: 'ICT lab workstations.' },
+  { id: 'i8', name: 'Classroom Projectors', code: 'CPJ-008', category: 'Electronic Devices', unit: 'units', quantity: 4, minLevel: 5, unitPrice: 380000, description: 'Portable projectors for teaching.' },
+  { id: 'i9', name: 'Laser Printers', code: 'LPR-009', category: 'Electronic Devices', unit: 'units', quantity: 0, minLevel: 2, unitPrice: 220000, description: 'Administration office printers.' },
+  { id: 'i10', name: 'UPS Backup Units', code: 'UPS-010', category: 'Electronic Devices', unit: 'units', quantity: 6, minLevel: 6, unitPrice: 95000, description: 'Power backup for server and ICT lab.' },
+  { id: 'i11', name: 'Laptops', code: 'LTP-011', category: 'Electronic Devices', unit: 'units', quantity: 15, minLevel: 8, unitPrice: 520000, description: 'Staff and lab laptops.' },
+  { id: 'i12', name: 'Extension Cables', code: 'EXC-012', category: 'Electronic Devices', unit: 'pieces', quantity: 9, minLevel: 10, unitPrice: 8000, description: 'Power extension cables for labs and offices.' },
 ];
 
 // type: 'in' | 'out'

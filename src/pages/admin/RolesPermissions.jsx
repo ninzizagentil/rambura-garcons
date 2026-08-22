@@ -35,14 +35,14 @@ export default function RolesPermissions() {
       />
 
       <div className="grid lg:grid-cols-[220px_1fr] gap-6">
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-2">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-2">
           {Object.entries(ROLE_LABELS).map(([value, label]) => (
             <button
               key={value}
               type="button"
               onClick={() => setActiveRole(value)}
               className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 ${
-                activeRole === value ? 'bg-[var(--color-light-green-100)] text-[var(--color-deep-green)]' : 'text-[var(--color-mid-gray)] hover:bg-[var(--color-off-white)]'
+                activeRole === value ? 'bg-[var(--color-light-green-100)] text-[var(--color-heading)]' : 'text-[var(--color-mid-gray)] hover:bg-[var(--color-off-white)]'
               }`}
             >
               <ShieldCheck className="w-4 h-4" aria-hidden="true" />
@@ -51,7 +51,7 @@ export default function RolesPermissions() {
           ))}
         </div>
 
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
           <h2 className="font-display text-lg font-semibold text-[var(--color-dark-gray)] mb-1">
             {ROLE_LABELS[activeRole]} Permissions
           </h2>
@@ -73,7 +73,7 @@ export default function RolesPermissions() {
                   }`}
                 >
                   <span
-                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white flex items-center justify-center transition-transform ${
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-[var(--color-white)] flex items-center justify-center transition-transform ${
                       matrix[activeRole][module] ? 'translate-x-5' : ''
                     }`}
                   >

@@ -27,7 +27,7 @@ export default function About() {
         <div className="rounded-[var(--radius-card)] overflow-hidden aspect-[16/8] mb-8">
           <img src={getSiteImage('about.campus')} alt="Rambura Garçons campus grounds" className="w-full h-full object-cover" loading="lazy" />
         </div>
-        <h2 className="font-display text-2xl font-semibold text-[var(--color-deep-green)] mb-4">School History</h2>
+        <h2 className="font-display text-2xl font-semibold text-[var(--color-heading)] mb-4">School History</h2>
         <p className="text-[var(--color-mid-gray)] leading-relaxed">
           Rambura Garçons was founded to answer a clear need in Nyabihu District: skilled tradespeople trained to a
           professional standard, close to home. Since opening, the school has grown from a single workshop to four
@@ -41,7 +41,7 @@ export default function About() {
 
       <section className="bg-[var(--color-light-green-100)] py-14">
         <div className="max-w-5xl mx-auto px-4 md:px-6 grid sm:grid-cols-2 gap-6">
-          <div id="mission" className="bg-white rounded-[var(--radius-card)] p-6">
+          <div id="mission" className="bg-[var(--color-white)] rounded-[var(--radius-card)] p-6">
             <Target className="w-7 h-7 text-[var(--color-medium-green)] mb-3" aria-hidden="true" />
             <h3 className="font-display text-lg font-semibold text-[var(--color-dark-gray)]">Mission</h3>
             <p className="text-sm text-[var(--color-mid-gray)] mt-2">
@@ -49,7 +49,7 @@ export default function About() {
               build sustainable livelihoods.
             </p>
           </div>
-          <div id="vision" className="bg-white rounded-[var(--radius-card)] p-6">
+          <div id="vision" className="bg-[var(--color-white)] rounded-[var(--radius-card)] p-6">
             <Eye className="w-7 h-7 text-[var(--color-medium-green)] mb-3" aria-hidden="true" />
             <h3 className="font-display text-lg font-semibold text-[var(--color-dark-gray)]">Vision</h3>
             <p className="text-sm text-[var(--color-mid-gray)] mt-2">
@@ -63,7 +63,7 @@ export default function About() {
       <section id="values" className="max-w-5xl mx-auto px-4 md:px-6 py-14">
         <div className="flex items-center gap-2 mb-6">
           <HeartHandshake className="w-6 h-6 text-[var(--color-medium-green)]" aria-hidden="true" />
-          <h2 className="font-display text-2xl font-semibold text-[var(--color-deep-green)]">Core Values</h2>
+          <h2 className="font-display text-2xl font-semibold text-[var(--color-heading)]">Core Values</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {VALUES.map((v) => (
@@ -80,7 +80,7 @@ export default function About() {
             <img src={getSiteImage('about.leadership')} alt="Rambura Garçons school leadership" className="w-full h-full object-cover" loading="lazy" />
           </div>
           <div>
-            <h2 className="font-display text-2xl font-semibold text-[var(--color-deep-green)] mb-2">Leadership</h2>
+            <h2 className="font-display text-2xl font-semibold text-[var(--color-heading)] mb-2">Leadership</h2>
             <p className="text-[var(--color-mid-gray)] mb-6">Meet the people guiding Rambura Garçons.</p>
             <Link
               to="/staff"
@@ -95,11 +95,11 @@ export default function About() {
       <section id="facilities" className="max-w-5xl mx-auto px-4 md:px-6 py-14">
         <div className="flex items-center gap-2 mb-6">
           <Building2 className="w-6 h-6 text-[var(--color-medium-green)]" aria-hidden="true" />
-          <h2 className="font-display text-2xl font-semibold text-[var(--color-deep-green)]">Facilities</h2>
+          <h2 className="font-display text-2xl font-semibold text-[var(--color-heading)]">Facilities</h2>
         </div>
         <ul className="grid sm:grid-cols-2 gap-4 text-sm text-[var(--color-mid-gray)]">
           {FACILITIES.map((f) => (
-            <li key={f.key} className="bg-white border border-[var(--color-border-gray)] rounded-[var(--radius-control)] overflow-hidden">
+            <li key={f.key} className="bg-[var(--color-white)] border border-[var(--color-border-gray)] rounded-[var(--radius-control)] overflow-hidden">
               <div className="aspect-[16/9]">
                 <img src={getSiteImage(`about.facilities.${f.key}`)} alt={f.label} className="w-full h-full object-cover" loading="lazy" />
               </div>

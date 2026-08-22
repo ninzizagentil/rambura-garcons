@@ -104,7 +104,40 @@ See `src/` — organized per the spec into `components/`, `context/`,
 shared}/`, `routes/`, `services/`, `utils/`.
 
 ## Note on this environment
-This project was assembled without network access to npm, so
-`npm install` / `npm run build` have **not** been run against this exact
-snapshot. Please run both locally after downloading to confirm a clean
-build before deploying.
+This snapshot's `npm install`, `npm run build`, and `npx oxlint src` were
+all run successfully in this update (0 build errors, 0 lint errors — only
+the same 5 pre-existing `react/only-export-components` warnings every
+other context file already has). `node_modules` and `dist` were removed
+before zipping to keep the download small; run `npm install` once after
+extracting.
+
+## What's new in this update
+- **Light / dark mode** — toggle button (sun/moon icon) added to the
+  dashboard topbar, next to the notification bell. Preference is saved to
+  `localStorage` (`rg_theme`) and respects the OS preference on first visit.
+  Implemented purely through the existing `@theme` CSS variables in
+  `src/index.css` (an `html.dark { --color-white: ...; }` override block),
+  so no component code needed to change — every page already reads color
+  through those variables. See `src/context/ThemeContext.jsx`.
+- **Profile photo upload** — on `/profile`, any logged-in account (Admin,
+  Librarian, Stock Manager, Director) can upload, change, or remove a
+  profile photo via the camera icon on their avatar. Stored as a base64
+  data URL on the session (`src/context/AuthContext.jsx` → `updateAvatar`),
+  and shown in the topbar profile menu and on the Profile page
+  (`src/components/common/Avatar.jsx`). 2MB file-size limit, image files
+  only. Falls back to initials when no photo is set.
+- **Admin/IT is now view-only on Library MIS & Stock MIS** — the IT
+  Administrator can still open every Library and Stock page for oversight,
+  but "Add", "Edit", "Borrow", "Return", "Notify", "Stock In", and
+  "Stock Out" actions are hidden or blocked for that role; a blue
+  "View-only access" banner explains why. Mutating actions stay available
+  to the Librarian and Stock Manager accounts. See
+  `src/hooks/useModuleAccess.js` and
+  `src/components/feedback/ViewOnlyBanner.jsx`.
+- **Fixed "Export" buttons** — the five report/export buttons that
+  previously only showed a "(demo)" toast (Library Reports, Borrowing
+  History, Stock Reports, Management → Library Reports, Management → Stock
+  Reports) now generate and download a real `.csv` file with the
+  currently-filtered data. See `src/utils/export.js`.
+- Full sweep of every `onClick` handler across Admin, Library, Stock, and
+  Management pages confirmed no other dead/placeholder actions remain.

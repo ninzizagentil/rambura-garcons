@@ -6,11 +6,15 @@ import { Badge } from '../../components/common/Badge';
 import IconButton from '../../components/common/IconButton';
 import ConfirmModal from '../../components/modals/ConfirmModal';
 import { EmptyState } from '../../components/feedback/States';
+import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
+import { useModuleAccess } from '../../hooks/useModuleAccess';
+import { ROLES } from '../../data/roles';
 import { useToast } from '../../context/ToastContext';
 import { getLoans, returnBook, daysOverdue } from '../../services/bookService';
 
 export default function OverdueBooks() {
   const { showToast } = useToast();
+  const { viewOnly } = useModuleAccess(ROLES.LIBRARIAN);
   const [loans, setLoans] = useState(() => getLoans().filter((l) => l.status !== 'returned' && daysOverdue(l.dueDate) > 0));
   const [confirmLoan, setConfirmLoan] = useState(null);
   const [processing, setProcessing] = useState(false);
@@ -39,7 +43,9 @@ export default function OverdueBooks() {
     { key: 'dueDate', header: 'Due Date' },
     { key: 'overdueDays', header: 'Days Overdue', render: (l) => <Badge tone="red">{l.overdueDays} days</Badge> },
     { key: 'status', header: 'Status', render: () => <Badge tone="red">Overdue</Badge> },
-    {
+  ];
+  if (!viewOnly) {
+    columns.push({
       key: 'actions',
       header: 'Actions',
       render: (l) => (
@@ -48,8 +54,8 @@ export default function OverdueBooks() {
           <IconButton icon={Bell} label={`Notify ${l.borrower}`} onClick={() => handleNotify(l)} />
         </div>
       ),
-    },
-  ];
+    });
+  }
 
   return (
     <div>
@@ -58,7 +64,7 @@ export default function OverdueBooks() {
         description="Loans past their due date."
         breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Overdue Books' }]}
       />
-      <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
+      {viewOnly && <ViewOnlyBanner module="Library MIS" />}      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
         <DataTable columns={columns} data={rows} emptyState={<EmptyState title="No overdue books" message="Nice — every loan is within its due date." />} />
       </div>
 

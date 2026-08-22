@@ -8,12 +8,16 @@ import { StatusBadge } from '../../components/common/Badge';
 import IconButton from '../../components/common/IconButton';
 import ConfirmModal from '../../components/modals/ConfirmModal';
 import { EmptyState } from '../../components/feedback/States';
+import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
+import { useModuleAccess } from '../../hooks/useModuleAccess';
+import { ROLES } from '../../data/roles';
 import { useToast } from '../../context/ToastContext';
 import { getLoans, returnBook, daysOverdue } from '../../services/bookService';
 
 export default function BorrowedBooks() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { viewOnly } = useModuleAccess(ROLES.LIBRARIAN);
   const [loans, setLoans] = useState(() => getLoans().filter((l) => l.status !== 'returned'));
   const [search, setSearch] = useState('');
   const [confirmLoan, setConfirmLoan] = useState(null);
@@ -45,12 +49,14 @@ export default function BorrowedBooks() {
     { key: 'borrowDate', header: 'Borrowed' },
     { key: 'dueDate', header: 'Due Date' },
     { key: 'status', header: 'Status', render: (l) => <StatusBadge status={daysOverdue(l.dueDate) > 0 ? 'overdue' : 'borrowed'} /> },
-    {
+  ];
+  if (!viewOnly) {
+    columns.push({
       key: 'actions',
       header: 'Actions',
       render: (l) => <IconButton icon={RotateCcw} label={`Return ${l.bookTitle}`} onClick={() => setConfirmLoan(l)} />,
-    },
-  ];
+    });
+  }
 
   return (
     <div>
@@ -59,8 +65,8 @@ export default function BorrowedBooks() {
         description="Books currently out on loan."
         breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Borrowed Books' }]}
       />
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by borrower or book…" className="mb-4 max-w-sm" />
-      <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
+      {viewOnly && <ViewOnlyBanner module="Library MIS" />}      <SearchBar value={search} onChange={setSearch} placeholder="Search by borrower or book…" className="mb-4 max-w-sm" />
+      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
         <DataTable
           columns={columns}
           data={filtered}

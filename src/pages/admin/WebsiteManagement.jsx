@@ -95,23 +95,23 @@ function SectionSidebar({ active, onChange, counts }) {
             'shrink-0 flex items-center gap-2 pl-2.5 pr-3 py-2 rounded-full border backdrop-blur-xl transition-all duration-200',
             'focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2',
             isActive
-              ? 'bg-white border-white shadow-[0_6px_16px_rgba(0,0,0,0.22)]'
+              ? 'bg-[var(--color-white)] border-white shadow-[0_6px_16px_rgba(0,0,0,0.22)]'
               : 'bg-white/10 border-white/25 hover:bg-white/20'
           )}
         >
           <span
             className={cn(
               'inline-flex items-center justify-center w-6 h-6 rounded-full shrink-0',
-              isActive ? 'bg-[var(--color-light-green-100)] text-[var(--color-deep-green)]' : 'bg-white/15 text-white'
+              isActive ? 'bg-[var(--color-light-green-100)] text-[var(--color-heading)]' : 'bg-white/15 text-white'
             )}
           >
             <Icon className="w-3.5 h-3.5" aria-hidden="true" />
           </span>
-          <span className={cn('text-xs font-semibold whitespace-nowrap', isActive ? 'text-[var(--color-deep-green)]' : 'text-white')}>
+          <span className={cn('text-xs font-semibold whitespace-nowrap', isActive ? 'text-[var(--color-heading)]' : 'text-white')}>
             {s.label}
           </span>
           {count !== null && count !== undefined && (
-            <span className={cn('text-[10px] font-bold', isActive ? 'text-[var(--color-medium-green)]' : 'text-white/70')}>
+            <span className={cn('text-[10px] font-bold', isActive ? 'text-[var(--color-medium-green)]' : 'text-white/90')}>
               {count}
             </span>
           )}
@@ -128,7 +128,7 @@ function SectionSidebar({ active, onChange, counts }) {
           'group relative w-full flex items-center gap-3 text-left pl-3.5 pr-3 py-2.5 rounded-xl border backdrop-blur-xl transition-all duration-200 ease-out',
           'focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2',
           isActive
-            ? 'bg-white border-white shadow-[0_8px_20px_rgba(0,0,0,0.25)] translate-x-0.5'
+            ? 'bg-[var(--color-white)] border-white shadow-[0_8px_20px_rgba(0,0,0,0.25)] translate-x-0.5'
             : 'bg-white/[0.06] border-white/15 hover:bg-white/[0.14] hover:border-white/30'
         )}
       >
@@ -143,17 +143,17 @@ function SectionSidebar({ active, onChange, counts }) {
           className={cn(
             'inline-flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-colors',
             isActive
-              ? 'bg-[var(--color-light-green-100)] text-[var(--color-deep-green)]'
+              ? 'bg-[var(--color-light-green-100)] text-[var(--color-heading)]'
               : 'bg-white/10 text-white group-hover:bg-white/20'
           )}
         >
           <Icon className="w-4.5 h-4.5" aria-hidden="true" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className={cn('block text-sm font-semibold truncate', isActive ? 'text-[var(--color-deep-green)]' : 'text-white')}>
+          <span className={cn('block text-sm font-semibold truncate', isActive ? 'text-[var(--color-heading)]' : 'text-white')}>
             {s.label}
           </span>
-          <span className={cn('block text-[11px] leading-snug truncate', isActive ? 'text-[var(--color-mid-gray)]' : 'text-white/60')}>
+          <span className={cn('block text-[11px] leading-snug truncate', isActive ? 'text-[var(--color-mid-gray)]' : 'text-white/85')}>
             {s.description}
           </span>
         </span>
@@ -161,7 +161,7 @@ function SectionSidebar({ active, onChange, counts }) {
           <span
             className={cn(
               'text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0',
-              isActive ? 'bg-[var(--color-light-green-100)] text-[var(--color-deep-green)]' : 'bg-white/10 text-white/80'
+              isActive ? 'bg-[var(--color-light-green-100)] text-[var(--color-heading)]' : 'bg-white/10 text-white/95'
             )}
           >
             {count}
@@ -191,7 +191,7 @@ function SectionSidebar({ active, onChange, counts }) {
       <div className="hidden lg:block relative p-4 max-h-[calc(100vh-3rem)] overflow-y-auto">
         {SECTION_GROUPS.map((grp, i) => (
           <div key={grp.group} className={i > 0 ? 'mt-5 pt-5 border-t border-white/10' : ''}>
-            <p className="px-1 mb-2 font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white/55">
+            <p className="px-1 mb-2 font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white/80">
               {grp.group}
             </p>
             <div className="space-y-1.5">
@@ -205,7 +205,7 @@ function SectionSidebar({ active, onChange, counts }) {
       <div className="lg:hidden relative p-4 space-y-3">
         {SECTION_GROUPS.map((grp) => (
           <div key={grp.group}>
-            <p className="mb-1.5 font-display text-[10px] font-bold tracking-[0.12em] uppercase text-white/55">
+            <p className="mb-1.5 font-display text-[10px] font-bold tracking-[0.12em] uppercase text-white/80">
               {grp.group}
             </p>
             <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
@@ -857,10 +857,10 @@ export default function WebsiteManagement() {
           }}
         />
 
-        <div className="flex-1 min-w-0 w-full bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
+        <div className="flex-1 min-w-0 w-full bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
           {currentSection && (
             <div className="flex items-center gap-3 px-6 pt-5 pb-4 border-b border-[var(--color-border-gray)]">
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--color-light-green-100)] text-[var(--color-deep-green)] shrink-0">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--color-light-green-100)] text-[var(--color-heading)] shrink-0">
                 <currentSection.icon className="w-5 h-5" aria-hidden="true" />
               </span>
               <div className="min-w-0">
@@ -876,7 +876,7 @@ export default function WebsiteManagement() {
       </div>
 
       {/* Recent website actions — everything performed from this panel, most recent first */}
-      <div className="mt-6 bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
+      <div className="mt-6 bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
         <div className="flex items-center justify-between mb-3">
           <h2 className="flex items-center gap-2 font-display text-sm font-semibold text-[var(--color-dark-gray)]">
             <History className="w-4 h-4 text-[var(--color-medium-green)]" aria-hidden="true" /> Recent Website Actions

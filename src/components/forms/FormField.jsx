@@ -11,7 +11,7 @@ const fieldClasses = (hasError, dark) =>
         hasError ? 'border-[var(--color-status-red)]' : 'border-[var(--color-navy-border)]'
       )
     : cn(
-        'w-full rounded-[var(--radius-control)] border bg-white px-3.5 py-2.5 text-sm text-[var(--color-dark-gray)]',
+        'w-full rounded-[var(--radius-control)] border bg-[var(--color-white)] px-3.5 py-2.5 text-sm text-[var(--color-dark-gray)]',
         'placeholder:text-[var(--color-mid-gray)] transition-colors duration-150',
         'focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)] focus:border-[var(--color-medium-green)]',
         hasError ? 'border-[var(--color-status-red)]' : 'border-[var(--color-border-gray)]'
@@ -111,7 +111,7 @@ export const Select = forwardRef(function Select(
           id={inputId}
           required={required}
           aria-invalid={!!error}
-          className={cn(fieldClasses(!!error, dark), 'appearance-none', Icon && 'pl-10', dark ? 'bg-[var(--color-navy-field)]' : 'bg-white', className)}
+          className={cn(fieldClasses(!!error, dark), 'appearance-none', Icon && 'pl-10', dark ? 'bg-[var(--color-navy-field)]' : 'bg-[var(--color-white)]', className)}
           {...props}
         >
           <option value="" disabled className={dark ? 'text-[var(--color-dark-gray)]' : ''}>

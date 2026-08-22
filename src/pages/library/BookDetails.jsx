@@ -5,6 +5,9 @@ import PageHeader from '../../components/layout/PageHeader';
 import { StatusBadge } from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import { EmptyState } from '../../components/feedback/States';
+import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
+import { useModuleAccess } from '../../hooks/useModuleAccess';
+import { ROLES } from '../../data/roles';
 import { getBookById, getLoansForBook } from '../../services/bookService';
 import BorrowModal from './BorrowModal';
 import BookFormModal from './BookFormModal';
@@ -12,6 +15,7 @@ import BookFormModal from './BookFormModal';
 export default function BookDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { viewOnly } = useModuleAccess(ROLES.LIBRARIAN);
   const [searchParams, setSearchParams] = useSearchParams();
   const [book, setBook] = useState(() => getBookById(id));
   const [loans, setLoans] = useState(() => getLoansForBook(id));
@@ -39,20 +43,37 @@ export default function BookDetails() {
         description={`by ${book.author}`}
         breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Books', to: '/library/books' }, { label: book.title }]}
         actions={
-          <>
-            <Button variant="secondary" icon={Pencil} onClick={() => setEditOpen(true)}>Edit Book</Button>
-            <Button icon={BookMarked} onClick={() => { setSearchParams({}); setBorrowOpen(true); }}>Borrow Book</Button>
-          </>
+          !viewOnly && (
+            <>
+              <Button variant="secondary" icon={Pencil} onClick={() => setEditOpen(true)}>Edit Book</Button>
+              <Button icon={BookMarked} onClick={() => { setSearchParams({}); setBorrowOpen(true); }}>Borrow Book</Button>
+            </>
+          )
         }
       />
 
+      {viewOnly && <ViewOnlyBanner module="Library MIS" />}
+
       <div className="grid lg:grid-cols-3 gap-5 mb-6">
-        <div className="lg:col-span-2 bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <StatusBadge status={book.availableCopies > 0 ? 'available' : 'borrowed'} label={book.availableCopies > 0 ? 'Available' : 'Fully Borrowed'} />
-            <span className="text-xs text-[var(--color-mid-gray)]">Book Code: {book.bookCode}</span>
+        <div className="lg:col-span-2 bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
+          <div className="flex gap-5">
+            <div className="w-24 h-32 rounded-lg overflow-hidden shrink-0 bg-[var(--color-soft-gray)] border border-[var(--color-border-gray)]">
+              {book.coverImage ? (
+                <img src={book.coverImage} alt={`Cover of ${book.title}`} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[var(--color-mid-gray)]">
+                  <BookMarked className="w-6 h-6" aria-hidden="true" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-4">
+                <StatusBadge status={book.availableCopies > 0 ? 'available' : 'borrowed'} label={book.availableCopies > 0 ? 'Available' : 'Fully Borrowed'} />
+                <span className="text-xs text-[var(--color-mid-gray)]">Book Code: {book.bookCode}</span>
+              </div>
+              <p className="text-sm text-[var(--color-dark-gray)] leading-relaxed">{book.description || 'No description provided.'}</p>
+            </div>
           </div>
-          <p className="text-sm text-[var(--color-dark-gray)] leading-relaxed">{book.description || 'No description provided.'}</p>
           <dl className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-[var(--color-border-gray)]">
             <div><dt className="text-xs text-[var(--color-mid-gray)]">Category</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{book.category}</dd></div>
             <div><dt className="text-xs text-[var(--color-mid-gray)]">Total Copies</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{book.totalCopies}</dd></div>
@@ -60,7 +81,7 @@ export default function BookDetails() {
           </dl>
         </div>
 
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
           <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Current Borrowers</p>
           {currentBorrowers.length === 0 ? (
             <p className="text-sm text-[var(--color-mid-gray)]">No copies currently borrowed.</p>
@@ -77,7 +98,7 @@ export default function BookDetails() {
         </div>
       </div>
 
-      <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
+      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
         <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Borrowing History</p>
         {loans.length === 0 ? (
           <EmptyState title="No borrowing history" message="This book hasn't been borrowed yet." />
@@ -113,8 +134,8 @@ export default function BookDetails() {
         Back to Books
       </Button>
 
-      <BorrowModal open={borrowOpen} onClose={() => setBorrowOpen(false)} book={book} onBorrowed={() => { refresh(); setBorrowOpen(false); }} />
-      <BookFormModal open={editOpen} onClose={() => setEditOpen(false)} book={book} onSaved={() => { refresh(); setEditOpen(false); }} />
+      <BorrowModal open={borrowOpen && !viewOnly} onClose={() => setBorrowOpen(false)} book={book} onBorrowed={() => { refresh(); setBorrowOpen(false); }} />
+      <BookFormModal open={editOpen && !viewOnly} onClose={() => setEditOpen(false)} book={book} onSaved={() => { refresh(); setEditOpen(false); }} />
     </div>
   );
 }

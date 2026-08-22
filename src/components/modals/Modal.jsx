@@ -23,6 +23,14 @@ export default function Modal({ open, onClose, title, children, footer, size = '
 
   const sizes = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' };
 
+  // Portal into the dashboard's own root (present only while a dashboard
+  // route is mounted — see DashboardLayout.jsx) so the modal inherits the
+  // scoped dark-mode CSS variables when opened from a dashboard page.
+  // On public pages that root doesn't exist, so this falls back to
+  // document.body exactly as before — always light, matching the rest of
+  // the public site regardless of the dashboard's theme preference.
+  const portalTarget = document.querySelector('[data-dashboard-root]') || document.body;
+
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
@@ -37,13 +45,13 @@ export default function Modal({ open, onClose, title, children, footer, size = '
         aria-labelledby="modal-title"
         tabIndex={-1}
         className={cn(
-          'relative w-full bg-white rounded-[var(--radius-card)] shadow-card-hover',
+          'relative w-full bg-[var(--color-white)] rounded-[var(--radius-card)] shadow-card-hover',
           'max-h-[90vh] flex flex-col animate-[fadeIn_.15s_ease-out]',
           sizes[size]
         )}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border-gray)]">
-          <h2 id="modal-title" className="font-display text-lg font-semibold text-[var(--color-deep-green)]">
+          <h2 id="modal-title" className="font-display text-lg font-semibold text-[var(--color-heading)]">
             {title}
           </h2>
           <IconButton icon={X} label="Close dialog" onClick={onClose} />
@@ -56,6 +64,6 @@ export default function Modal({ open, onClose, title, children, footer, size = '
         )}
       </div>
     </div>,
-    document.body
+    portalTarget
   );
 }

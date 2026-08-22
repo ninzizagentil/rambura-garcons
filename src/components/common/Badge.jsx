@@ -32,6 +32,7 @@ const STATUS_MAP = {
   borrowed: { tone: 'blue', label: 'Borrowed' },
   overdue: { tone: 'red', label: 'Overdue' },
   'low-stock': { tone: 'amber', label: 'Low Stock' },
+  'out-of-stock': { tone: 'red', label: 'Out of Stock' },
   normal: { tone: 'green', label: 'Normal' },
   pending: { tone: 'amber', label: 'Pending' },
   returned: { tone: 'green', label: 'Returned' },

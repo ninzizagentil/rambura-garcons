@@ -6,8 +6,13 @@ import { Input, Select, Textarea } from '../../components/forms/FormField';
 import Button from '../../components/common/Button';
 import Alert from '../../components/feedback/Alert';
 import { useToast } from '../../context/ToastContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 import { getItems, stockIn } from '../../services/stockService';
+import { logActivity } from '../../services/activityService';
+import { useModuleAccess } from '../../hooks/useModuleAccess';
+import { ROLES } from '../../data/roles';
+import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 
 const TODAY = '2026-08-18';
 
@@ -15,7 +20,9 @@ export default function StockIn() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { addNotification } = useNotifications();
   const { user } = useAuth();
+  const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
   const items = useMemo(() => getItems(), []);
 
   const [step, setStep] = useState('form'); // form | confirm | success
@@ -66,6 +73,17 @@ export default function StockIn() {
       setResult(res);
       setStep('success');
       showToast(`Stock In recorded for "${selectedItem.name}".`, 'success');
+      addNotification({
+        type: 'stock',
+        message: `Stock In recorded: ${form.quantity} ${selectedItem.unit} of ${selectedItem.name}.`,
+        to: '/stock/transactions',
+      });
+      logActivity({
+        user: user?.fullName || 'Stock Manager',
+        action: `Recorded Stock In: ${selectedItem.name} (+${form.quantity}${selectedItem.unit})`,
+        module: 'Stock',
+        status: 'success',
+      });
     }, 500);
   };
 
@@ -77,11 +95,24 @@ export default function StockIn() {
     setStep('form');
   };
 
+  if (viewOnly) {
+    return (
+      <div>
+        <PageHeader title="Stock In" description="Record incoming stock for an item." breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock In' }]} />
+        <ViewOnlyBanner module="Stock MIS" />
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
+          <p className="text-sm text-[var(--color-mid-gray)]">Recording Stock In is reserved for the Stock Manager account.</p>
+          <Button variant="secondary" className="mt-4" onClick={() => navigate('/stock')}>Back to Stock Dashboard</Button>
+        </div>
+      </div>
+    );
+  }
+
   if (step === 'success') {
     return (
       <div>
         <PageHeader title="Stock In" breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock In' }]} />
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
           <CheckCircle2 className="w-12 h-12 text-[var(--color-status-green)] mb-4" aria-hidden="true" />
           <p className="font-display text-lg font-semibold text-[var(--color-dark-gray)]">Stock In Successful</p>
           <p className="text-sm text-[var(--color-mid-gray)] mt-1">
@@ -101,7 +132,7 @@ export default function StockIn() {
     <div>
       <PageHeader title="Stock In" description="Record incoming stock for an item." breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock In' }]} />
 
-      <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-2xl">
+      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-2xl">
         {step === 'form' ? (
           <form onSubmit={handleContinue} noValidate className="space-y-4">
             {serverError && <Alert type="error">{serverError}</Alert>}

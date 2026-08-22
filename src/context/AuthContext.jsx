@@ -43,6 +43,19 @@ export function AuthProvider({ children }) {
 
   const hasRole = useCallback((...roles) => !!user && roles.includes(user.role), [user]);
 
+  // Persists a profile photo (base64 data URL) onto the current session.
+  // Demo/local-only persistence today (localStorage), same shape a real
+  // PATCH /users/:id/avatar call would return, so swapping in a real API
+  // later only means changing this function's body.
+  const updateAvatar = useCallback((avatarDataUrl) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, avatar: avatarDataUrl };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   // Placeholder permission model: role-based for now, structured so a real
   // permission matrix (per Roles & Permissions admin screen) can slot in later.
   const hasPermission = useCallback(
@@ -63,6 +76,7 @@ export function AuthProvider({ children }) {
     logout,
     hasRole,
     hasPermission,
+    updateAvatar,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

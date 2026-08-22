@@ -30,7 +30,7 @@ export default function Settings() {
         description="System-wide configuration."
         breadcrumb={[{ label: 'Admin', to: '/admin' }, { label: 'Settings' }]}
       />
-      <form onSubmit={handleSave} className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-2xl space-y-6">
+      <form onSubmit={handleSave} className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-2xl space-y-6">
         <FormSection title="School Information">
           <Input label="School Name" value={form.schoolName} onChange={update('schoolName')} />
           <Input label="District" value={form.district} onChange={update('district')} />

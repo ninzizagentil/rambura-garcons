@@ -28,7 +28,7 @@ export default function ChangePassword() {
   return (
     <div>
       <PageHeader title="Change Password" description="Update your account password." />
-      <form onSubmit={handleSubmit} noValidate className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-md space-y-5">
+      <form onSubmit={handleSubmit} noValidate className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-md space-y-5">
         <Alert type="info">This is a demo — password changes are not persisted to a real backend.</Alert>
         <Input label="Current Password" type="password" required value={form.current} onChange={update('current')} error={errors.current} />
         <Input label="New Password" type="password" required value={form.next} onChange={update('next')} error={errors.next} hint="At least 8 characters." />

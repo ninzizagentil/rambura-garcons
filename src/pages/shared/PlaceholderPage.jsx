@@ -11,9 +11,9 @@ export default function PlaceholderPage({ title, phase, breadcrumb, backTo, back
     <div>
       {breadcrumb && <PageHeader title={title} breadcrumb={breadcrumb} />}
       {!breadcrumb && (
-        <h1 className="font-display text-2xl font-semibold text-[var(--color-deep-green)] mb-6">{title}</h1>
+        <h1 className="font-display text-2xl font-semibold text-[var(--color-heading)] mb-6">{title}</h1>
       )}
-      <div className="bg-white rounded-[var(--radius-card)] border border-dashed border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
+      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-dashed border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
         <span className="w-14 h-14 rounded-full bg-[var(--color-light-green-100)] flex items-center justify-center mb-4">
           <Construction className="w-6 h-6 text-[var(--color-medium-green)]" aria-hidden="true" />
         </span>

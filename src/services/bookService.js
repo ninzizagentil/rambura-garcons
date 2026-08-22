@@ -16,7 +16,7 @@ export function getBookById(id) {
   return getBooks().find((b) => b.id === id) || null;
 }
 
-export function createBook({ title, author, category, bookCode, description, totalCopies }) {
+export function createBook({ title, author, category, bookCode, description, totalCopies, coverImage }) {
   const books = loadCollection(BOOKS_KEY, SEED_BOOKS);
   const duplicate = books.some((b) => b.bookCode.toLowerCase() === bookCode.toLowerCase());
   if (duplicate) return { success: false, error: 'A book with this Book Code / ISBN already exists.' };
@@ -28,6 +28,7 @@ export function createBook({ title, author, category, bookCode, description, tot
     category,
     bookCode,
     description,
+    coverImage: coverImage || '',
     totalCopies: Number(totalCopies),
     borrowedCopies: 0,
   };

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useState } from 'react';
 import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { useTheme } from './ThemeContext';
 
 const ToastContext = createContext(null);
 
@@ -14,6 +15,7 @@ const COLORS = {
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  const { isDark } = useTheme();
 
   const dismiss = useCallback((id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -33,7 +35,7 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={{ showToast, dismiss }}>
       {children}
       <div
-        className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 w-[min(360px,calc(100vw-2rem))]"
+        className={cn('fixed bottom-4 right-4 z-[100] flex flex-col gap-2 w-[min(360px,calc(100vw-2rem))]', isDark && 'dark')}
         aria-live="polite"
         aria-atomic="true"
       >
@@ -44,7 +46,7 @@ export function ToastProvider({ children }) {
               key={t.id}
               role="status"
               className={cn(
-                'flex items-start gap-2.5 bg-white border-l-4 rounded-[var(--radius-control)] shadow-card-hover px-4 py-3',
+                'flex items-start gap-2.5 bg-[var(--color-white)] border-l-4 rounded-[var(--radius-control)] shadow-card-hover px-4 py-3',
                 COLORS[t.type]
               )}
             >

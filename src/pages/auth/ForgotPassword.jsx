@@ -21,10 +21,10 @@ export default function ForgotPassword() {
           <span className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--color-deep-green)] mb-4">
             <GraduationCap className="w-7 h-7 text-[var(--color-gold)]" aria-hidden="true" />
           </span>
-          <h1 className="font-display text-2xl font-semibold text-[var(--color-deep-green)]">Reset your password</h1>
+          <h1 className="font-display text-2xl font-semibold text-[var(--color-heading)]">Reset your password</h1>
         </div>
 
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card p-7">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card p-7">
           {sent ? (
             <div className="text-center py-4">
               <CheckCircle2 className="w-10 h-10 text-[var(--color-status-green)] mx-auto mb-3" aria-hidden="true" />

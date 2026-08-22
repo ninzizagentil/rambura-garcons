@@ -7,6 +7,7 @@ import { FilterDropdown } from '../../components/common/SearchBar';
 import Button from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
 import { getBooks } from '../../services/bookService';
+import { exportToCSV } from '../../utils/export';
 
 const CIRCULATION = [
   { month: 'Apr', loans: 62, returns: 58 }, { month: 'May', loans: 74, returns: 69 },
@@ -28,13 +29,28 @@ export default function LibraryReports() {
 
   const mostBorrowed = [...books].sort((a, b) => b.borrowedCopies - a.borrowedCopies).slice(0, 5);
 
+  const handleExport = () => {
+    exportToCSV(
+      'library-reports',
+      [
+        { key: 'title', header: 'Title' },
+        { key: 'category', header: 'Category' },
+        { key: 'totalCopies', header: 'Total Copies' },
+        { key: 'availableCopies', header: 'Available' },
+        { key: 'borrowedCopies', header: 'Borrowed' },
+      ],
+      books
+    );
+    showToast('Library report downloaded as CSV.', 'success');
+  };
+
   return (
     <div>
       <PageHeader
         title="Library Reports"
         description="Circulation, trends, and availability."
         breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Reports' }]}
-        actions={<Button variant="secondary" icon={Download} onClick={() => showToast('Report exported (demo).', 'success')}>Export</Button>}
+        actions={<Button variant="secondary" icon={Download} onClick={handleExport}>Export</Button>}
       />
 
       <div className="flex flex-wrap gap-3 mb-5">

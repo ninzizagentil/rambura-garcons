@@ -42,7 +42,7 @@ export default function ActivityAudit() {
         <SearchBar value={search} onChange={setSearch} placeholder="Search activity…" className="flex-1 min-w-[220px]" />
         <FilterDropdown label="All Modules" value={moduleFilter} onChange={setModuleFilter} options={modules.map((m) => ({ value: m, label: m }))} />
       </div>
-      <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
+      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
         <DataTable columns={columns} data={filtered} emptyState={<EmptyState title="No activity found" message="Try a different search or filter." />} />
       </div>
     </div>

@@ -49,6 +49,14 @@
   /* Shadow */
   --shadow-card: 0 1px 2px rgba(15, 61, 46, 0.04), 0 2px 8px rgba(15, 61, 46, 0.06);
   --shadow-card-hover: 0 2px 4px rgba(15, 61, 46, 0.06), 0 8px 20px rgba(15, 61, 46, 0.10);
+
+  /* Heading/accent TEXT color (headings, active tabs, icon glyphs, etc.).
+     Same value as --color-deep-green in light mode, but re-pointed to a
+     lighter green in dark mode (see html.dark below) so this text stays
+     readable on dark card/page backgrounds. --color-deep-green itself is
+     left alone because it's also used as a solid BACKGROUND (sidebar,
+     footer, navbar) that must stay the same green in both modes. */
+  --color-heading: var(--color-deep-green);
 }
 
 html {
@@ -60,6 +68,64 @@ html {
 
 body {
   background-color: var(--color-off-white);
+  transition: background-color 0.15s ease;
+}
+
+/* Keep placeholder text on the theme's secondary-text token so it stays
+   legible in both light and dark mode, instead of the browser default gray
+   (which reads as near-invisible on the dark-mode navy input backgrounds). */
+::placeholder {
+  color: var(--color-mid-gray);
+  opacity: 1;
+}
+
+/* ===== Dark mode ===== =====================================================
+   Every dashboard component in this app reads color via the semantic CSS
+   variables above (bg-white, text-dark-gray, bg-off-white, border-border-gray,
+   etc.), never raw hex values, so the dashboard can be re-themed for dark
+   mode by simply re-pointing those same variable names here.
+
+   Scope: the `.dark` class is applied ONLY to the dashboard's root element
+   (see DashboardLayout.jsx), never to <html> or <body>. CSS custom
+   properties cascade to descendants, so this re-theme reaches every
+   dashboard page/table/modal/chart without touching the public website —
+   the public site's own pages use plain (non-variable) text colors and
+   were never designed for a dark background, so leaking dark mode onto
+   them would make their text unreadable. Keeping `.dark` scoped to the
+   dashboard subtree is what keeps the public site untouched. Do not move
+   this back onto <html>.
+
+   Palette below matches the Login page's existing navy + gold dark look
+   (--color-navy-900/800/field/border, --color-gold), reused here instead of
+   introducing a new color set. --color-deep-green and --color-deep-green-600
+   are intentionally NOT overridden — the sidebar/menu stays the same green
+   in both light and dark mode. */
+.dark {
+  --color-white: var(--color-navy-field);        /* card / surface background */
+  --color-off-white: var(--color-navy-900);      /* page background */
+  --color-dark-gray: #F1F4F8;                     /* primary text — near-white, readable on navy */
+  --color-mid-gray: #93A5C2;                      /* secondary text */
+  --color-soft-gray: var(--color-navy-800);       /* hover / subtle fill */
+  --color-border-gray: var(--color-navy-border);  /* borders */
+
+  --color-light-green-100: #12321F;
+  --color-light-green: #7FBF9E;
+  --color-medium-green: #3FA377;
+  --color-medium-green-600: #4CB584;
+
+  --color-status-red-bg: #3A1616;
+  --color-status-amber-bg: #362A11;
+  --color-status-green-bg: #12321F;
+  --color-status-blue-bg: #142236;
+
+  --color-gold-100: #2E2412;
+
+  --color-heading: var(--color-light-green);  /* deep-green text would be invisible on dark cards */
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.35), 0 8px 20px rgba(0, 0, 0, 0.4);
+
+  color-scheme: dark;
 }
 
 /* Visible focus rings everywhere (accessibility) */

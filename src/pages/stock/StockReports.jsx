@@ -11,6 +11,7 @@ import { useToast } from '../../context/ToastContext';
 import { getItems, getTransactions, getLowStockItems, getUsageByItem } from '../../services/stockService';
 import { STOCK_CATEGORIES } from '../../data/stock';
 import { useNavigate } from 'react-router-dom';
+import { exportToCSV } from '../../utils/export';
 
 const PIE_COLORS = ['var(--color-medium-green)', 'var(--color-status-blue)'];
 
@@ -40,7 +41,21 @@ export default function StockReports() {
   const mostUsed = usage.filter((i) => (!category || i.category === category) && i.used > 0).slice(0, 5);
   const leastUsed = [...usage].filter((i) => !category || i.category === category).sort((a, b) => a.used - b.used).slice(0, 5);
 
-  const handleExport = () => showToast('Stock report exported (demo).', 'success');
+  const handleExport = () => {
+    exportToCSV(
+      'stock-reports',
+      [
+        { key: 'name', header: 'Item' },
+        { key: 'category', header: 'Category' },
+        { key: 'unit', header: 'Unit' },
+        { key: 'quantity', header: 'Quantity' },
+        { key: 'minLevel', header: 'Minimum Level' },
+        { key: 'status', header: 'Status' },
+      ],
+      filteredItems
+    );
+    showToast('Stock report downloaded as CSV.', 'success');
+  };
 
   return (
     <div>
@@ -57,15 +72,15 @@ export default function StockReports() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
           <p className="text-sm text-[var(--color-mid-gray)]">Received Stock</p>
           <p className="font-display text-2xl font-semibold text-[var(--color-status-green)] mt-1">+{received}</p>
         </div>
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
           <p className="text-sm text-[var(--color-mid-gray)]">Issued / Used Stock</p>
           <p className="font-display text-2xl font-semibold text-[var(--color-status-amber)] mt-1">−{issued}</p>
         </div>
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
           <p className="text-sm text-[var(--color-mid-gray)]">Items Tracked</p>
           <p className="font-display text-2xl font-semibold text-[var(--color-dark-gray)] mt-1">{filteredItems.length}</p>
         </div>

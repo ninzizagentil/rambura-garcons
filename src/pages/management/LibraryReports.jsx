@@ -8,6 +8,7 @@ import { StatusBadge } from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
 import { getBooks, getLoans, daysOverdue } from '../../services/bookService';
+import { exportToCSV } from '../../utils/export';
 
 export default function ManagementLibraryReports() {
   const navigate = useNavigate();
@@ -19,25 +20,39 @@ export default function ManagementLibraryReports() {
   const overdue = activeLoans.filter((l) => daysOverdue(l.dueDate) > 0);
   const mostBorrowed = [...books].sort((a, b) => b.borrowedCopies - a.borrowedCopies).slice(0, 6);
 
+  const handleExport = () => {
+    exportToCSV(
+      'management-library-reports',
+      [
+        { key: 'title', header: 'Title' },
+        { key: 'category', header: 'Category' },
+        { key: 'totalCopies', header: 'Total Copies' },
+        { key: 'borrowedCopies', header: 'Borrowed' },
+      ],
+      books
+    );
+    showToast('Library report downloaded as CSV.', 'success');
+  };
+
   return (
     <div>
       <PageHeader
         title="Library Reports"
         description="Circulation summary for school management."
         breadcrumb={[{ label: 'Management', to: '/management' }, { label: 'Library Reports' }]}
-        actions={<Button variant="secondary" icon={Download} onClick={() => showToast('Report exported (demo).', 'success')}>Export</Button>}
+        actions={<Button variant="secondary" icon={Download} onClick={handleExport}>Export</Button>}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
           <p className="text-sm text-[var(--color-mid-gray)]">Total Books</p>
           <p className="font-display text-2xl font-semibold text-[var(--color-dark-gray)] mt-1">{books.length}</p>
         </div>
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
           <p className="text-sm text-[var(--color-mid-gray)]">Borrowed (Active Loans)</p>
           <p className="font-display text-2xl font-semibold text-[var(--color-dark-gray)] mt-1">{activeLoans.length}</p>
         </div>
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
           <p className="text-sm text-[var(--color-mid-gray)]">Overdue Loans</p>
           <p className="font-display text-2xl font-semibold text-[var(--color-status-red)] mt-1">{overdue.length}</p>
         </div>
@@ -59,7 +74,7 @@ export default function ManagementLibraryReports() {
         </ResponsiveContainer>
       </ChartCard>
 
-      <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 mt-5">
+      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 mt-5">
         <div className="flex items-center justify-between mb-3">
           <p className="font-display font-semibold text-[var(--color-dark-gray)]">Overdue Summary</p>
           <Button variant="ghost" size="sm" icon={ArrowRight} iconPosition="right" onClick={() => navigate('/library/overdue')}>View in Library MIS</Button>

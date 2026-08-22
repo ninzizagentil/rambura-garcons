@@ -96,7 +96,7 @@ export default function ImageField({ label, required, hint, value, onChange, cla
             type="button"
             onClick={handlePick}
             disabled={busy}
-            className="inline-flex items-center gap-1.5 self-start rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--color-dark-gray)] hover:bg-[var(--color-soft-gray)] transition-colors disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 self-start rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-white)] px-3 py-1.5 text-xs font-semibold text-[var(--color-dark-gray)] hover:bg-[var(--color-soft-gray)] transition-colors disabled:opacity-60"
           >
             <Upload className="w-3.5 h-3.5" aria-hidden="true" />
             {busy ? 'Reading photo…' : value ? 'Change photo…' : 'Browse…'}

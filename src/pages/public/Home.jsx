@@ -64,7 +64,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-2 md:grid-cols-4 gap-6">
           {hero.stats.map((s) => (
             <div key={s.label} className="text-center">
-              <p className="font-display text-3xl md:text-4xl font-semibold text-[var(--color-deep-green)]">{s.value}</p>
+              <p className="font-display text-3xl md:text-4xl font-semibold text-[var(--color-heading)]">{s.value}</p>
               <p className="text-sm text-[var(--color-mid-gray)] mt-1">{s.label}</p>
             </div>
           ))}
@@ -75,7 +75,7 @@ export default function Home() {
       <section className="py-16 max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
           <div>
-            <h2 className="font-display text-2xl md:text-3xl font-semibold text-[var(--color-deep-green)]">
+            <h2 className="font-display text-2xl md:text-3xl font-semibold text-[var(--color-heading)]">
               Trade Programs
             </h2>
             <p className="text-[var(--color-mid-gray)] mt-1">Four core trades, taught by practicing professionals.</p>
@@ -108,14 +108,14 @@ export default function Home() {
       <section className="bg-[var(--color-light-green-100)] py-16">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
-            <h2 className="font-display text-2xl md:text-3xl font-semibold text-[var(--color-deep-green)]">Latest News</h2>
+            <h2 className="font-display text-2xl md:text-3xl font-semibold text-[var(--color-heading)]">Latest News</h2>
             <Link to="/news" className="text-sm font-semibold text-[var(--color-medium-green)] hover:underline flex items-center gap-1">
               All news <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
           <div className="grid sm:grid-cols-3 gap-5">
             {latestNews.map((n) => (
-              <Link key={n.slug} to={`/news/${n.slug}`} className="bg-white rounded-[var(--radius-card)] p-5 hover:shadow-card-hover transition-shadow">
+              <Link key={n.slug} to={`/news/${n.slug}`} className="bg-[var(--color-white)] rounded-[var(--radius-card)] p-5 hover:shadow-card-hover transition-shadow">
                 <p className="text-xs text-[var(--color-gold)] font-semibold">
                   {new Date(n.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>
@@ -132,7 +132,7 @@ export default function Home() {
       {/* Gallery preview */}
       <section className="py-16 max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
-          <h2 className="font-display text-2xl md:text-3xl font-semibold text-[var(--color-deep-green)]">Campus Gallery</h2>
+          <h2 className="font-display text-2xl md:text-3xl font-semibold text-[var(--color-heading)]">Campus Gallery</h2>
           <Link to="/gallery" className="text-sm font-semibold text-[var(--color-medium-green)] hover:underline flex items-center gap-1">
             View gallery <ArrowRight className="w-4 h-4" />
           </Link>

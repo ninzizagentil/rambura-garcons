@@ -4,13 +4,18 @@ import { Input, Select, Textarea } from '../../components/forms/FormField';
 import Button from '../../components/common/Button';
 import Alert from '../../components/feedback/Alert';
 import { useToast } from '../../context/ToastContext';
+import { useNotifications } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 import { STOCK_CATEGORIES, STOCK_UNITS } from '../../data/stock';
 import { createItem, updateItem } from '../../services/stockService';
+import { logActivity } from '../../services/activityService';
 
 const EMPTY_FORM = { name: '', category: '', unit: '', quantity: '', minLevel: '', description: '' };
 
 export default function StockItemFormModal({ open, onClose, item, onSaved }) {
   const { showToast } = useToast();
+  const { addNotification } = useNotifications();
+  const { user } = useAuth();
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
@@ -63,6 +68,21 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
         return;
       }
       showToast(isEdit ? 'Stock item updated successfully.' : 'Stock item added.', 'success');
+      logActivity({
+        user: user?.fullName || 'Stock Manager',
+        action: isEdit
+          ? `Updated stock item: ${form.name}`
+          : `Added new stock item: ${form.name} (${form.quantity} ${form.unit})`,
+        module: 'Stock',
+        status: 'success',
+      });
+      if (!isEdit) {
+        addNotification({
+          type: 'stock',
+          message: `New stock item added: ${form.name} (${form.quantity} ${form.unit}).`,
+          to: '/stock/items',
+        });
+      }
       onSaved(result.item);
     }, 400);
   };

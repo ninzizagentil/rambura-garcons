@@ -1,4 +1,4 @@
-import { Inbox, Loader2 } from 'lucide-react';
+import { Inbox, Loader2, AlertCircle } from 'lucide-react';
 import Button from '../common/Button';
 import { cn } from '../../utils/cn';
 
@@ -19,6 +19,23 @@ export function EmptyState({ icon: Icon = Inbox, title, message, actionLabel, on
   );
 }
 
+export function ErrorState({ title = 'Something went wrong', message, retryLabel = 'Try again', onRetry, className = '' }) {
+  return (
+    <div className={cn('flex flex-col items-center justify-center text-center py-14 px-6', className)} role="alert">
+      <div className="w-14 h-14 rounded-full bg-[var(--color-status-red-bg)] flex items-center justify-center mb-4">
+        <AlertCircle className="w-6 h-6 text-[var(--color-status-red)]" aria-hidden="true" />
+      </div>
+      <p className="font-display text-base font-semibold text-[var(--color-dark-gray)]">{title}</p>
+      {message && <p className="text-sm text-[var(--color-mid-gray)] mt-1 max-w-sm">{message}</p>}
+      {onRetry && (
+        <Button variant="secondary" size="sm" onClick={onRetry} className="mt-5">
+          {retryLabel}
+        </Button>
+      )}
+    </div>
+  );
+}
+
 export function LoadingState({ label = 'Loading…', className = '' }) {
   return (
     <div className={cn('flex flex-col items-center justify-center py-14 gap-3', className)} role="status" aria-live="polite">
@@ -30,7 +47,7 @@ export function LoadingState({ label = 'Loading…', className = '' }) {
 
 export function SkeletonCard({ className = '' }) {
   return (
-    <div className={cn('rounded-[var(--radius-card)] bg-white border border-[var(--color-border-gray)] p-5 animate-pulse', className)}>
+    <div className={cn('rounded-[var(--radius-card)] bg-[var(--color-white)] border border-[var(--color-border-gray)] p-5 animate-pulse', className)}>
       <div className="h-3 w-20 bg-[var(--color-soft-gray)] rounded mb-3" />
       <div className="h-6 w-28 bg-[var(--color-soft-gray)] rounded" />
     </div>

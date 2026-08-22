@@ -27,7 +27,7 @@ export default function Notifications() {
           )
         }
       />
-      <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] divide-y divide-[var(--color-border-gray)]">
+      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] divide-y divide-[var(--color-border-gray)]">
         {notifications.length === 0 ? (
           <EmptyState title="No notifications" message="You're all caught up. New alerts will appear here." />
         ) : (

@@ -6,8 +6,13 @@ import { Input, Select, Textarea } from '../../components/forms/FormField';
 import Button from '../../components/common/Button';
 import Alert from '../../components/feedback/Alert';
 import { useToast } from '../../context/ToastContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
-import { getItems, stockOut } from '../../services/stockService';
+import { getItems, stockOut, isLowStock } from '../../services/stockService';
+import { logActivity } from '../../services/activityService';
+import { useModuleAccess } from '../../hooks/useModuleAccess';
+import { ROLES } from '../../data/roles';
+import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 
 const TODAY = '2026-08-18';
 
@@ -15,7 +20,9 @@ export default function StockOut() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { addNotification } = useNotifications();
   const { user } = useAuth();
+  const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
   const items = useMemo(() => getItems(), []);
 
   const [step, setStep] = useState('form'); // form | confirm | success
@@ -67,6 +74,20 @@ export default function StockOut() {
       setResult(res);
       setStep('success');
       showToast(`Stock Out recorded for "${selectedItem.name}".`, 'success');
+      const nowLow = isLowStock({ ...selectedItem, quantity: res.newQuantity });
+      if (nowLow) {
+        addNotification({
+          type: 'low-stock',
+          message: `${selectedItem.name} is below minimum stock level (${res.newQuantity} ${selectedItem.unit} left).`,
+          to: '/stock/low-stock',
+        });
+      }
+      logActivity({
+        user: user?.fullName || 'Stock Manager',
+        action: `Recorded Stock Out: ${selectedItem.name} (-${form.quantity}${selectedItem.unit})`,
+        module: 'Stock',
+        status: nowLow ? 'warning' : 'success',
+      });
     }, 500);
   };
 
@@ -78,11 +99,24 @@ export default function StockOut() {
     setStep('form');
   };
 
+  if (viewOnly) {
+    return (
+      <div>
+        <PageHeader title="Stock Out" description="Issue stock from an item's balance." breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock Out' }]} />
+        <ViewOnlyBanner module="Stock MIS" />
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
+          <p className="text-sm text-[var(--color-mid-gray)]">Recording Stock Out is reserved for the Stock Manager account.</p>
+          <Button variant="secondary" className="mt-4" onClick={() => navigate('/stock')}>Back to Stock Dashboard</Button>
+        </div>
+      </div>
+    );
+  }
+
   if (step === 'success') {
     return (
       <div>
         <PageHeader title="Stock Out" breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock Out' }]} />
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
           <CheckCircle2 className="w-12 h-12 text-[var(--color-status-green)] mb-4" aria-hidden="true" />
           <p className="font-display text-lg font-semibold text-[var(--color-dark-gray)]">Stock Out Successful</p>
           <p className="text-sm text-[var(--color-mid-gray)] mt-1">
@@ -102,7 +136,7 @@ export default function StockOut() {
     <div>
       <PageHeader title="Stock Out" description="Issue stock from an item's balance." breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock Out' }]} />
 
-      <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-2xl">
+      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-2xl">
         {step === 'form' ? (
           <form onSubmit={handleContinue} noValidate className="space-y-4">
             {serverError && <Alert type="error">{serverError}</Alert>}

@@ -9,7 +9,7 @@ export function Breadcrumb({ items }) {
           <li key={i} className="flex items-center gap-1.5">
             {i > 0 && <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />}
             {item.to && i < items.length - 1 ? (
-              <Link to={item.to} className="hover:text-[var(--color-deep-green)] hover:underline">
+              <Link to={item.to} className="hover:text-[var(--color-heading)] hover:underline">
                 {item.label}
               </Link>
             ) : (
@@ -30,7 +30,7 @@ export default function PageHeader({ title, description, breadcrumb, actions }) 
       {breadcrumb && <Breadcrumb items={breadcrumb} />}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-semibold text-[var(--color-deep-green)]">{title}</h1>
+          <h1 className="font-display text-2xl font-semibold text-[var(--color-heading)]">{title}</h1>
           {description && <p className="text-sm text-[var(--color-mid-gray)] mt-1">{description}</p>}
         </div>
         {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}

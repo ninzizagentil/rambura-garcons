@@ -4,10 +4,7 @@ import { ChevronDown } from 'lucide-react';
 import { PROFILE_NAV } from '../../data/roles';
 import { useAuth } from '../../context/AuthContext';
 import ConfirmModal from '../modals/ConfirmModal';
-
-function initials(name = '') {
-  return name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
-}
+import Avatar from '../common/Avatar';
 
 export default function ProfileMenu() {
   const { user, logout } = useAuth();
@@ -39,17 +36,22 @@ export default function ProfileMenu() {
         aria-expanded={open}
         className="flex items-center gap-2 rounded-full pl-1 pr-2.5 py-1 hover:bg-[var(--color-soft-gray)]"
       >
-        <span className="w-8 h-8 rounded-full bg-[var(--color-medium-green)] text-white flex items-center justify-center text-xs font-semibold">
-          {initials(user?.fullName)}
-        </span>
+        <Avatar name={user?.fullName} src={user?.avatar} size="sm" />
         <span className="hidden sm:block text-sm font-medium text-[var(--color-dark-gray)]">{user?.fullName}</span>
         <ChevronDown className="w-4 h-4 text-[var(--color-mid-gray)]" aria-hidden="true" />
       </button>
 
+      {/* Uses the same semantic tokens as the rest of the app. Note: Tailwind
+          v4 ties utilities like `bg-white` to the theme's --color-white
+          variable, which .dark re-points to the navy card color — so a
+          "fixed light" panel built from bg-white + literal hex text was
+          actually going dark-background / dark-text (invisible) in dark
+          mode. Using the tokens here keeps text and background in sync in
+          both themes instead. */}
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-56 bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card-hover py-1.5 z-30"
+          className="absolute right-0 mt-2 w-56 bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card-hover py-1.5 z-30"
         >
           {PROFILE_NAV.map((item) =>
             item.action === 'logout' ? (

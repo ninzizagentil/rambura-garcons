@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, AlertTriangle, TrendingDown, Package, BookMarked, Info } from 'lucide-react';
+import { Bell, AlertTriangle, TrendingDown, Package, BookMarked, Info, Volume2, VolumeX } from 'lucide-react';
 import { useNotifications } from '../../context/NotificationContext';
 import { EmptyState } from '../feedback/States';
 
@@ -31,7 +31,7 @@ export function NotificationItem({ notification, onClick }) {
 }
 
 export default function NotificationBell() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, soundEnabled, toggleSound } = useNotifications();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
@@ -63,14 +63,25 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card-hover z-30 max-h-[70vh] flex flex-col">
+        <div className="absolute right-0 mt-2 w-80 bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card-hover z-30 max-h-[70vh] flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-gray)]">
             <p className="font-semibold text-sm text-[var(--color-dark-gray)]">Notifications</p>
-            {unreadCount > 0 && (
-              <button type="button" onClick={markAllAsRead} className="text-xs font-medium text-[var(--color-medium-green)] hover:underline">
-                Mark all as read
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleSound}
+                aria-label={soundEnabled ? 'Mute notification sound' : 'Unmute notification sound'}
+                title={soundEnabled ? 'Notification sound on' : 'Notification sound off'}
+                className="p-1 rounded-md text-[var(--color-mid-gray)] hover:bg-[var(--color-off-white)] hover:text-[var(--color-dark-gray)]"
+              >
+                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
               </button>
-            )}
+              {unreadCount > 0 && (
+                <button type="button" onClick={markAllAsRead} className="text-xs font-medium text-[var(--color-medium-green)] hover:underline">
+                  Mark all as read
+                </button>
+              )}
+            </div>
           </div>
           <div className="overflow-y-auto divide-y divide-[var(--color-border-gray)]">
             {notifications.length === 0 ? (

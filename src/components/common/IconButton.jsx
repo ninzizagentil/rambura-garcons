@@ -12,7 +12,7 @@ const IconButton = forwardRef(function IconButton(
   const sizes = { sm: 'p-1.5', md: 'p-2', lg: 'p-2.5' };
   const iconSizes = { sm: 'w-4 h-4', md: 'w-4.5 h-4.5', lg: 'w-5 h-5' };
   const variants = {
-    ghost: 'text-[var(--color-mid-gray)] hover:bg-[var(--color-soft-gray)] hover:text-[var(--color-deep-green)]',
+    ghost: 'text-[var(--color-mid-gray)] hover:bg-[var(--color-soft-gray)] hover:text-[var(--color-heading)]',
     solid: 'bg-[var(--color-medium-green)] text-white hover:bg-[var(--color-deep-green-600)]',
     danger: 'text-[var(--color-status-red)] hover:bg-[var(--color-status-red-bg)]',
   };

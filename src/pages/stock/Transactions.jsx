@@ -47,7 +47,7 @@ export default function Transactions() {
         <FilterDropdown label="All Types" value={typeFilter} onChange={setTypeFilter} options={[{ value: 'in', label: 'Stock In' }, { value: 'out', label: 'Stock Out' }]} />
         <FilterDropdown label="All Categories" value={categoryFilter} onChange={setCategoryFilter} options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))} />
       </div>
-      <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
+      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
         <DataTable
           columns={columns}
           data={filtered}

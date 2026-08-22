@@ -4,9 +4,11 @@ import { BookOpen, Package, AlertTriangle, TrendingDown, TrendingUp, BookMarked 
 import PageHeader from '../../components/layout/PageHeader';
 import StatCard from '../../components/cards/StatCard';
 import { InsightCard } from '../../components/cards/InsightChartCards';
+import ActivityFeedCard from '../../components/cards/ActivityFeedCard';
 import { useAuth } from '../../context/AuthContext';
 import { getBooks, getLoans, daysOverdue } from '../../services/bookService';
 import { getItems, getLowStockItems, getUsageByItem } from '../../services/stockService';
+import { getActivity } from '../../services/activityService';
 
 export default function ManagementDashboard() {
   const navigate = useNavigate();
@@ -17,6 +19,10 @@ export default function ManagementDashboard() {
   const items = useMemo(() => getItems(), []);
   const lowStock = useMemo(() => getLowStockItems(), []);
   const usage = useMemo(() => getUsageByItem(), []);
+  const activity = useMemo(
+    () => getActivity().filter((a) => ['Library', 'Stock', 'Management'].includes(a.module)).slice(0, 5),
+    []
+  );
 
   const activeLoans = loans.filter((l) => l.status !== 'returned');
   const overdue = activeLoans.filter((l) => daysOverdue(l.dueDate) > 0);
@@ -35,7 +41,7 @@ export default function ManagementDashboard() {
         <StatCard label="Low Stock" value={lowStock.length} icon={TrendingDown} tone="amber" onClick={() => navigate('/management/stock-reports')} />
       </div>
 
-      <h2 className="font-display text-lg font-semibold text-[var(--color-deep-green)] mb-4">Management Insights</h2>
+      <h2 className="font-display text-lg font-semibold text-[var(--color-heading)] mb-4">Management Insights</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <InsightCard
           icon={TrendingUp}
@@ -75,6 +81,15 @@ export default function ManagementDashboard() {
           answer="View open alerts"
           tone="amber"
           onClick={() => navigate('/notifications')}
+        />
+      </div>
+
+      <div className="mt-8">
+        <ActivityFeedCard
+          title="Cross-Department Activity"
+          activity={activity}
+          viewAllTo="/management/insights"
+          viewAllLabel="View insights"
         />
       </div>
     </div>

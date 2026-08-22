@@ -8,6 +8,7 @@ import { StatusBadge } from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
 import { getItems, getLowStockItems, getUsageByItem } from '../../services/stockService';
+import { exportToCSV } from '../../utils/export';
 
 const PIE_COLORS = ['var(--color-medium-green)', 'var(--color-status-blue)'];
 
@@ -25,25 +26,40 @@ export default function ManagementStockReports() {
   const categoryData = Object.entries(byCategory).map(([name, value]) => ({ name, value }));
   const mostUsed = usage.filter((i) => i.used > 0).slice(0, 5);
 
+  const handleExport = () => {
+    exportToCSV(
+      'management-stock-reports',
+      [
+        { key: 'name', header: 'Item' },
+        { key: 'category', header: 'Category' },
+        { key: 'quantity', header: 'Quantity' },
+        { key: 'minLevel', header: 'Minimum Level' },
+        { key: 'status', header: 'Status' },
+      ],
+      items
+    );
+    showToast('Stock report downloaded as CSV.', 'success');
+  };
+
   return (
     <div>
       <PageHeader
         title="Stock Reports"
         description="Stock overview for school management."
         breadcrumb={[{ label: 'Management', to: '/management' }, { label: 'Stock Reports' }]}
-        actions={<Button variant="secondary" icon={Download} onClick={() => showToast('Report exported (demo).', 'success')}>Export</Button>}
+        actions={<Button variant="secondary" icon={Download} onClick={handleExport}>Export</Button>}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
           <p className="text-sm text-[var(--color-mid-gray)]">Total Stock Items</p>
           <p className="font-display text-2xl font-semibold text-[var(--color-dark-gray)] mt-1">{items.length}</p>
         </div>
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
           <p className="text-sm text-[var(--color-mid-gray)]">Low Stock Items</p>
           <p className="font-display text-2xl font-semibold text-[var(--color-status-amber)] mt-1">{lowStock.length}</p>
         </div>
-        <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
           <p className="text-sm text-[var(--color-mid-gray)]">Most Used Item</p>
           <p className="font-display text-lg font-semibold text-[var(--color-dark-gray)] mt-1">{mostUsed[0]?.name || '—'}</p>
         </div>

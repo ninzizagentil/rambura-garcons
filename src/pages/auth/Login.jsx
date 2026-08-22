@@ -5,8 +5,22 @@ import { Eye, EyeOff, GraduationCap, LogIn, ArrowLeft, AlertCircle, User, Lock }
 import { Input } from '../../components/forms/FormField';
 import Button from '../../components/common/Button';
 import { useAuth } from '../../context/AuthContext';
-import { ROLE_HOME } from '../../data/roles';
+import { ROLE_HOME, NAV_BY_ROLE } from '../../data/roles';
 import { getSiteImage } from '../../services/imageService';
+
+// Shared, non-role-specific routes any authenticated user may return to.
+const SHARED_ROUTES = ['/notifications', '/profile', '/change-password'];
+
+// Guards against redirecting back to a page the freshly-logged-in role
+// can't actually see (e.g. a director who was previously bounced off an
+// admin-only URL would otherwise be sent right back into another bounce,
+// landing on Access Restricted immediately after logging in).
+function isPathAllowedForRole(pathname, role) {
+  if (!pathname) return false;
+  if (SHARED_ROUTES.includes(pathname)) return true;
+  const navItems = NAV_BY_ROLE[role] || [];
+  return navItems.some((item) => pathname === item.to || pathname.startsWith(`${item.to}/`));
+}
 
 const DEMO_ACCOUNTS = [
   { identifier: 'admin', password: 'Admin@123', role: 'Administrator' },
@@ -62,7 +76,10 @@ export default function Login() {
         setError(result.error);
         return;
       }
-      const redirectTo = location.state?.from?.pathname || ROLE_HOME[result.user.role] || '/';
+      const from = location.state?.from?.pathname;
+      const redirectTo = isPathAllowedForRole(from, result.user.role)
+        ? from
+        : ROLE_HOME[result.user.role] || '/';
       navigate(redirectTo, { replace: true });
     }, 400);
   };

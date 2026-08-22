@@ -19,7 +19,7 @@ export default function NewsDetails() {
         <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
         {new Date(article.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
       </p>
-      <h1 className="font-display text-2xl md:text-3xl font-semibold text-[var(--color-deep-green)] mt-2">{article.title}</h1>
+      <h1 className="font-display text-2xl md:text-3xl font-semibold text-[var(--color-heading)] mt-2">{article.title}</h1>
       <div className="aspect-video rounded-[var(--radius-card)] overflow-hidden my-6">
         <img
           src={article.image}

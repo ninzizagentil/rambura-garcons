@@ -105,7 +105,7 @@ export default function Users() {
         />
       </div>
 
-      <div className="bg-white rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
+      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
         <DataTable
           columns={columns}
           data={filtered}
