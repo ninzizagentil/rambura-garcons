@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Wrench, Zap, HardHat, Car, Award } from 'lucide-react';
-import HillRidgeDivider from '../../components/common/HillRidgeDivider';
+import {
+  ArrowRight, Star, Wrench, Zap, HardHat, Car, Award,
+  UserCheck, Building2, Target, GraduationCap, Users, BookOpen, Play,
+} from 'lucide-react';
 import Button from '../../components/common/Button';
-import { getHero, getPrograms, getNews } from '../../services/contentService';
+import { getHero, getPrograms } from '../../services/contentService';
 import { getSiteImage } from '../../services/imageService';
 
 const PROGRAM_ICONS = {
@@ -12,153 +14,241 @@ const PROGRAM_ICONS = {
   'automobile-mechanics': Car,
 };
 
+const HERO_HIGHLIGHTS = [
+  { Icon: Wrench, title: 'Practical', subtitle: 'Training' },
+  { Icon: UserCheck, title: 'Skilled', subtitle: 'Instructors' },
+  { Icon: Building2, title: 'Modern', subtitle: 'Facilities' },
+  { Icon: Target, title: 'Career', subtitle: 'Focused' },
+];
+
+const ABOUT_FEATURES = [
+  {
+    Icon: GraduationCap,
+    title: 'Quality Education',
+    description: 'Industry-focused curriculum designed for real-world success.',
+  },
+  {
+    Icon: UserCheck,
+    title: 'Experienced Instructors',
+    description: 'Skilled and dedicated professionals guiding student excellence.',
+  },
+  {
+    Icon: Award,
+    title: 'Career Preparation',
+    description: 'Equipping students with skills for employment and entrepreneurship.',
+  },
+];
+
+const STAT_ICONS = [GraduationCap, Users, BookOpen, Award];
+
+/** Splits the CMS headline into a light first line and a green second line,
+ *  mirroring the two-tone hero heading, while staying safe if the title
+ *  only has a single sentence. */
+function splitHeadline(title = '') {
+  const parts = title.split(/(?<=[.!?])\s+/).filter(Boolean);
+  if (parts.length < 2) return { first: title, rest: '' };
+  return { first: parts[0], rest: parts.slice(1).join(' ') };
+}
+
 export default function Home() {
   const hero = getHero();
   const programs = getPrograms().slice(0, 4);
-  const latestNews = getNews().slice(0, 3);
   const heroImage = getSiteImage('home.hero');
-  const previewImages = [0, 1, 2, 3].map((i) => getSiteImage(`home.gallery.${i}`));
+  const aboutImage = getSiteImage('about.campus');
+  const { first: headlineFirst, rest: headlineRest } = splitHeadline(hero.title);
 
   return (
     <div>
       {/* Hero */}
-      <section className="relative text-white overflow-hidden">
-        {/* Full-bleed background photo — image only, no colour overlay */}
+      <section className="relative overflow-hidden">
         <div className="absolute inset-0" aria-hidden="true">
-          <img
-            src={heroImage}
-            alt=""
-            className="w-full h-full object-cover"
-            loading="eager"
-          />
+          <img src={heroImage} alt="" className="w-full h-full object-cover" loading="eager" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[var(--color-deep-green)]/95 via-[var(--color-deep-green)]/75 to-[var(--color-deep-green)]/20" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 md:px-6 py-20 md:py-32">
-          <div className="max-w-xl bg-[var(--color-deep-green)]/70 backdrop-blur-md border border-white/10 rounded-2xl shadow-xl p-6 md:p-9">
-            <span className="inline-block text-xs font-semibold tracking-wide uppercase text-[var(--color-gold)] mb-4">
+        <div className="relative max-w-7xl mx-auto px-4 md:px-6 flex flex-col justify-between min-h-[560px] md:min-h-[620px] pb-0">
+          <div className="max-w-xl pt-16 md:pt-24">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white text-[var(--color-deep-green)] text-xs font-semibold">
+              <Star className="w-3.5 h-3.5 fill-current" aria-hidden="true" />
               {hero.eyebrow}
             </span>
-            <h1 className="font-display text-4xl md:text-5xl font-semibold leading-tight">
-              {hero.title}
+
+            <h1 className="font-display text-4xl md:text-[3.25rem] leading-[1.08] font-bold mt-5 text-white">
+              {headlineFirst}
+              {headlineRest && (
+                <span className="block text-[var(--color-light-green)]">{headlineRest}</span>
+              )}
             </h1>
-            <p className="text-white/85 mt-5 text-base md:text-lg max-w-lg">
+
+            <p className="text-white/85 mt-6 text-base md:text-lg max-w-lg leading-relaxed">
               {hero.subtitle}
             </p>
+
             <div className="flex flex-wrap gap-3 mt-8">
-              <Link to="/about">
-                <Button variant="gold" size="lg" icon={ArrowRight} iconPosition="right">Learn More</Button>
+              <Link to="/academics">
+                <Button variant="secondary" size="lg" icon={ArrowRight} iconPosition="right">
+                  Discover More
+                </Button>
               </Link>
-              <Link to="/admissions">
-                <Button variant="secondary" size="lg" className="!bg-white/10 !text-white !border-white/20 hover:!bg-white/20">
-                  Admissions
+              <Link to="/about">
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  icon={ArrowRight}
+                  iconPosition="right"
+                  className="!bg-transparent !text-white !border-white/40 hover:!bg-white/10"
+                >
+                  Learn About Us
                 </Button>
               </Link>
             </div>
           </div>
+
+          {/* Highlights strip */}
+          <div className="bg-[var(--color-deep-green)]/85 backdrop-blur-sm -mx-4 md:-mx-6 px-4 md:px-6 py-6 mt-12">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+              {HERO_HIGHLIGHTS.map(({ Icon, title, subtitle }) => (
+                <div key={title} className="flex items-center gap-3">
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-white/10 text-[var(--color-gold)] shrink-0">
+                    <Icon className="w-5 h-5" aria-hidden="true" />
+                  </span>
+                  <span className="text-white text-sm font-semibold leading-tight">
+                    {title}
+                    <span className="block font-normal text-white/70">{subtitle}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-        <HillRidgeDivider tone="gold" className="relative" />
       </section>
 
-      {/* Stats */}
-      <section className="bg-[var(--color-off-white)] py-10">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {hero.stats.map((s) => (
-            <div key={s.label} className="text-center">
-              <p className="font-display text-3xl md:text-4xl font-semibold text-[var(--color-heading)]">{s.value}</p>
-              <p className="text-sm text-[var(--color-mid-gray)] mt-1">{s.label}</p>
+      {/* About Us */}
+      <section className="py-16 md:py-20 max-w-7xl mx-auto px-4 md:px-6">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <div className="relative rounded-2xl overflow-hidden shadow-card-hover aspect-[4/3]">
+            <img src={aboutImage} alt="Students training in the workshop" className="w-full h-full object-cover" loading="lazy" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+            <Link
+              to="/about"
+              aria-label="Learn more about Rambura Garçons"
+              className="absolute bottom-5 right-5 inline-flex items-center justify-center w-12 h-12 rounded-full bg-white text-[var(--color-deep-green)] shadow-lg hover:scale-105 transition-transform"
+            >
+              <Play className="w-5 h-5 fill-current ml-0.5" aria-hidden="true" />
+            </Link>
+          </div>
+
+          <div>
+            <span className="text-xs font-bold tracking-[0.15em] uppercase text-[var(--color-medium-green)]">
+              About Us
+            </span>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mt-2 text-[var(--color-dark-gray)]">
+              Empowering Youth Through
+              <span className="block text-[var(--color-medium-green)]">Quality Technical Education</span>
+            </h2>
+            <p className="text-[var(--color-mid-gray)] mt-5 leading-relaxed max-w-lg">
+              We are committed to providing industry-relevant training, modern facilities and a supportive
+              learning environment that prepares students for successful careers and lifelong impact.
+            </p>
+
+            <div className="grid sm:grid-cols-3 gap-6 mt-8">
+              {ABOUT_FEATURES.map(({ Icon, title, description }) => (
+                <div key={title}>
+                  <span className="inline-flex items-center justify-center w-11 h-11 rounded-lg bg-[var(--color-light-green-100)] text-[var(--color-medium-green)] mb-3">
+                    <Icon className="w-5 h-5" aria-hidden="true" />
+                  </span>
+                  <h3 className="font-display font-semibold text-sm text-[var(--color-dark-gray)]">{title}</h3>
+                  <p className="text-xs text-[var(--color-mid-gray)] mt-1.5 leading-relaxed">{description}</p>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
       {/* Programs */}
-      <section className="py-16 max-w-7xl mx-auto px-4 md:px-6">
-        <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
+      <section className="pb-16 max-w-7xl mx-auto px-4 md:px-6">
+        <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
           <div>
-            <h2 className="font-display text-2xl md:text-3xl font-semibold text-[var(--color-heading)]">
-              Trade Programs
+            <span className="text-xs font-bold tracking-[0.15em] uppercase text-[var(--color-medium-green)]">
+              Our Programs
+            </span>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mt-2 text-[var(--color-dark-gray)]">
+              Programs We Offer
             </h2>
-            <p className="text-[var(--color-mid-gray)] mt-1">Four core trades, taught by practicing professionals.</p>
           </div>
-          <Link to="/academics" className="text-sm font-semibold text-[var(--color-medium-green)] hover:underline flex items-center gap-1">
-            View all programs <ArrowRight className="w-4 h-4" />
+          <Link to="/academics">
+            <Button variant="secondary" size="md" icon={ArrowRight} iconPosition="right">
+              View All Programs
+            </Button>
           </Link>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {programs.map((p) => {
             const Icon = PROGRAM_ICONS[p.slug] || Wrench;
             return (
-            <Link
-              key={p.slug}
-              to="/academics"
-              className="group rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5 hover:shadow-card-hover hover:border-[var(--color-medium-green)] transition-all"
-            >
-              <span className="inline-flex items-center justify-center w-11 h-11 rounded-lg bg-[var(--color-light-green-100)] text-[var(--color-medium-green)] mb-4">
-                <Icon className="w-5 h-5" aria-hidden="true" />
-              </span>
-              <h3 className="font-display font-semibold text-[var(--color-dark-gray)]">{p.title}</h3>
-              <p className="text-sm text-[var(--color-mid-gray)] mt-1.5">{p.summary}</p>
-            </Link>
+              <Link
+                key={p.slug}
+                to="/academics"
+                className="group rounded-[var(--radius-card)] bg-white border border-[var(--color-border-gray)] overflow-hidden hover:shadow-card-hover hover:border-[var(--color-medium-green)] transition-all"
+              >
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img
+                    src={p.image}
+                    alt={p.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                  <span className="absolute left-4 -bottom-5 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[var(--color-deep-green)] text-white shadow-card-hover">
+                    <Icon className="w-5 h-5" aria-hidden="true" />
+                  </span>
+                </div>
+                <div className="p-5 pt-8">
+                  <h3 className="font-display font-semibold text-[var(--color-dark-gray)]">{p.title}</h3>
+                  <p className="text-sm text-[var(--color-mid-gray)] mt-1.5 leading-relaxed">{p.summary}</p>
+                  <span className="text-sm font-semibold text-[var(--color-medium-green)] mt-4 inline-flex items-center gap-1">
+                    Learn More <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Stats strip */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 bg-[var(--color-off-white)] rounded-2xl p-6 md:p-8">
+          {hero.stats.map((s, i) => {
+            const Icon = STAT_ICONS[i % STAT_ICONS.length];
+            return (
+              <div key={s.label} className="flex items-center gap-3 justify-center md:justify-start">
+                <span className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-[var(--color-light-green-100)] text-[var(--color-medium-green)] shrink-0">
+                  <Icon className="w-5 h-5" aria-hidden="true" />
+                </span>
+                <span>
+                  <span className="block font-display text-xl md:text-2xl font-bold text-[var(--color-deep-green)]">{s.value}</span>
+                  <span className="block text-xs md:text-sm text-[var(--color-mid-gray)]">{s.label}</span>
+                </span>
+              </div>
             );
           })}
         </div>
       </section>
 
-      {/* News */}
-      <section className="bg-[var(--color-light-green-100)] py-16">
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
-            <h2 className="font-display text-2xl md:text-3xl font-semibold text-[var(--color-heading)]">Latest News</h2>
-            <Link to="/news" className="text-sm font-semibold text-[var(--color-medium-green)] hover:underline flex items-center gap-1">
-              All news <ArrowRight className="w-4 h-4" />
-            </Link>
+      {/* CTA banner */}
+      <section className="pb-16 max-w-7xl mx-auto px-4 md:px-6">
+        <div className="relative overflow-hidden rounded-2xl bg-[var(--color-deep-green)] px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-center md:items-center justify-between gap-6">
+          <GraduationCap className="hidden md:block absolute right-6 top-1/2 -translate-y-1/2 w-32 h-32 text-white/5" aria-hidden="true" />
+          <div className="relative text-center md:text-left">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-white">Ready to Start Your Journey?</h2>
+            <p className="text-white/70 mt-2 max-w-md">
+              Join Rambura Garçons TVET School and build the skills for a better future.
+            </p>
           </div>
-          <div className="grid sm:grid-cols-3 gap-5">
-            {latestNews.map((n) => (
-              <Link key={n.slug} to={`/news/${n.slug}`} className="bg-[var(--color-white)] rounded-[var(--radius-card)] p-5 hover:shadow-card-hover transition-shadow">
-                <p className="text-xs text-[var(--color-gold)] font-semibold">
-                  {new Date(n.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </p>
-                <h3 className="font-display font-semibold text-[var(--color-dark-gray)] mt-2">{n.title}</h3>
-                <span className="text-sm font-medium text-[var(--color-medium-green)] mt-3 inline-flex items-center gap-1">
-                  Read more <ArrowRight className="w-3.5 h-3.5" />
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Gallery preview */}
-      <section className="py-16 max-w-7xl mx-auto px-4 md:px-6">
-        <div className="flex items-end justify-between mb-8 flex-wrap gap-3">
-          <h2 className="font-display text-2xl md:text-3xl font-semibold text-[var(--color-heading)]">Campus Gallery</h2>
-          <Link to="/gallery" className="text-sm font-semibold text-[var(--color-medium-green)] hover:underline flex items-center gap-1">
-            View gallery <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {previewImages.map((src, i) => (
-            <Link key={i} to="/gallery" className="aspect-square rounded-[var(--radius-card)] overflow-hidden block hover:opacity-85 transition-opacity">
-              <img src={src} alt={`Campus photo ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="bg-[var(--color-deep-green)] text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 text-center">
-          <Award className="w-9 h-9 mx-auto mb-4 text-[var(--color-gold)]" aria-hidden="true" />
-          <h2 className="font-display text-2xl md:text-3xl font-semibold">Ready to build your future in a trade?</h2>
-          <p className="text-white/70 mt-3 max-w-xl mx-auto">
-            Applications for the 2027 intake open soon. Review requirements and start your application today.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3 mt-7">
-            <Link to="/admissions"><Button variant="gold" size="lg">Start Admissions</Button></Link>
-            <Link to="/contact">
-              <Button variant="secondary" size="lg" className="!bg-transparent !text-white !border-white/30 hover:!bg-white/10">
-                Contact Us
+          <div className="relative shrink-0">
+            <Link to="/admissions">
+              <Button variant="secondary" size="lg" icon={ArrowRight} iconPosition="right">
+                Apply Now
               </Button>
             </Link>
           </div>
