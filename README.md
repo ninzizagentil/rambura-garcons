@@ -142,3 +142,4 @@ extracting.
 - Full sweep of every `onClick` handler across Admin, Library, Stock, and
   Management pages confirmed no other dead/placeholder actions remain.
 "# rambura-garcons" 
+"# rambura-garcons" 
