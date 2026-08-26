@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { GraduationCap, Mail, CheckCircle2 } from 'lucide-react';
 import { Input } from '../../components/forms/FormField';
 import Button from '../../components/common/Button';
+import BrandMark from '../../components/common/BrandMark';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -18,9 +19,10 @@ export default function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center bg-[var(--color-off-white)] px-4 py-10">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <span className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[var(--color-deep-green)] mb-4">
-            <GraduationCap className="w-7 h-7 text-[var(--color-gold)]" aria-hidden="true" />
-          </span>
+          <BrandMark
+            containerClassName="w-14 h-14 rounded-2xl bg-[var(--color-deep-green)] mb-4"
+            fallback={<GraduationCap className="w-7 h-7 text-[var(--color-gold)]" aria-hidden="true" />}
+          />
           <h1 className="font-display text-2xl font-semibold text-[var(--color-heading)]">Reset your password</h1>
         </div>
 

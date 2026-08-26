@@ -1,0 +1,3 @@
+import mongoose from 'mongoose';
+const schema = new mongoose.Schema({ itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'StockItem', required: true }, quantity: { type: Number, min: 1, required: true }, reason: { type: String, enum: ['Broken', 'Faulty', 'Physical Damage', 'Water Damage', 'Other'], required: true }, date: { type: Date, default: Date.now }, reportedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, notes: String, status: { type: String, enum: ['reported', 'disposed'], default: 'reported' } }, { timestamps: true });
+export default mongoose.model('DamagedStock', schema);

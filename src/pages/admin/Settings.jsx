@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import PageHeader from '../../components/layout/PageHeader';
 import { Input, Select, Textarea } from '../../components/forms/FormField';
+import ImageField from '../../components/forms/ImageField';
 import { FormSection } from '../../components/cards/InsightChartCards';
 import Button from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
+import { getBranding, updateSiteLogo, resetSiteLogo } from '../../services/brandingService';
 
 export default function Settings() {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [form, setForm] = useState({
     schoolName: 'Rambura Garçons TVET School',
     district: 'Nyabihu',
@@ -15,12 +19,33 @@ export default function Settings() {
     lowStockDefault: '10',
     aboutText: 'A Technical and Vocational Education and Training school in Nyabihu District, Rwanda.',
   });
+  const [logoUrl, setLogoUrl] = useState(() => getBranding().logoUrl);
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const handleSave = (e) => {
     e.preventDefault();
     showToast('Settings saved successfully.', 'success');
+  };
+
+  // The logo saves the moment a file is chosen — unlike the rest of this
+  // form, it isn't tied to the "Save Settings" button, so it takes effect
+  // everywhere (sidebar, login page, public site, footer) right away.
+  const handleLogoChange = async (dataUrl) => {
+    if (!dataUrl) {
+      const result = await resetSiteLogo(user);
+      if (!result.success) { showToast(result.error, 'error'); return; }
+      setLogoUrl('');
+      showToast('Logo removed — the default badge will show instead.', 'success');
+      return;
+    }
+    const result = await updateSiteLogo(dataUrl, user);
+    if (result.success) {
+      setLogoUrl(dataUrl);
+      showToast('Logo updated everywhere it appears.', 'success');
+    } else {
+      showToast(result.error, 'error');
+    }
   };
 
   return (
@@ -32,6 +57,13 @@ export default function Settings() {
       />
       <form onSubmit={handleSave} className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-2xl space-y-6">
         <FormSection title="School Information">
+          <ImageField
+            label="School Logo"
+            value={logoUrl}
+            onChange={handleLogoChange}
+            hint="Shows in the admin sidebar, login page, public site header, and footer. PNG with a transparent background works best."
+            className="sm:col-span-2"
+          />
           <Input label="School Name" value={form.schoolName} onChange={update('schoolName')} />
           <Input label="District" value={form.district} onChange={update('district')} />
           <Input label="Contact Email" type="email" value={form.contactEmail} onChange={update('contactEmail')} className="sm:col-span-2" />

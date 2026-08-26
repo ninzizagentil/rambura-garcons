@@ -9,12 +9,13 @@ import { useToast } from '../../context/ToastContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 import { getItems, stockIn } from '../../services/stockService';
+import { STOCK_TODAY as TODAY } from '../../data/stock';
 import { logActivity } from '../../services/activityService';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 
-const TODAY = '2026-08-18';
+
 
 export default function StockIn() {
   const [searchParams] = useSearchParams();
@@ -59,17 +60,16 @@ export default function StockIn() {
     if (validate()) setStep('confirm');
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setSaving(true);
     setServerError('');
-    setTimeout(() => {
-      const res = stockIn(form);
-      setSaving(false);
-      if (!res.success) {
-        setServerError(res.error);
-        setStep('form');
-        return;
-      }
+    const res = await stockIn(form);
+    setSaving(false);
+    if (!res.success) {
+      setServerError(res.error);
+      setStep('form');
+      return;
+    }
       setResult(res);
       setStep('success');
       showToast(`Stock In recorded for "${selectedItem.name}".`, 'success');
@@ -84,7 +84,7 @@ export default function StockIn() {
         module: 'Stock',
         status: 'success',
       });
-    }, 500);
+    
   };
 
   const startAnother = () => {

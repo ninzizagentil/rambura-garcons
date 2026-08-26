@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { X, GraduationCap, ChevronDown } from 'lucide-react';
+import { X, ChevronDown } from 'lucide-react';
+import BrandMark from '../common/BrandMark';
 import { NAV_BY_ROLE, ROLE_LABELS } from '../../data/roles';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
@@ -93,9 +94,7 @@ export default function MobileMenu() {
       <div className="absolute inset-y-0 left-0 w-[280px] bg-[var(--color-deep-green)] text-white flex flex-col">
         <div className="flex items-center justify-between px-4 h-16 border-b border-[rgba(255,255,255,0.12)]">
           <div className="flex items-center gap-2.5">
-            <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--color-gold)]">
-              <GraduationCap className="w-5 h-5 text-white" aria-hidden="true" />
-            </span>
+            <BrandMark containerClassName="w-9 h-9 rounded-lg bg-[var(--color-gold)]" />
             <div className="leading-tight">
               <p className="font-display font-semibold text-sm text-white">Rambura Garçons</p>
               <p className="text-[11px] text-[rgba(255,255,255,0.65)]">{ROLE_LABELS[role]}</p>

@@ -24,7 +24,7 @@ export default function GalleryFormModal({ open, onClose, image, onSaved }) {
     }
   }, [open, image]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError('');
     if (!caption.trim()) {
@@ -33,16 +33,11 @@ export default function GalleryFormModal({ open, onClose, image, onSaved }) {
     }
     setSaving(true);
     const actor = user?.fullName || 'System Administrator';
-    setTimeout(() => {
-      const result = isEdit ? updateGalleryImage(image.id, { caption }, actor) : createGalleryImage({ caption }, actor);
-      setSaving(false);
-      if (!result.success) {
-        setServerError(result.error);
-        return;
-      }
-      showToast(isEdit ? 'Image updated successfully.' : 'Image added successfully.', 'success');
-      onSaved();
-    }, 300);
+    const result = isEdit ? await updateGalleryImage(image.id, { caption }, actor) : await createGalleryImage({ caption }, actor);
+    setSaving(false);
+    if (!result.success) { setServerError(result.error); return; }
+    showToast(isEdit ? 'Image updated successfully.' : 'Image added successfully.', 'success');
+    onSaved();
   };
 
   return (

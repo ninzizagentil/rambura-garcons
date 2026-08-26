@@ -1,0 +1,15 @@
+import { Router } from 'express';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { asyncHandler } from '../utils/api.js';
+import { getItems, getItem, createItem, updateItem, deleteItem, stockIn, stockOut, getTransactions, adjustment, transfer, damaged, getDamaged, getDisposed, dispose, expiry, dashboard } from '../controllers/stockController.js';
+const router = Router();
+router.use(authenticate);
+router.get('/items', asyncHandler(getItems)); router.get('/items/:id/transactions', asyncHandler(async (req, res) => getTransactions({ ...req, query: { ...req.query, itemId: req.params.id } }, res))); router.get('/items/:id', asyncHandler(getItem));
+router.post('/items', authorize('admin', 'stock_manager'), asyncHandler(createItem)); router.put('/items/:id', authorize('admin', 'stock_manager'), asyncHandler(updateItem)); router.delete('/items/:id', authorize('admin', 'stock_manager'), asyncHandler(deleteItem));
+router.post('/transactions/in', authorize('admin', 'stock_manager'), asyncHandler(stockIn)); router.post('/transactions/out', authorize('admin', 'stock_manager'), asyncHandler(stockOut)); router.get('/transactions', asyncHandler(getTransactions));
+router.post('/transactions/adjustment', authorize('admin', 'stock_manager'), asyncHandler(adjustment)); router.post('/transactions/transfer', authorize('admin', 'stock_manager'), asyncHandler(transfer));
+router.get('/damaged', asyncHandler(getDamaged)); router.post('/damaged', authorize('admin', 'stock_manager'), asyncHandler(damaged));
+router.get('/disposed', asyncHandler(getDisposed)); router.post('/disposed', authorize('admin', 'stock_manager'), asyncHandler(dispose));
+router.get('/expired', asyncHandler((req, res) => expiry({ ...req, query: { ...req.query, kind: 'expired' } }, res))); router.get('/expiring-soon', asyncHandler((req, res) => expiry({ ...req, query: { ...req.query, kind: 'soon' } }, res)));
+router.get('/dashboard', asyncHandler(dashboard));
+export default router;

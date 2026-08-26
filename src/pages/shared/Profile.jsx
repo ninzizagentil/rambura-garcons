@@ -33,10 +33,15 @@ export default function Profile() {
 
     setUploading(true);
     const reader = new FileReader();
-    reader.onload = () => {
-      updateAvatar(reader.result);
-      setUploading(false);
-      showToast('Profile photo updated.', 'success');
+    reader.onload = async () => {
+      try {
+        await updateAvatar(reader.result);
+        showToast('Profile photo updated.', 'success');
+      } catch (error) {
+        showToast(error.message, 'error');
+      } finally {
+        setUploading(false);
+      }
     };
     reader.onerror = () => {
       setUploading(false);
@@ -45,9 +50,9 @@ export default function Profile() {
     reader.readAsDataURL(file);
   };
 
-  const handleRemove = () => {
-    updateAvatar(null);
-    showToast('Profile photo removed.', 'success');
+  const handleRemove = async () => {
+    try { await updateAvatar(null); showToast('Profile photo removed.', 'success'); }
+    catch (error) { showToast(error.message, 'error'); }
   };
 
   return (

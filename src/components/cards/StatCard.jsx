@@ -44,6 +44,24 @@ export default function StatCard({ label, value, icon: Icon, trend, spark, tone 
       glow: 'bg-[var(--color-status-blue)]',
       spark: 'var(--color-status-blue)',
     },
+    orange: {
+      icon: 'text-[var(--color-status-orange)] bg-[var(--color-status-orange-bg)]',
+      bar: 'bg-[var(--color-status-orange)]',
+      glow: 'bg-[var(--color-status-orange)]',
+      spark: 'var(--color-status-orange)',
+    },
+    purple: {
+      icon: 'text-[var(--color-status-purple)] bg-[var(--color-status-purple-bg)]',
+      bar: 'bg-[var(--color-status-purple)]',
+      glow: 'bg-[var(--color-status-purple)]',
+      spark: 'var(--color-status-purple)',
+    },
+    gray: {
+      icon: 'text-[var(--color-status-gray)] bg-[var(--color-status-gray-bg)]',
+      bar: 'bg-[var(--color-status-gray)]',
+      glow: 'bg-[var(--color-status-gray)]',
+      spark: 'var(--color-status-gray)',
+    },
   };
   const t = toneStyles[tone] || toneStyles.default;
 

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Package, AlertTriangle, TrendingDown, TrendingUp, BookMarked } from 'lucide-react';
+import { BookOpen, Package, AlertTriangle, TrendingDown, TrendingUp, BookMarked, GraduationCap } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import StatCard from '../../components/cards/StatCard';
 import { InsightCard } from '../../components/cards/InsightChartCards';
@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getBooks, getLoans, daysOverdue } from '../../services/bookService';
 import { getItems, getLowStockItems, getUsageByItem } from '../../services/stockService';
 import { getActivity } from '../../services/activityService';
+import { getApplications } from '../../services/applicationService';
 
 export default function ManagementDashboard() {
   const navigate = useNavigate();
@@ -19,8 +20,9 @@ export default function ManagementDashboard() {
   const items = useMemo(() => getItems(), []);
   const lowStock = useMemo(() => getLowStockItems(), []);
   const usage = useMemo(() => getUsageByItem(), []);
+  const applications = useMemo(() => getApplications(), []);
   const activity = useMemo(
-    () => getActivity().filter((a) => ['Library', 'Stock', 'Management'].includes(a.module)).slice(0, 5),
+    () => getActivity().filter((a) => ['Library', 'Stock', 'Management', 'Admissions'].includes(a.module)).slice(0, 5),
     []
   );
 
@@ -29,12 +31,20 @@ export default function ManagementDashboard() {
   const mostBorrowed = [...books].sort((a, b) => b.borrowedCopies - a.borrowedCopies)[0];
   const mostUsed = usage.filter((i) => i.used > 0)[0];
   const leastUsed = [...usage].sort((a, b) => a.used - b.used)[0];
+  const newApplications = applications.filter((a) => a.status === 'new');
 
   return (
     <div>
       <PageHeader title={`Welcome back, ${user?.fullName?.split(' ')[0]}`} description="Cross-department insights." />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+        <StatCard
+          label="New Applications"
+          value={newApplications.length}
+          icon={GraduationCap}
+          tone={newApplications.length ? 'gold' : 'default'}
+          onClick={() => navigate('/management/applications')}
+        />
         <StatCard label="Borrowed Books" value={activeLoans.length} icon={BookMarked} onClick={() => navigate('/management/library-reports')} />
         <StatCard label="Overdue Books" value={overdue.length} icon={AlertTriangle} tone="red" onClick={() => navigate('/management/library-reports')} />
         <StatCard label="Stock Items" value={items.length} icon={Package} onClick={() => navigate('/management/stock-reports')} />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams, Navigate } from 'react-router-dom';
-import { PackagePlus, PackageMinus, Pencil, ArrowLeft } from 'lucide-react';
+import { PackagePlus, PackageMinus, Pencil, ArrowLeft, ClipboardEdit, ArrowLeftRight } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import { StatusBadge, Badge } from '../../components/common/Badge';
 import Button from '../../components/common/Button';
@@ -34,6 +34,8 @@ export default function StockItemDetails() {
 
   const stockInHistory = transactions.filter((t) => t.type === 'in');
   const stockOutHistory = transactions.filter((t) => t.type === 'out');
+  const adjustmentHistory = transactions.filter((t) => t.type === 'adjustment');
+  const transferHistory = transactions.filter((t) => t.type === 'transfer');
 
   return (
     <div>
@@ -45,6 +47,8 @@ export default function StockItemDetails() {
           !viewOnly && (
             <>
               <Button variant="secondary" icon={Pencil} onClick={() => { setSearchParams({}); setEditOpen(true); }}>Edit Item</Button>
+              <Button variant="outline" icon={ArrowLeftRight} onClick={() => navigate(`/stock/transfer?item=${item.id}`)}>Transfer</Button>
+              <Button variant="outline" icon={ClipboardEdit} onClick={() => navigate(`/stock/adjustment?item=${item.id}`)}>Adjust</Button>
               <Button variant="outline" icon={PackageMinus} onClick={() => navigate(`/stock/stock-out?item=${item.id}`)}>Stock Out</Button>
               <Button icon={PackagePlus} onClick={() => navigate(`/stock/stock-in?item=${item.id}`)}>Stock In</Button>
             </>
@@ -134,6 +138,64 @@ export default function StockItemDetails() {
                       <td className="py-2.5 pr-4">{t.date}</td>
                       <td className="py-2.5 pr-4 font-medium text-[var(--color-status-amber)]">−{t.quantity}</td>
                       <td className="py-2.5">{t.party}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-5 mt-5">
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
+          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Adjustment History</p>
+          {adjustmentHistory.length === 0 ? (
+            <EmptyState title="No adjustments recorded" message="This item's quantity hasn't been reconciled against a physical count yet." />
+          ) : (
+            <div className="table-scroll">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--color-border-gray)] text-xs uppercase text-[var(--color-mid-gray)]">
+                    <th className="text-left py-2 pr-4">Date</th>
+                    <th className="text-left py-2 pr-4">Difference</th>
+                    <th className="text-left py-2">Reason</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-border-gray)]">
+                  {adjustmentHistory.map((t) => (
+                    <tr key={t.id}>
+                      <td className="py-2.5 pr-4">{t.date}</td>
+                      <td className={`py-2.5 pr-4 font-medium ${t.difference > 0 ? 'text-[var(--color-status-green)]' : 'text-[var(--color-status-red)]'}`}>{t.difference > 0 ? '+' : ''}{t.difference}</td>
+                      <td className="py-2.5">{t.notes}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
+          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Transfer History</p>
+          {transferHistory.length === 0 ? (
+            <EmptyState title="No transfers recorded" message="This item hasn't moved between locations yet." />
+          ) : (
+            <div className="table-scroll">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--color-border-gray)] text-xs uppercase text-[var(--color-mid-gray)]">
+                    <th className="text-left py-2 pr-4">Date</th>
+                    <th className="text-left py-2 pr-4">Quantity</th>
+                    <th className="text-left py-2">Route</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-border-gray)]">
+                  {transferHistory.map((t) => (
+                    <tr key={t.id}>
+                      <td className="py-2.5 pr-4">{t.date}</td>
+                      <td className="py-2.5 pr-4 font-medium text-[var(--color-status-blue)]">{t.quantity}</td>
+                      <td className="py-2.5">{t.fromLocation} → {t.toLocation}</td>
                     </tr>
                   ))}
                 </tbody>

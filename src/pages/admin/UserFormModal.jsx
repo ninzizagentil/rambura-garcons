@@ -39,33 +39,19 @@ export default function UserFormModal({ open, onClose, user, onSaved }) {
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError('');
     if (!validate()) return;
     setSaving(true);
 
-    setTimeout(() => {
-      let result;
-      if (isEdit) {
-        result = updateUser(user.id, {
-          fullName: form.fullName,
-          username: form.username,
-          email: form.email,
-          role: form.role,
-          status: form.status,
-        });
-      } else {
-        result = createUser(form);
-      }
-      setSaving(false);
-      if (!result.success) {
-        setServerError(result.error);
-        return;
-      }
-      showToast(isEdit ? 'User updated successfully.' : 'User created successfully.', 'success');
-      onSaved();
-    }, 400);
+    const result = isEdit
+      ? await updateUser(user.id, { fullName: form.fullName, username: form.username, email: form.email, role: form.role, status: form.status })
+      : await createUser(form);
+    setSaving(false);
+    if (!result.success) { setServerError(result.error); return; }
+    showToast(isEdit ? 'User updated successfully.' : 'User created successfully.', 'success');
+    onSaved();
   };
 
   return (

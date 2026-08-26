@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import { SearchBar } from '../../components/common/SearchBar';
@@ -11,7 +11,7 @@ import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import { useToast } from '../../context/ToastContext';
 import { useNotifications } from '../../context/NotificationContext';
-import { getLoans, returnBook, daysOverdue } from '../../services/bookService';
+import { getLoans, refreshLibrary, returnBook, daysOverdue } from '../../services/bookService';
 
 export default function Returns() {
   const { showToast } = useToast();
@@ -25,6 +25,11 @@ export default function Returns() {
   const [justReturned, setJustReturned] = useState(null);
 
   const refresh = () => setLoans(getLoans().filter((l) => l.status !== 'returned'));
+  useEffect(() => {
+    window.addEventListener('rg:library-updated', refresh);
+    refreshLibrary().catch(() => {});
+    return () => window.removeEventListener('rg:library-updated', refresh);
+  }, []);
 
   const filtered = useMemo(
     () => loans.filter((l) => !search || l.bookTitle.toLowerCase().includes(search.toLowerCase()) || l.borrower.toLowerCase().includes(search.toLowerCase())),
@@ -33,9 +38,10 @@ export default function Returns() {
 
   const handleConfirmReturn = () => {
     setProcessing(true);
-    setTimeout(() => {
-      returnBook(selected.id);
+    setTimeout(async () => {
+      const result = await returnBook(selected.id);
       setProcessing(false);
+      if (!result.success) { showToast(result.error, 'error'); return; }
       setConfirmOpen(false);
       setJustReturned(selected);
       showToast(`"${selected.bookTitle}" returned successfully.`, 'success');

@@ -1,30 +1,43 @@
 import { useState, useMemo } from 'react';
-import { Download, Eye } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
+import { useNavigate } from 'react-router-dom';
+import { Download, Printer, Eye, FileBarChart } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend,
+} from 'recharts';
 import PageHeader from '../../components/layout/PageHeader';
 import { ChartCard } from '../../components/cards/InsightChartCards';
 import { FilterDropdown } from '../../components/common/SearchBar';
-import { StatusBadge } from '../../components/common/Badge';
 import IconButton from '../../components/common/IconButton';
 import Button from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
-import { getItems, getTransactions, getLowStockItems, getUsageByItem } from '../../services/stockService';
+import {
+  getItems, getTransactions, getLowStockItems, getOutOfStockItems, getDamagedItems,
+  getRemovedItems, getUsageByItem, getTotalStockValue,
+} from '../../services/stockService';
 import { STOCK_CATEGORIES } from '../../data/stock';
-import { useNavigate } from 'react-router-dom';
 import { exportToCSV } from '../../utils/export';
+import { printReport } from '../../utils/print';
 
 const PIE_COLORS = ['var(--color-medium-green)', 'var(--color-status-blue)'];
+
+function formatRWF(amount) {
+  return `RWF ${Math.round(amount || 0).toLocaleString('en-US')}`;
+}
 
 export default function StockReports() {
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const [range, setRange] = useState('');
   const [category, setCategory] = useState('');
 
   const items = useMemo(() => getItems(), []);
   const transactions = useMemo(() => getTransactions(), []);
   const lowStock = useMemo(() => getLowStockItems(), []);
+  const outOfStock = useMemo(() => getOutOfStockItems(), []);
+  const damaged = useMemo(() => getDamagedItems(), []);
+  const removed = useMemo(() => getRemovedItems(), []);
   const usage = useMemo(() => getUsageByItem(), []);
+  const totalValue = useMemo(() => getTotalStockValue(), []);
+  const expiring = useMemo(() => items.filter((i) => !!i.expiryDate), [items]);
 
   const filteredItems = category ? items.filter((i) => i.category === category) : items;
   const filteredTx = category ? transactions.filter((t) => t.category === category) : transactions;
@@ -37,37 +50,178 @@ export default function StockReports() {
     return acc;
   }, {});
   const categoryBalanceData = Object.entries(byCategory).map(([name, value]) => ({ name, value }));
-
   const mostUsed = usage.filter((i) => (!category || i.category === category) && i.used > 0).slice(0, 5);
-  const leastUsed = [...usage].filter((i) => !category || i.category === category).sort((a, b) => a.used - b.used).slice(0, 5);
 
-  const handleExport = () => {
-    exportToCSV(
-      'stock-reports',
-      [
-        { key: 'name', header: 'Item' },
+  // Movement summary: totals per transaction type, per category.
+  const movementSummary = STOCK_CATEGORIES.map((cat) => {
+    const rows = transactions.filter((t) => t.category === cat);
+    return {
+      category: cat,
+      in: rows.filter((t) => t.type === 'in').reduce((s, t) => s + t.quantity, 0),
+      out: rows.filter((t) => t.type === 'out').reduce((s, t) => s + t.quantity, 0),
+      adjustment: rows.filter((t) => t.type === 'adjustment').length,
+      transfer: rows.filter((t) => t.type === 'transfer').reduce((s, t) => s + t.quantity, 0),
+      removed: rows.filter((t) => t.type === 'removed').reduce((s, t) => s + t.quantity, 0),
+    };
+  });
+
+  const REPORTS = [
+    {
+      id: 'inventory',
+      title: 'Inventory Report',
+      description: 'Every catalogued item with quantity, minimum level, and status.',
+      data: filteredItems,
+      columns: [
+        { key: 'code', header: 'Item Code' },
+        { key: 'name', header: 'Item Name' },
         { key: 'category', header: 'Category' },
         { key: 'unit', header: 'Unit' },
         { key: 'quantity', header: 'Quantity' },
         { key: 'minLevel', header: 'Minimum Level' },
+        { key: 'location', header: 'Location' },
         { key: 'status', header: 'Status' },
       ],
-      filteredItems
-    );
-    showToast('Stock report downloaded as CSV.', 'success');
+      viewTo: '/stock/items',
+    },
+    {
+      id: 'movement',
+      title: 'Stock Movement Report',
+      description: 'Received, issued, adjusted, transferred, and removed totals by category.',
+      data: movementSummary,
+      columns: [
+        { key: 'category', header: 'Category' },
+        { key: 'in', header: 'Stock In' },
+        { key: 'out', header: 'Stock Out' },
+        { key: 'adjustment', header: 'Adjustments' },
+        { key: 'transfer', header: 'Transferred' },
+        { key: 'removed', header: 'Removed' },
+      ],
+      viewTo: '/stock/transactions',
+    },
+    {
+      id: 'low-stock',
+      title: 'Low Stock Report',
+      description: 'Items at or below their minimum stock level.',
+      data: lowStock,
+      columns: [
+        { key: 'name', header: 'Item' },
+        { key: 'category', header: 'Category' },
+        { key: 'quantity', header: 'Current Quantity' },
+        { key: 'minLevel', header: 'Minimum Level' },
+        { header: 'Difference', value: (i) => i.quantity - i.minLevel },
+      ],
+      viewTo: '/stock/low-stock',
+    },
+    {
+      id: 'out-of-stock',
+      title: 'Out of Stock Report',
+      description: 'Items with zero quantity currently on hand.',
+      data: outOfStock,
+      columns: [
+        { key: 'name', header: 'Item' },
+        { key: 'category', header: 'Category' },
+        { key: 'minLevel', header: 'Minimum Level' },
+        { key: 'supplier', header: 'Supplier' },
+        { key: 'location', header: 'Location' },
+      ],
+      viewTo: '/stock/out-of-stock',
+    },
+    {
+      id: 'damaged',
+      title: 'Damaged Stock Report',
+      description: 'Reported damage incidents pending or resolved.',
+      data: damaged,
+      columns: [
+        { key: 'itemName', header: 'Item' },
+        { key: 'quantity', header: 'Quantity' },
+        { key: 'reason', header: 'Reason' },
+        { key: 'date', header: 'Date' },
+        { key: 'reportedBy', header: 'Reported By' },
+        { key: 'status', header: 'Status' },
+      ],
+      viewTo: '/stock/damaged',
+    },
+    {
+      id: 'expired',
+      title: 'Expired Stock Report',
+      description: 'Perishable items by batch, expiry date, and status.',
+      data: expiring,
+      columns: [
+        { key: 'name', header: 'Item' },
+        { key: 'batchNumber', header: 'Batch / Lot' },
+        { key: 'expiryDate', header: 'Expiry Date' },
+        { key: 'quantity', header: 'Quantity' },
+        { key: 'expiryDaysRemaining', header: 'Days Remaining' },
+        { key: 'expiryStatus', header: 'Status' },
+      ],
+      viewTo: '/stock/expired',
+    },
+    {
+      id: 'removed',
+      title: 'Removed / Disposed Report',
+      description: 'Permanent record of stock written off or disposed.',
+      data: removed,
+      columns: [
+        { key: 'itemName', header: 'Item' },
+        { key: 'quantityRemoved', header: 'Quantity Removed' },
+        { key: 'remainingQuantity', header: 'Remaining Quantity' },
+        { key: 'reason', header: 'Reason' },
+        { key: 'date', header: 'Date' },
+        { key: 'responsibleUser', header: 'Responsible User' },
+        { key: 'approvedBy', header: 'Approved By' },
+      ],
+      viewTo: '/stock/removed',
+    },
+    {
+      id: 'valuation',
+      title: 'Stock Valuation Report',
+      description: 'Current quantity, unit price, and total value per item.',
+      data: filteredItems,
+      columns: [
+        { key: 'name', header: 'Item' },
+        { key: 'category', header: 'Category' },
+        { key: 'quantity', header: 'Quantity' },
+        { header: 'Unit Price (RWF)', value: (i) => i.unitPrice || 0 },
+        { header: 'Total Value (RWF)', value: (i) => Math.round(i.value || 0) },
+      ],
+      viewTo: '/stock/items',
+    },
+    {
+      id: 'transactions',
+      title: 'Transaction Report',
+      description: 'Full chronological log of every stock-changing action.',
+      data: filteredTx,
+      columns: [
+        { key: 'date', header: 'Date' },
+        { key: 'itemName', header: 'Item' },
+        { key: 'type', header: 'Type' },
+        { key: 'quantity', header: 'Quantity' },
+        { key: 'responsibleUser', header: 'Responsible User' },
+        { key: 'party', header: 'Source / Destination' },
+      ],
+      viewTo: '/stock/transactions',
+    },
+  ];
+
+  const handleExport = (report) => {
+    exportToCSV(`stock-${report.id}`, report.columns, report.data);
+    showToast(`${report.title} downloaded as CSV.`, 'success');
+  };
+
+  const handlePrint = (report) => {
+    const ok = printReport(report.title, report.columns, report.data);
+    if (!ok) showToast('Enable pop-ups to print this report.', 'error');
   };
 
   return (
     <div>
       <PageHeader
         title="Stock Reports"
-        description="Received, issued, balances, and category breakdowns."
+        description="Every inventory and movement report, ready to view, print, or export."
         breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Reports' }]}
-        actions={<Button variant="secondary" icon={Download} onClick={handleExport}>Export</Button>}
       />
 
       <div className="flex flex-wrap gap-3 mb-5">
-        <FilterDropdown label="Date Range" value={range} onChange={setRange} options={[{ value: 'month', label: 'This Month' }, { value: 'term', label: 'This Term' }, { value: 'year', label: 'This Year' }]} />
         <FilterDropdown label="All Categories" value={category} onChange={setCategory} options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))} />
       </div>
 
@@ -81,12 +235,12 @@ export default function StockReports() {
           <p className="font-display text-2xl font-semibold text-[var(--color-status-amber)] mt-1">−{issued}</p>
         </div>
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
-          <p className="text-sm text-[var(--color-mid-gray)]">Items Tracked</p>
-          <p className="font-display text-2xl font-semibold text-[var(--color-dark-gray)] mt-1">{filteredItems.length}</p>
+          <p className="text-sm text-[var(--color-mid-gray)]">Total Stock Value</p>
+          <p className="font-display text-2xl font-semibold text-[var(--color-dark-gray)] mt-1">{formatRWF(totalValue)}</p>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5 mb-5">
+      <div className="grid lg:grid-cols-2 gap-5 mb-6">
         <ChartCard title="Current Balances by Category" description="Foods vs. Electronic Devices">
           <ResponsiveContainer width="100%" height={240}>
             <PieChart>
@@ -112,35 +266,27 @@ export default function StockReports() {
         </ChartCard>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5 mb-5">
-        <ChartCard title="Low Stock Items" description="Current items at or below minimum level">
-          {lowStock.length === 0 ? (
-            <p className="text-sm text-[var(--color-mid-gray)] py-4">No items currently below minimum level.</p>
-          ) : (
-            <ul className="divide-y divide-[var(--color-border-gray)]">
-              {lowStock.map((i) => (
-                <li key={i.id} className="flex items-center justify-between py-2.5 text-sm">
-                  <span className="text-[var(--color-dark-gray)]">{i.name}</span>
-                  <div className="flex items-center gap-2">
-                    <StatusBadge status="low-stock" />
-                    <IconButton icon={Eye} label={`View ${i.name}`} onClick={() => navigate(`/stock/items/${i.id}`)} />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </ChartCard>
-
-        <ChartCard title="Least Used Items" description="Bottom items by total quantity issued">
-          <ul className="divide-y divide-[var(--color-border-gray)]">
-            {leastUsed.map((i) => (
-              <li key={i.id} className="flex items-center justify-between py-2.5 text-sm">
-                <span className="text-[var(--color-dark-gray)]">{i.name}</span>
-                <span className="font-semibold text-[var(--color-gold)]">{i.used} used</span>
-              </li>
-            ))}
-          </ul>
-        </ChartCard>
+      <h2 className="font-display text-base font-semibold text-[var(--color-heading)] mb-3">All Reports</h2>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {REPORTS.map((report) => (
+          <div key={report.id} className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5 flex flex-col">
+            <div className="flex items-start gap-3 mb-2">
+              <span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--color-light-green-100)] text-[var(--color-medium-green)] flex-shrink-0">
+                <FileBarChart className="w-4.5 h-4.5" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="font-display font-semibold text-[var(--color-dark-gray)]">{report.title}</p>
+                <p className="text-xs text-[var(--color-mid-gray)] mt-0.5">{report.data.length} record{report.data.length === 1 ? '' : 's'}</p>
+              </div>
+            </div>
+            <p className="text-sm text-[var(--color-mid-gray)] mb-4 flex-1">{report.description}</p>
+            <div className="flex items-center gap-1.5">
+              <Button size="sm" variant="secondary" icon={Eye} onClick={() => navigate(report.viewTo)}>View</Button>
+              <IconButton icon={Printer} label={`Print ${report.title}`} onClick={() => handlePrint(report)} />
+              <IconButton icon={Download} label={`Export ${report.title} as CSV`} onClick={() => handleExport(report)} />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

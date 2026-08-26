@@ -17,13 +17,12 @@ export default function ContactSettingsPanel() {
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
-    setTimeout(() => {
-      updateContactSettings(form, user?.fullName || 'System Administrator');
-      setSaving(false);
-      showToast('Contact page details updated successfully.', 'success');
-    }, 300);
+    const result = await updateContactSettings(form, user?.fullName || 'System Administrator');
+    if (result.success) showToast('Contact page details updated successfully.', 'success');
+    else showToast(result.error, 'error');
+    setSaving(false);
   };
 
   return (

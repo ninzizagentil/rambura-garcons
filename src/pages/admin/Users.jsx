@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { UserPlus, Eye, Pencil, UserX, UserCheck } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable from '../../components/tables/DataTable';
@@ -15,7 +15,8 @@ import UserFormModal from './UserFormModal';
 
 export default function Users() {
   const { showToast } = useToast();
-  const [users, setUsers] = useState(getUsers());
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -23,7 +24,8 @@ export default function Users() {
   const [editingUser, setEditingUser] = useState(null);
   const [confirmTarget, setConfirmTarget] = useState(null);
 
-  const refresh = () => setUsers(getUsers());
+  const refresh = async () => { setLoading(true); try { setUsers(await getUsers()); } finally { setLoading(false); } };
+  useEffect(() => { refresh(); }, []);
 
   const filtered = useMemo(() => {
     return users.filter((u) => {
@@ -41,8 +43,7 @@ export default function Users() {
   const handleToggleStatus = () => {
     if (!confirmTarget) return;
     const newStatus = confirmTarget.status === 'active' ? 'inactive' : 'active';
-    setUserStatus(confirmTarget.id, newStatus);
-    refresh();
+    setUserStatus(confirmTarget.id, newStatus).then((result) => { if (!result.success) showToast(result.error, 'error'); return refresh(); });
     showToast(`${confirmTarget.fullName} was ${newStatus === 'active' ? 'reactivated' : 'deactivated'}.`, 'success');
     setConfirmTarget(null);
   };

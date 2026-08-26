@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Eye, Pencil, BookMarked } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
@@ -11,20 +11,26 @@ import { EmptyState } from '../../components/feedback/States';
 import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
-import { getBooks } from '../../services/bookService';
+import { getBooks, refreshLibrary } from '../../services/bookService';
 import { BOOK_CATEGORIES } from '../../data/library';
 import BookFormModal from './BookFormModal';
 
 export default function Books() {
   const navigate = useNavigate();
   const { viewOnly } = useModuleAccess(ROLES.LIBRARIAN);
-  const [books, setBooks] = useState(getBooks());
+  const [books, setBooks] = useState(() => getBooks());
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [availabilityFilter, setAvailabilityFilter] = useState('');
   const [formOpen, setFormOpen] = useState(false);
 
-  const refresh = () => setBooks(getBooks());
+  const refresh = () => setBooks([...getBooks()]);
+  useEffect(() => {
+    const handleUpdate = () => refresh();
+    window.addEventListener('rg:library-updated', handleUpdate);
+    refreshLibrary().catch(() => {});
+    return () => window.removeEventListener('rg:library-updated', handleUpdate);
+  }, []);
 
   const filtered = useMemo(() => {
     return books.filter((b) => {

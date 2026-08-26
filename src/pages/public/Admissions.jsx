@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CheckCircle2, FileText, CalendarDays, ListChecks, Phone, User, Mail, GraduationCap, Send } from 'lucide-react';
 import { Input, Select, Textarea } from '../../components/forms/FormField';
 import { FormSection } from '../../components/cards/InsightChartCards';
@@ -6,15 +6,25 @@ import Button from '../../components/common/Button';
 import PageHero from '../../components/common/PageHero';
 import { getPrograms, getAdmissionsInfo } from '../../services/contentService';
 import { getSiteImage } from '../../services/imageService';
+import { submitApplication } from '../../services/applicationService';
 
 const REQUIRED_FIELDS = ['fullName', 'email', 'phone', 'program'];
 
 export default function Admissions() {
-  const programs = getPrograms();
-  const info = getAdmissionsInfo();
+  const [programs, setPrograms] = useState([]);
+  const [info, setInfo] = useState({ intro: '', requirements: [], dates: [], process: '', contactLine: '' });
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', program: '', message: '' });
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [serverError, setServerError] = useState('');
+
+  useEffect(() => {
+    Promise.all([getPrograms(), getAdmissionsInfo()]).then(([nextPrograms, nextInfo]) => {
+      setPrograms(nextPrograms);
+      setInfo(nextInfo);
+    }).catch((error) => setServerError(error.message));
+  }, []);
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -28,9 +38,20 @@ export default function Admissions() {
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) setSubmitted(true);
+    if (!validate()) return;
+    const program = programs.find((p) => p.slug === form.program);
+    setSaving(true);
+    setServerError('');
+    try {
+      await submitApplication({ ...form, programLabel: program?.title });
+      setSubmitted(true);
+    } catch (error) {
+      setServerError(error.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -90,6 +111,7 @@ export default function Admissions() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} noValidate className="space-y-5">
+              {serverError && <p className="text-sm text-red-200">{serverError}</p>}
               <div>
                 <h2 className="font-display text-xl font-semibold text-white">Application Form</h2>
                 <span className="block w-10 h-1 rounded-full bg-[var(--color-gold)] mt-2" aria-hidden="true" />
@@ -111,7 +133,7 @@ export default function Admissions() {
               </FormSection>
               <Textarea dark label="Message (optional)" value={form.message} onChange={update('message')} placeholder="Anything else we should know?" />
               <div className="flex items-center gap-5 pt-1">
-                <Button type="submit" variant="gold" className="flex-1" icon={Send} iconPosition="right">Submit Application</Button>
+                <Button type="submit" variant="gold" className="flex-1" icon={Send} iconPosition="right" loading={saving} disabled={saving}>Submit Application</Button>
                 <button
                   type="button"
                   className="text-sm font-medium text-white/70 hover:text-white transition-colors"

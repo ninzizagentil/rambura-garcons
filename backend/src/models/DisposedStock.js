@@ -1,0 +1,3 @@
+import mongoose from 'mongoose';
+const schema = new mongoose.Schema({ itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'StockItem', required: true }, itemName: String, quantityRemoved: { type: Number, min: 1, required: true }, remainingQuantity: { type: Number, min: 0, required: true }, reason: { type: String, enum: ['Damaged', 'Expired', 'Lost', 'Broken', 'Obsolete', 'Other'], required: true }, date: { type: Date, default: Date.now }, responsibleUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, notes: String }, { timestamps: true });
+export default mongoose.model('DisposedStock', schema);

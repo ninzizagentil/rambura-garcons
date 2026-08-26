@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { authenticate, authorize } from '../middleware/auth.js';
+import { asyncHandler } from '../utils/api.js';
+import { publicList, publicDetail, adminList, adminCreate, adminUpdate, adminDelete, publishNews, getSettings, updateSettings, getHero, updateHero } from '../controllers/contentController.js';
+import { submit, getApplications, getApplication, updateStatus, remove } from '../controllers/admissionController.js';
+const publicRouter = Router();
+publicRouter.post('/applications', asyncHandler(submit)); publicRouter.get('/settings', asyncHandler(getSettings)); publicRouter.get('/home', asyncHandler(getHero)); publicRouter.get('/:resource/:slug', asyncHandler(publicDetail)); publicRouter.get('/:resource', asyncHandler(publicList));
+const adminRouter = Router(); adminRouter.use(authenticate, authorize('admin')); adminRouter.get('/settings', asyncHandler(getSettings)); adminRouter.put('/settings', asyncHandler(updateSettings)); adminRouter.get('/website/hero', asyncHandler(getHero)); adminRouter.put('/website/hero', asyncHandler(updateHero)); adminRouter.post('/news/:id/publish', asyncHandler((req, res) => publishNews({ ...req, body: { ...req.body, published: true } }, res))); adminRouter.post('/news/:id/unpublish', asyncHandler((req, res) => publishNews({ ...req, body: { ...req.body, published: false } }, res))); adminRouter.get('/:resource', asyncHandler(adminList)); adminRouter.post('/:resource', asyncHandler(adminCreate)); adminRouter.put('/:resource/:id', asyncHandler(adminUpdate)); adminRouter.delete('/:resource/:id', asyncHandler(adminDelete));
+const applicationRouter = Router(); applicationRouter.use(authenticate, authorize('admin', 'management')); applicationRouter.get('/', asyncHandler(getApplications)); applicationRouter.get('/:id', asyncHandler(getApplication)); applicationRouter.patch('/:id/status', asyncHandler(updateStatus)); applicationRouter.delete('/:id', asyncHandler(remove));
+export { publicRouter, adminRouter, applicationRouter };

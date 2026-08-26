@@ -49,8 +49,15 @@ import StockItems from './pages/stock/StockItems';
 import StockItemDetails from './pages/stock/StockItemDetails';
 import StockIn from './pages/stock/StockIn';
 import StockOut from './pages/stock/StockOut';
+import StockAdjustment from './pages/stock/StockAdjustment';
+import StockTransfer from './pages/stock/StockTransfer';
+import Suppliers from './pages/stock/Suppliers';
 import Transactions from './pages/stock/Transactions';
 import LowStock from './pages/stock/LowStock';
+import OutOfStock from './pages/stock/OutOfStock';
+import DamagedItems from './pages/stock/DamagedItems';
+import ExpiredItems from './pages/stock/ExpiredItems';
+import RemovedDisposed from './pages/stock/RemovedDisposed';
 import UsageAnalytics from './pages/stock/UsageAnalytics';
 import StockReports from './pages/stock/StockReports';
 
@@ -58,6 +65,7 @@ import StockReports from './pages/stock/StockReports';
 import ManagementLibraryReports from './pages/management/LibraryReports';
 import ManagementStockReports from './pages/management/StockReports';
 import ManagementInsights from './pages/management/ManagementInsights';
+import ManagementApplications from './pages/management/Applications';
 
 // Shared
 import Notifications from './pages/shared/Notifications';
@@ -129,10 +137,17 @@ export default function App() {
           <Route path="/stock" element={<StockDashboard />} />
           <Route path="/stock/items" element={<StockItems />} />
           <Route path="/stock/items/:id" element={<StockItemDetails />} />
+          <Route path="/stock/low-stock" element={<LowStock />} />
+          <Route path="/stock/out-of-stock" element={<OutOfStock />} />
+          <Route path="/stock/damaged" element={<DamagedItems />} />
+          <Route path="/stock/expired" element={<ExpiredItems />} />
+          <Route path="/stock/removed" element={<RemovedDisposed />} />
           <Route path="/stock/stock-in" element={<StockIn />} />
           <Route path="/stock/stock-out" element={<StockOut />} />
+          <Route path="/stock/adjustment" element={<StockAdjustment />} />
+          <Route path="/stock/transfer" element={<StockTransfer />} />
+          <Route path="/stock/suppliers" element={<Suppliers />} />
           <Route path="/stock/transactions" element={<Transactions />} />
-          <Route path="/stock/low-stock" element={<LowStock />} />
           <Route path="/stock/analytics" element={<UsageAnalytics />} />
           <Route path="/stock/reports" element={<StockReports />} />
         </Route>
@@ -142,6 +157,7 @@ export default function App() {
       <Route element={<RoleProtectedRoute allow={[ROLES.MANAGEMENT, ROLES.ADMIN]} />}>
         <Route element={<DashboardLayout />}>
           <Route path="/management" element={<ManagementDashboard />} />
+          <Route path="/management/applications" element={<ManagementApplications />} />
           <Route path="/management/library-reports" element={<ManagementLibraryReports />} />
           <Route path="/management/stock-reports" element={<ManagementStockReports />} />
           <Route path="/management/insights" element={<ManagementInsights />} />

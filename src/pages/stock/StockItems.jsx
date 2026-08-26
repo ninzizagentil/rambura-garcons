@@ -202,14 +202,13 @@ export default function StockItems() {
     showToast('Stock items exported.', 'success');
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    setTimeout(() => {
-      const result = deleteItem(deleteTarget.id);
-      setDeleting(false);
-      setDeleteTarget(null);
-      if (result.success) {
+    const result = await deleteItem(deleteTarget.id);
+    setDeleting(false);
+    setDeleteTarget(null);
+    if (result.success) {
         showToast(`${deleteTarget.name} removed from stock.`, 'success');
         refresh();
         setSelectedKeys((prev) => {
@@ -217,10 +216,9 @@ export default function StockItems() {
           next.delete(deleteTarget.id);
           return next;
         });
-      } else {
-        showToast(result.error, 'error');
-      }
-    }, 350);
+    } else {
+      showToast(result.error, 'error');
+    }
   };
 
   const columns = [

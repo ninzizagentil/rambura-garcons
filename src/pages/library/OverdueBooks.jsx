@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { RotateCcw, Bell } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable from '../../components/tables/DataTable';
@@ -10,7 +10,7 @@ import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import { useToast } from '../../context/ToastContext';
-import { getLoans, returnBook, daysOverdue } from '../../services/bookService';
+import { getLoans, refreshLibrary, returnBook, daysOverdue } from '../../services/bookService';
 
 export default function OverdueBooks() {
   const { showToast } = useToast();
@@ -20,13 +20,19 @@ export default function OverdueBooks() {
   const [processing, setProcessing] = useState(false);
 
   const refresh = () => setLoans(getLoans().filter((l) => l.status !== 'returned' && daysOverdue(l.dueDate) > 0));
+  useEffect(() => {
+    window.addEventListener('rg:library-updated', refresh);
+    refreshLibrary().catch(() => {});
+    return () => window.removeEventListener('rg:library-updated', refresh);
+  }, []);
 
   const handleReturn = () => {
     if (!confirmLoan) return;
     setProcessing(true);
-    setTimeout(() => {
-      returnBook(confirmLoan.id);
+    setTimeout(async () => {
+      const result = await returnBook(confirmLoan.id);
       setProcessing(false);
+      if (!result.success) { showToast(result.error, 'error'); return; }
       showToast(`"${confirmLoan.bookTitle}" returned successfully.`, 'success');
       refresh();
       setConfirmLoan(null);

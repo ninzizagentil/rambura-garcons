@@ -8,6 +8,9 @@ export function Badge({ children, tone = 'neutral', className = '' }) {
     amber: 'bg-[var(--color-status-amber-bg)] text-[var(--color-status-amber)]',
     blue: 'bg-[var(--color-status-blue-bg)] text-[var(--color-status-blue)]',
     gold: 'bg-[var(--color-gold-100)] text-[var(--color-gold)]',
+    orange: 'bg-[var(--color-status-orange-bg)] text-[var(--color-status-orange)]',
+    purple: 'bg-[var(--color-status-purple-bg)] text-[var(--color-status-purple)]',
+    gray: 'bg-[var(--color-status-gray-bg)] text-[var(--color-status-gray)]',
   };
   return (
     <span
@@ -37,6 +40,13 @@ const STATUS_MAP = {
   pending: { tone: 'amber', label: 'Pending' },
   returned: { tone: 'green', label: 'Returned' },
   suspended: { tone: 'red', label: 'Suspended' },
+  damaged: { tone: 'orange', label: 'Damaged' },
+  expired: { tone: 'purple', label: 'Expired' },
+  'expiring-soon': { tone: 'amber', label: 'Expiring Soon' },
+  valid: { tone: 'green', label: 'Valid' },
+  removed: { tone: 'gray', label: 'Removed' },
+  disposed: { tone: 'gray', label: 'Disposed' },
+  reported: { tone: 'orange', label: 'Reported' },
 };
 
 export function StatusBadge({ status, label, className = '' }) {
@@ -50,6 +60,9 @@ export function StatusBadge({ status, label, className = '' }) {
           config.tone === 'red' && 'bg-[var(--color-status-red)]',
           config.tone === 'amber' && 'bg-[var(--color-status-amber)]',
           config.tone === 'blue' && 'bg-[var(--color-status-blue)]',
+          config.tone === 'orange' && 'bg-[var(--color-status-orange)]',
+          config.tone === 'purple' && 'bg-[var(--color-status-purple)]',
+          config.tone === 'gray' && 'bg-[var(--color-status-gray)]',
           config.tone === 'neutral' && 'bg-[var(--color-mid-gray)]'
         )}
         aria-hidden="true"

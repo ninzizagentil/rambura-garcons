@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { DEMO_USERS } from '../data/users';
+import { api, clearTokens } from '../services/api';
+import { getSession, hasPermission as canPermission, login as authenticate, logout as endSession } from '../services/authService';
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = 'rg_auth_session';
@@ -9,36 +10,24 @@ export function AuthProvider({ children }) {
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setUser(JSON.parse(raw));
-    } catch {
-      localStorage.removeItem(STORAGE_KEY);
-    } finally {
-      setInitializing(false);
-    }
+    getSession().then(setUser).finally(() => setInitializing(false));
+    const handleExpired = () => { setUser(null); clearTokens(); localStorage.removeItem(STORAGE_KEY); };
+    window.addEventListener('rg:session-expired', handleExpired);
+    return () => window.removeEventListener('rg:session-expired', handleExpired);
   }, []);
 
-  const login = useCallback(({ identifier, password }) => {
-    const found = DEMO_USERS.find(
-      (u) => (u.username === identifier || u.email === identifier) && u.password === password
-    );
-    if (!found) {
-      return { success: false, error: 'Invalid username/email or password.' };
+  const login = useCallback(async ({ identifier, password }) => {
+    const result = await authenticate({ identifier, password });
+    if (result.success) {
+      setUser(result.user);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(result.user));
     }
-    if (found.status !== 'active') {
-      return { success: false, error: 'This account has been deactivated. Contact the administrator.' };
-    }
-    // eslint-disable-next-line no-unused-vars
-    const { password: _pw, ...safeUser } = found;
-    setUser(safeUser);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(safeUser));
-    return { success: true, user: safeUser };
+    return result;
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await endSession();
     setUser(null);
-    localStorage.removeItem(STORAGE_KEY);
   }, []);
 
   const hasRole = useCallback((...roles) => !!user && roles.includes(user.role), [user]);
@@ -47,25 +36,16 @@ export function AuthProvider({ children }) {
   // Demo/local-only persistence today (localStorage), same shape a real
   // PATCH /users/:id/avatar call would return, so swapping in a real API
   // later only means changing this function's body.
-  const updateAvatar = useCallback((avatarDataUrl) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      const next = { ...prev, avatar: avatarDataUrl };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
+  const updateAvatar = useCallback(async (avatarDataUrl) => {
+    const result = await api.patch('/auth/avatar', { profileImage: avatarDataUrl ? { imageUrl: avatarDataUrl } : null });
+    setUser(result.data);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(result.data));
+    return result.data;
   }, []);
 
   // Placeholder permission model: role-based for now, structured so a real
   // permission matrix (per Roles & Permissions admin screen) can slot in later.
-  const hasPermission = useCallback(
-    (_permission) => {
-      if (!user) return false;
-      if (user.role === 'admin') return true;
-      return true; // demo: role-level access covers current module scope
-    },
-    [user]
-  );
+  const hasPermission = useCallback((permission) => canPermission(user, permission), [user]);
 
   const value = {
     user,

@@ -1,49 +1,16 @@
-import { getBooks, getLoans, daysOverdue } from './bookService';
-import { getItems, getTransactions, getLowStockItems, getUsageByItem } from './stockService';
+import { api } from './api';
 
-export function getCirculationSummary() {
-  const books = getBooks();
-  const totalCopies = books.reduce((s, b) => s + b.copies, 0);
-  const borrowedCopies = books.reduce((s, b) => s + b.borrowedCopies, 0);
-  const availableCopies = totalCopies - borrowedCopies;
-  return { totalBooks: books.length, totalCopies, borrowedCopies, availableCopies };
-}
+export async function getCirculationSummary() { const result = await api.get('/reports/library/summary'); return result.data; }
+export async function getOverdueSummary() { const result = await api.get('/reports/library/overdue'); return result.data; }
+export async function getMostBorrowedBooks(limit = 5) { const result = await api.get('/reports/library/summary'); return (result.data.mostBorrowedBooks || []).slice(0, limit); }
+export async function getStockBalanceSummary() { const result = await api.get('/stock/dashboard'); return result.data; }
+export async function getStockUsageSummary(limit = 5) { const result = await api.get('/reports/stock/analytics', { days: 30 }); return { mostUsed: (result.data.mostUsedItems || []).slice(0, limit), leastUsed: (result.data.leastUsedItems || []).slice(0, limit), ...result.data }; }
 
-export function getOverdueSummary() {
-  const loans = getLoans();
-  return loans.filter((l) => l.status !== 'returned' && daysOverdue(l.dueDate) > 0);
-}
-
-export function getMostBorrowedBooks(limit = 5) {
-  return [...getBooks()].sort((a, b) => b.borrowedCopies - a.borrowedCopies).slice(0, limit);
-}
-
-export function getStockBalanceSummary() {
-  const items = getItems();
-  const transactions = getTransactions();
-  return {
-    totalItems: items.length,
-    received: transactions.filter((t) => t.type === 'in').reduce((s, t) => s + t.quantity, 0),
-    issued: transactions.filter((t) => t.type === 'out').reduce((s, t) => s + t.quantity, 0),
-    lowStockCount: getLowStockItems().length,
-  };
-}
-
-export function getStockUsageSummary(limit = 5) {
-  const usage = getUsageByItem();
-  return {
-    mostUsed: usage.slice(0, limit),
-    leastUsed: [...usage].sort((a, b) => a.used - b.used).slice(0, limit),
-  };
-}
-
-/**
- * Demo export — in a real backend this would trigger a file download or
- * server-generated report (CSV/PDF). For now it just resolves so the UI can
- * show a success toast; swap the body for a real fetch() once an API exists.
- */
-export function exportReport(reportName) {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve({ success: true, reportName }), 400);
-  });
+export async function exportReport(reportName, format = 'csv') {
+  const path = reportName.toLowerCase().includes('library') ? '/reports/library/circulation' : '/reports/stock/inventory';
+  const response = await fetch(`${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '')}${path}?format=${format}`, { headers: { Authorization: `Bearer ${localStorage.getItem('rg_access_token') || ''}` } });
+  if (!response.ok) throw new Error('Report download failed');
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `${reportName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${format}`; link.click(); URL.revokeObjectURL(url);
+  return { success: true, reportName };
 }

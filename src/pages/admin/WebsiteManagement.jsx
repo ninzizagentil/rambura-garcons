@@ -327,10 +327,10 @@ function SiteImagesPanel({ user, notify, notifyError, bumpActivity }) {
   const refresh = () => setSlots(getSiteImageSlots());
   const draftFor = (path, fallback) => (drafts[path] ?? fallback);
 
-  const handleSave = (path) => {
+  const handleSave = async (path) => {
     const url = drafts[path];
     setSavingPath(path);
-    const result = updateSiteImage(path, url, user);
+    const result = await updateSiteImage(path, url, user);
     setSavingPath(null);
     if (result.success) {
       refresh();
@@ -342,8 +342,9 @@ function SiteImagesPanel({ user, notify, notifyError, bumpActivity }) {
     }
   };
 
-  const handleReset = (path) => {
-    resetSiteImage(path, user);
+  const handleReset = async (path) => {
+    const result = await resetSiteImage(path, user);
+    if (!result.success) { notifyError(result.error); return; }
     refresh();
     setDrafts((d) => { const next = { ...d }; delete next[path]; return next; });
     notify('Image reset to the default photo.');
@@ -444,10 +445,10 @@ export default function WebsiteManagement() {
   const notifyError = (msg) => showToast(msg, 'error');
 
   /* ── Home Hero ───────────────────────────────────────────────────── */
-  const saveHero = (e) => {
+  const saveHero = async (e) => {
     e.preventDefault();
     setSavingSingle(true);
-    const result = updateHero(heroForm, user);
+    const result = await updateHero(heroForm, user);
     setSavingSingle(false);
     if (result.success) {
       setHeroForm(result.hero);
@@ -474,22 +475,23 @@ export default function WebsiteManagement() {
   ];
   const openAddProgram = () => setFormModal({ open: true, mode: 'add', item: {} });
   const openEditProgram = (p) => setFormModal({ open: true, mode: 'edit', item: p });
-  const submitProgram = (values) => {
+  const submitProgram = async (values) => {
     const result = formModal.mode === 'add'
       ? createProgram(values, user)
-      : updateProgram(formModal.item.slug, values, user);
-    if (result.success) {
+      : updateProgram(formModal.item.id, values, user);
+    const resolved = await result;
+    if (resolved.success) {
       setPrograms(getPrograms());
       setFormModal({ open: false, mode: 'add', item: null });
       notify(formModal.mode === 'add' ? 'Program added.' : 'Program updated.');
       bumpActivity();
     } else {
-      notifyError(result.error);
+      notifyError(resolved.error);
     }
-    return result;
+    return resolved;
   };
-  const confirmDeleteProgram = () => {
-    deleteProgram(deleteTarget.slug, user);
+  const confirmDeleteProgram = async () => {
+    await deleteProgram(deleteTarget.id, user);
     setPrograms(getPrograms());
     setDeleteTarget(null);
     notify('Program deleted.');
@@ -505,23 +507,24 @@ export default function WebsiteManagement() {
   ];
   const openAddDepartment = () => setFormModal({ open: true, mode: 'add', item: {} });
   const openEditDepartment = (d) => setFormModal({ open: true, mode: 'edit', item: d });
-  const submitDepartment = (values) => {
+  const submitDepartment = async (values) => {
     const payload = { ...values, staffCount: Number(values.staffCount) || 0 };
     const result = formModal.mode === 'add'
       ? createDepartment(payload, user)
-      : updateDepartment(formModal.item.slug, payload, user);
-    if (result.success) {
+      : updateDepartment(formModal.item.id, payload, user);
+    const resolved = await result;
+    if (resolved.success) {
       setDepartments(getDepartments());
       setFormModal({ open: false, mode: 'add', item: null });
       notify(formModal.mode === 'add' ? 'Department added.' : 'Department updated.');
       bumpActivity();
     } else {
-      notifyError(result.error);
+      notifyError(resolved.error);
     }
-    return result;
+    return resolved;
   };
-  const confirmDeleteDepartment = () => {
-    deleteDepartment(deleteTarget.slug, user);
+  const confirmDeleteDepartment = async () => {
+    await deleteDepartment(deleteTarget.id, user);
     setDepartments(getDepartments());
     setDeleteTarget(null);
     notify('Department deleted.');
@@ -538,22 +541,23 @@ export default function WebsiteManagement() {
   ];
   const openAddStaff = () => setFormModal({ open: true, mode: 'add', item: {} });
   const openEditStaff = (s) => setFormModal({ open: true, mode: 'edit', item: s });
-  const submitStaff = (values) => {
+  const submitStaff = async (values) => {
     const result = formModal.mode === 'add'
       ? createStaffMember(values, user)
       : updateStaffMember(formModal.item.id, values, user);
-    if (result.success) {
+    const resolved = await result;
+    if (resolved.success) {
       setStaff(getStaff());
       setFormModal({ open: false, mode: 'add', item: null });
       notify(formModal.mode === 'add' ? 'Staff member added.' : 'Staff member updated.');
       bumpActivity();
     } else {
-      notifyError(result.error);
+      notifyError(resolved.error);
     }
-    return result;
+    return resolved;
   };
-  const confirmDeleteStaff = () => {
-    deleteStaffMember(deleteTarget.id, user);
+  const confirmDeleteStaff = async () => {
+    await deleteStaffMember(deleteTarget.id, user);
     setStaff(getStaff());
     setDeleteTarget(null);
     notify('Staff member removed.');
@@ -570,22 +574,23 @@ export default function WebsiteManagement() {
   ];
   const openAddNews = () => setFormModal({ open: true, mode: 'add', item: {} });
   const openEditNews = (n) => setFormModal({ open: true, mode: 'edit', item: n });
-  const submitNews = (values) => {
+  const submitNews = async (values) => {
     const result = formModal.mode === 'add'
       ? createNewsArticle(values, user)
-      : updateNewsArticle(formModal.item.slug, values, user);
-    if (result.success) {
+      : updateNewsArticle(formModal.item.id, values, user);
+    const resolved = await result;
+    if (resolved.success) {
       setNews(getNews());
       setFormModal({ open: false, mode: 'add', item: null });
       notify(formModal.mode === 'add' ? 'Article published.' : 'Article updated.');
       bumpActivity();
     } else {
-      notifyError(result.error);
+      notifyError(resolved.error);
     }
-    return result;
+    return resolved;
   };
-  const confirmDeleteNews = () => {
-    deleteNewsArticle(deleteTarget.slug, user);
+  const confirmDeleteNews = async () => {
+    await deleteNewsArticle(deleteTarget.id, user);
     setNews(getNews());
     setDeleteTarget(null);
     notify('Article deleted.');
@@ -599,22 +604,23 @@ export default function WebsiteManagement() {
   ];
   const openAddGallery = () => setFormModal({ open: true, mode: 'add', item: {} });
   const openEditGallery = (g) => setFormModal({ open: true, mode: 'edit', item: g });
-  const submitGallery = (values) => {
+  const submitGallery = async (values) => {
     const result = formModal.mode === 'add'
       ? createGalleryImage(values, user)
       : updateGalleryImage(formModal.item.id, values, user);
-    if (result.success) {
+    const resolved = await result;
+    if (resolved.success) {
       setGallery(getGallery());
       setFormModal({ open: false, mode: 'add', item: null });
       notify(formModal.mode === 'add' ? 'Image added.' : 'Caption updated.');
       bumpActivity();
     } else {
-      notifyError(result.error);
+      notifyError(resolved.error);
     }
-    return result;
+    return resolved;
   };
-  const confirmDeleteGallery = () => {
-    deleteGalleryImage(deleteTarget.id, user);
+  const confirmDeleteGallery = async () => {
+    await deleteGalleryImage(deleteTarget.id, user);
     setGallery(getGallery());
     setDeleteTarget(null);
     notify('Image deleted.');

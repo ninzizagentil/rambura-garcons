@@ -1,104 +1,56 @@
-import { SEED_BOOKS, SEED_LOANS } from '../data/library';
-import { loadCollection, saveCollection, genId } from '../utils/storage';
+import { api } from './api';
 
-const BOOKS_KEY = 'rg_books';
-const LOANS_KEY = 'rg_loans';
+let books = [];
+let loans = [];
+let loaded = false;
+let loading;
 
-function withAvailability(book) {
-  return { ...book, availableCopies: book.totalCopies - book.borrowedCopies };
+function normalizeBook(book) {
+  return { ...book, id: book.id || book._id, availableCopies: book.availableCopies ?? (book.totalCopies - book.borrowedCopies) };
 }
 
-export function getBooks() {
-  return loadCollection(BOOKS_KEY, SEED_BOOKS).map(withAvailability);
+function normalizeLoan(loan) {
+  const value = { ...loan, id: loan.id || loan._id, bookId: loan.bookId?.id || loan.bookId?._id || loan.bookId };
+  value.bookTitle = value.bookTitle || loan.bookId?.title || '';
+  return value;
 }
 
-export function getBookById(id) {
-  return getBooks().find((b) => b.id === id) || null;
+export async function refreshLibrary() {
+  if (loading) return loading;
+  loading = Promise.all([api.get('/library/books', { limit: 100 }), api.get('/library/loans', { limit: 100 })])
+    .then(([bookResult, loanResult]) => {
+      books = bookResult.data.map(normalizeBook);
+      loans = loanResult.data.map(normalizeLoan);
+      loaded = true;
+      window.dispatchEvent(new Event('rg:library-updated'));
+      return { books, loans };
+    })
+    .finally(() => { loading = null; });
+  return loading;
 }
 
-export function createBook({ title, author, category, bookCode, description, totalCopies, coverImage }) {
-  const books = loadCollection(BOOKS_KEY, SEED_BOOKS);
-  const duplicate = books.some((b) => b.bookCode.toLowerCase() === bookCode.toLowerCase());
-  if (duplicate) return { success: false, error: 'A book with this Book Code / ISBN already exists.' };
+if (typeof window !== 'undefined') window.addEventListener('rg:authenticated', () => { refreshLibrary().catch(() => {}); });
 
-  const newBook = {
-    id: genId('b'),
-    title,
-    author,
-    category,
-    bookCode,
-    description,
-    coverImage: coverImage || '',
-    totalCopies: Number(totalCopies),
-    borrowedCopies: 0,
-  };
-  const next = [newBook, ...books];
-  saveCollection(BOOKS_KEY, next);
-  return { success: true, book: withAvailability(newBook) };
+export function getBooks() { return books; }
+export function getBookById(id) { return books.find((book) => book.id === id) || null; }
+export function getLoans() { return loans; }
+export function getLoansForBook(bookId) { return loans.filter((loan) => loan.bookId === bookId); }
+export function isLibraryLoaded() { return loaded; }
+
+export async function createBook(data) {
+  try { const result = await api.post('/library/books', data); await refreshLibrary(); return { success: true, book: normalizeBook(result.data) }; }
+  catch (error) { return { success: false, error: error.message }; }
 }
-
-export function updateBook(id, updates) {
-  const books = loadCollection(BOOKS_KEY, SEED_BOOKS);
-  const next = books.map((b) => (b.id === id ? { ...b, ...updates } : b));
-  saveCollection(BOOKS_KEY, next);
-  return { success: true };
+export async function updateBook(id, updates) {
+  try { await api.put(`/library/books/${id}`, updates); await refreshLibrary(); return { success: true }; }
+  catch (error) { return { success: false, error: error.message }; }
 }
-
-export function getLoans() {
-  return loadCollection(LOANS_KEY, SEED_LOANS);
+export async function borrowBook(data) {
+  try { const result = await api.post('/library/loans', data); await refreshLibrary(); return { success: true, loan: normalizeLoan(result.data) }; }
+  catch (error) { return { success: false, error: error.message }; }
 }
-
-export function getLoansForBook(bookId) {
-  return getLoans().filter((l) => l.bookId === bookId);
+export async function returnBook(id) {
+  try { await api.post(`/library/loans/${id}/return`, {}); await refreshLibrary(); return { success: true }; }
+  catch (error) { return { success: false, error: error.message }; }
 }
-
-export function borrowBook({ bookId, borrower, borrowerType, borrowDate, dueDate }) {
-  const books = loadCollection(BOOKS_KEY, SEED_BOOKS);
-  const book = books.find((b) => b.id === bookId);
-  if (!book) return { success: false, error: 'Book not found.' };
-  if (book.totalCopies - book.borrowedCopies <= 0) {
-    return { success: false, error: 'Insufficient availability — no copies left to borrow.' };
-  }
-
-  const updatedBooks = books.map((b) => (b.id === bookId ? { ...b, borrowedCopies: b.borrowedCopies + 1 } : b));
-  saveCollection(BOOKS_KEY, updatedBooks);
-
-  const loans = loadCollection(LOANS_KEY, SEED_LOANS);
-  const newLoan = {
-    id: genId('l'),
-    bookId,
-    bookTitle: book.title,
-    borrower,
-    borrowerType,
-    borrowDate,
-    dueDate,
-    returnDate: null,
-    status: 'borrowed',
-  };
-  saveCollection(LOANS_KEY, [newLoan, ...loans]);
-
-  return { success: true, loan: newLoan };
-}
-
-export function returnBook(loanId, { today = new Date().toISOString().slice(0, 10) } = {}) {
-  const loans = loadCollection(LOANS_KEY, SEED_LOANS);
-  const loan = loans.find((l) => l.id === loanId);
-  if (!loan) return { success: false, error: 'Loan not found.' };
-
-  const updatedLoans = loans.map((l) => (l.id === loanId ? { ...l, status: 'returned', returnDate: today } : l));
-  saveCollection(LOANS_KEY, updatedLoans);
-
-  const books = loadCollection(BOOKS_KEY, SEED_BOOKS);
-  const updatedBooks = books.map((b) =>
-    b.id === loan.bookId ? { ...b, borrowedCopies: Math.max(0, b.borrowedCopies - 1) } : b
-  );
-  saveCollection(BOOKS_KEY, updatedBooks);
-
-  return { success: true };
-}
-
-export function daysOverdue(dueDate, today = new Date('2026-08-18')) {
-  const due = new Date(dueDate);
-  const diff = Math.floor((today - due) / (1000 * 60 * 60 * 24));
-  return Math.max(0, diff);
-}
+export function daysOverdue(dueDate, today = new Date()) { return Math.max(0, Math.floor((new Date(today) - new Date(dueDate)) / 86400000)); }

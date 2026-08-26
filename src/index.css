@@ -26,6 +26,12 @@
   --color-status-green-bg: #E6F3EC;
   --color-status-blue: #2563EB;
   --color-status-blue-bg: #EAF1FE;
+  --color-status-orange: #C2410C;
+  --color-status-orange-bg: #FDEBE0;
+  --color-status-purple: #7C3AED;
+  --color-status-purple-bg: #F1E9FE;
+  --color-status-gray: #6B7280;
+  --color-status-gray-bg: #EEF1EF;
 
   /* Gold accent (heritage / achievement) — muted to sit alongside the flatter palette */
   --color-gold: #C08A2E;
@@ -117,6 +123,9 @@ body {
   --color-status-amber-bg: #362A11;
   --color-status-green-bg: #12321F;
   --color-status-blue-bg: #142236;
+  --color-status-orange-bg: #3A2311;
+  --color-status-purple-bg: #271A3D;
+  --color-status-gray-bg: var(--color-navy-800);
 
   --color-gold-100: #2E2412;
 

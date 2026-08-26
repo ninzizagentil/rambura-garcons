@@ -27,19 +27,17 @@ export default function AdmissionsSettingsPanel() {
   const addDate = () => setForm((f) => ({ ...f, dates: [...f.dates, { label: '', value: '' }] }));
   const removeDate = (i) => setForm((f) => ({ ...f, dates: f.dates.filter((_, idx) => idx !== i) }));
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
     const cleaned = {
       ...form,
       requirements: form.requirements.map((r) => r.trim()).filter(Boolean),
       dates: form.dates.filter((d) => d.label.trim() && d.value.trim()),
     };
-    setTimeout(() => {
-      updateAdmissionsSettings(cleaned, user?.fullName || 'System Administrator');
-      setForm(cleaned);
-      setSaving(false);
-      showToast('Admissions page content updated successfully.', 'success');
-    }, 300);
+    const result = await updateAdmissionsSettings(cleaned, user?.fullName || 'System Administrator');
+    if (result.success) { setForm(cleaned); showToast('Admissions page content updated successfully.', 'success'); }
+    else showToast(result.error, 'error');
+    setSaving(false);
   };
 
   return (

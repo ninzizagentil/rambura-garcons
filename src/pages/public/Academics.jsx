@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Clock, GraduationCap, ArrowRight, X } from 'lucide-react';
 import { getPrograms } from '../../services/contentService';
 import Modal from '../../components/modals/Modal';
@@ -8,7 +8,26 @@ import PageHero from '../../components/common/PageHero';
 
 export default function Academics() {
   const [selected, setSelected] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const programs = getPrograms();
+
+  // Deep link support: /academics?program=<slug> (used by the footer's
+  // Programs list) opens straight to that program's details modal.
+  useEffect(() => {
+    const slug = searchParams.get('program');
+    if (!slug) return;
+    const match = getPrograms().find((p) => p.slug === slug);
+    if (match) setSelected(match);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const closeModal = () => {
+    setSelected(null);
+    if (searchParams.get('program')) {
+      searchParams.delete('program');
+      setSearchParams(searchParams, { replace: true });
+    }
+  };
 
   return (
     <div>
@@ -56,7 +75,7 @@ export default function Academics() {
         </div>
       </section>
 
-      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.title} size="md">
+      <Modal open={!!selected} onClose={closeModal} title={selected?.title} size="md">
         {selected && (
           <div>
             <div className="flex items-center gap-4 text-xs text-[var(--color-mid-gray)] mb-4">
@@ -66,7 +85,7 @@ export default function Academics() {
             <p className="text-sm text-[var(--color-dark-gray)] leading-relaxed">{selected.details}</p>
             <div className="flex gap-3 mt-6">
               <Link to="/admissions"><Button variant="primary">Apply Now</Button></Link>
-              <Button variant="ghost" onClick={() => setSelected(null)} icon={X}>Close</Button>
+              <Button variant="ghost" onClick={closeModal} icon={X}>Close</Button>
             </div>
           </div>
         )}

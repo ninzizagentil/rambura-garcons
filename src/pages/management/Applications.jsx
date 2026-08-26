@@ -1,0 +1,212 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Download, Mail, Phone, GraduationCap, MessageSquare, X } from 'lucide-react';
+import PageHeader from '../../components/layout/PageHeader';
+import DataTable, { TablePagination } from '../../components/tables/DataTable';
+import { StatusBadge } from '../../components/common/Badge';
+import { SearchBar } from '../../components/common/SearchBar';
+import Button from '../../components/common/Button';
+import Modal from '../../components/modals/Modal';
+import StatCard from '../../components/cards/StatCard';
+import { EmptyState } from '../../components/feedback/States';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
+import { getApplications, updateApplicationStatus } from '../../services/applicationService';
+import { exportToCSV } from '../../utils/export';
+
+const STATUS_OPTIONS = ['new', 'reviewed', 'accepted', 'declined'];
+
+export default function ManagementApplications() {
+  const { user } = useAuth();
+  const { showToast } = useToast();
+
+  const [applications, setApplications] = useState([]);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [selected, setSelected] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = async () => {
+    setLoading(true);
+    try { setApplications(await getApplications()); } finally { setLoading(false); }
+  };
+
+  useEffect(() => { refresh(); }, []);
+
+  const filtered = useMemo(() => {
+    if (!search) return applications;
+    const q = search.toLowerCase();
+    return applications.filter(
+      (a) =>
+        a.fullName.toLowerCase().includes(q) ||
+        a.email.toLowerCase().includes(q) ||
+        a.programLabel.toLowerCase().includes(q)
+    );
+  }, [applications, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  const stats = useMemo(
+    () => ({
+      total: applications.length,
+      new: applications.filter((a) => a.status === 'new').length,
+      accepted: applications.filter((a) => a.status === 'accepted').length,
+    }),
+    [applications]
+  );
+
+  const handleStatusChange = async (app, status) => {
+    const result = await updateApplicationStatus(app.id, status, user);
+    if (!result.success) {
+      showToast(result.error, 'error');
+      return;
+    }
+    await refresh();
+    setSelected((s) => (s && s.id === app.id ? { ...s, status } : s));
+    showToast(`"${app.fullName}" marked as ${status}.`, 'success');
+  };
+
+  const handleExport = () => {
+    exportToCSV(
+      'admissions-applications',
+      [
+        { key: 'fullName', header: 'Full Name' },
+        { key: 'email', header: 'Email' },
+        { key: 'phone', header: 'Phone' },
+        { key: 'programLabel', header: 'Program' },
+        { key: 'status', header: 'Status' },
+        { key: 'submittedAt', header: 'Submitted' },
+      ],
+      applications
+    );
+    showToast('Applications exported as CSV.', 'success');
+  };
+
+  const columns = [
+    { key: 'fullName', header: 'Applicant' },
+    { key: 'programLabel', header: 'Program' },
+    { key: 'email', header: 'Email' },
+    { key: 'phone', header: 'Phone' },
+    {
+      key: 'submittedAt',
+      header: 'Submitted',
+      render: (a) => new Date(a.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+    },
+    { key: 'status', header: 'Status', render: (a) => <StatusBadge status={a.status} /> },
+  ];
+
+  return (
+    <div>
+      <PageHeader
+        title="Applications"
+        description="Admissions form submissions from the public website."
+        breadcrumb={[{ label: 'Management', to: '/management' }, { label: 'Applications' }]}
+        actions={
+          <Button variant="secondary" icon={Download} onClick={handleExport} disabled={applications.length === 0}>
+            Export
+          </Button>
+        }
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+        <StatCard label="Total Applications" value={stats.total} icon={GraduationCap} />
+        <StatCard label="New" value={stats.new} icon={Mail} tone="amber" />
+        <StatCard label="Accepted" value={stats.accepted} icon={GraduationCap} tone="green" />
+      </div>
+
+      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] overflow-hidden">
+        <div className="p-4 border-b border-[var(--color-border-gray)]">
+          <SearchBar value={search} onChange={setSearch} placeholder="Search by name, email, or program…" />
+        </div>
+        {loading ? <p className="p-8 text-sm text-[var(--color-mid-gray)]">Loading applications...</p> : applications.length === 0 ? (
+          <EmptyState
+            icon={GraduationCap}
+            title="No applications yet"
+            message="Submissions from the Admissions page on the public website will appear here as soon as someone applies."
+          />
+        ) : (
+          <>
+            <DataTable columns={columns} data={paged} onRowClick={(a) => setSelected(a)} />
+            <TablePagination
+              page={page}
+              totalPages={totalPages}
+              totalItems={filtered.length}
+              pageSize={pageSize}
+              onPageChange={setPage}
+            />
+          </>
+        )}
+      </div>
+
+      <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.fullName} size="md">
+        {selected && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <StatusBadge status={selected.status} />
+              <span className="text-xs text-[var(--color-mid-gray)]">
+                Applied{' '}
+                {new Date(selected.submittedAt).toLocaleString('en-GB', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
+
+            <div className="space-y-3 text-sm">
+              <p className="flex items-center gap-2 text-[var(--color-dark-gray)]">
+                <GraduationCap className="w-4 h-4 text-[var(--color-medium-green)] shrink-0" aria-hidden="true" />
+                {selected.programLabel}
+              </p>
+              <a href={`mailto:${selected.email}`} className="flex items-center gap-2 text-[var(--color-dark-gray)] hover:underline">
+                <Mail className="w-4 h-4 text-[var(--color-medium-green)] shrink-0" aria-hidden="true" />
+                {selected.email}
+              </a>
+              <a href={`tel:${selected.phone}`} className="flex items-center gap-2 text-[var(--color-dark-gray)] hover:underline">
+                <Phone className="w-4 h-4 text-[var(--color-medium-green)] shrink-0" aria-hidden="true" />
+                {selected.phone}
+              </a>
+              {selected.message && (
+                <p className="flex items-start gap-2 text-[var(--color-dark-gray)]">
+                  <MessageSquare className="w-4 h-4 text-[var(--color-medium-green)] shrink-0 mt-0.5" aria-hidden="true" />
+                  <span>{selected.message}</span>
+                </p>
+              )}
+            </div>
+
+            <div className="mt-6">
+              <p className="text-xs font-semibold text-[var(--color-mid-gray)] uppercase tracking-wide mb-2">Update Status</p>
+              <div className="flex flex-wrap gap-2">
+                {STATUS_OPTIONS.map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => handleStatusChange(selected, status)}
+                    disabled={selected.status === status}
+                    className="disabled:opacity-100 disabled:cursor-default"
+                  >
+                    <StatusBadge
+                      status={status}
+                      className={
+                        selected.status === status
+                          ? 'ring-2 ring-offset-1 ring-[var(--color-medium-green)]'
+                          : 'opacity-60 hover:opacity-100 transition-opacity cursor-pointer'
+                      }
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-6">
+              <Button variant="ghost" onClick={() => setSelected(null)} icon={X}>Close</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+}

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RotateCcw } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
@@ -12,7 +12,7 @@ import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import { useToast } from '../../context/ToastContext';
-import { getLoans, returnBook, daysOverdue } from '../../services/bookService';
+import { getLoans, refreshLibrary, returnBook, daysOverdue } from '../../services/bookService';
 
 export default function BorrowedBooks() {
   const navigate = useNavigate();
@@ -24,6 +24,11 @@ export default function BorrowedBooks() {
   const [processing, setProcessing] = useState(false);
 
   const refresh = () => setLoans(getLoans().filter((l) => l.status !== 'returned'));
+  useEffect(() => {
+    window.addEventListener('rg:library-updated', refresh);
+    refreshLibrary().catch(() => {});
+    return () => window.removeEventListener('rg:library-updated', refresh);
+  }, []);
 
   const filtered = useMemo(() => {
     return loans.filter(
@@ -34,9 +39,10 @@ export default function BorrowedBooks() {
   const handleReturn = () => {
     if (!confirmLoan) return;
     setProcessing(true);
-    setTimeout(() => {
-      returnBook(confirmLoan.id);
+    setTimeout(async () => {
+      const result = await returnBook(confirmLoan.id);
       setProcessing(false);
+      if (!result.success) { showToast(result.error, 'error'); return; }
       showToast(`"${confirmLoan.bookTitle}" returned successfully.`, 'success');
       refresh();
       setConfirmLoan(null);

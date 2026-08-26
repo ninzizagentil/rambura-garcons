@@ -9,6 +9,18 @@ import { ThemeProvider } from './context/ThemeContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { ToastProvider } from './context/ToastContext'
 
+// Remove records created by the former browser-only repositories. Authentication
+// tokens and UI preferences intentionally remain local to this browser.
+const LEGACY_BUSINESS_KEYS = [
+  'rg_users', 'rg_books', 'rg_loans', 'rg_stock_items', 'rg_stock_transactions',
+  'rg_stock_damaged', 'rg_stock_removed', 'rg_stock_suppliers', 'rg_activity',
+  'rg_applications', 'rg_notifications', 'rg_content_hero', 'rg_content_programs',
+  'rg_content_departments', 'rg_content_staff', 'rg_content_news', 'rg_content_gallery',
+  'rg_content_admissions', 'rg_content_contact', 'rg_content_site_images', 'rg_content_branding',
+]
+
+LEGACY_BUSINESS_KEYS.forEach((key) => window.localStorage.removeItem(key))
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>

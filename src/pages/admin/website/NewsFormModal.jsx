@@ -38,22 +38,17 @@ export default function NewsFormModal({ open, onClose, article, onSaved }) {
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError('');
     if (!validate()) return;
     setSaving(true);
     const actor = user?.fullName || 'System Administrator';
-    setTimeout(() => {
-      const result = isEdit ? updateNews(article.slug, form, actor) : createNews(form, actor);
-      setSaving(false);
-      if (!result.success) {
-        setServerError(result.error);
-        return;
-      }
-      showToast(isEdit ? 'Article updated successfully.' : 'Article published successfully.', 'success');
-      onSaved();
-    }, 300);
+    const result = isEdit ? await updateNews(article.id || article.slug, form, actor) : await createNews(form, actor);
+    setSaving(false);
+    if (!result.success) { setServerError(result.error); return; }
+    showToast(isEdit ? 'Article updated successfully.' : 'Article published successfully.', 'success');
+    onSaved();
   };
 
   return (

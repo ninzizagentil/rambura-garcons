@@ -8,7 +8,7 @@ import { EmptyState } from '../../components/feedback/States';
 import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
-import { getBookById, getLoansForBook } from '../../services/bookService';
+import { getBookById, getLoansForBook, refreshLibrary } from '../../services/bookService';
 import BorrowModal from './BorrowModal';
 import BookFormModal from './BookFormModal';
 
@@ -25,6 +25,16 @@ export default function BookDetails() {
   useEffect(() => {
     setBook(getBookById(id));
     setLoans(getLoansForBook(id));
+  }, [id]);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setBook(getBookById(id));
+      setLoans(getLoansForBook(id));
+    };
+    window.addEventListener('rg:library-updated', handleUpdate);
+    refreshLibrary().catch(() => {});
+    return () => window.removeEventListener('rg:library-updated', handleUpdate);
   }, [id]);
 
   const refresh = () => {

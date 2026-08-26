@@ -50,21 +50,19 @@ export default function BorrowModal({ open, onClose, book, onBorrowed }) {
     if (validate()) setStep('confirm');
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setSaving(true);
     setServerError('');
-    setTimeout(() => {
-      const result = borrowBook({ bookId: book.id, ...form });
-      setSaving(false);
-      if (!result.success) {
-        setServerError(result.error);
-        setStep('form');
-        return;
-      }
-      showToast(`"${book.title}" borrowed by ${form.borrower}.`, 'success');
-      onBorrowed();
-      reset();
-    }, 500);
+    const result = await borrowBook({ bookId: book.id, ...form });
+    setSaving(false);
+    if (!result.success) {
+      setServerError(result.error);
+      setStep('form');
+      return;
+    }
+    showToast(`"${book.title}" borrowed by ${form.borrower}.`, 'success');
+    onBorrowed();
+    reset();
   };
 
   if (!book) return null;

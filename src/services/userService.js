@@ -1,59 +1,18 @@
-import { DEMO_USERS } from '../data/users';
-import { loadCollection, saveCollection, genId } from '../utils/storage';
-import { logActivity } from './activityService';
+import { api } from './api';
 
-const USERS_KEY = 'rg_users';
+export async function getUsers(params = {}) { const result = await api.get('/users', params); return result.data; }
 
-export function getUsers() {
-  return loadCollection(USERS_KEY, DEMO_USERS);
+export async function getUserById(id) { const result = await api.get(`/users/${id}`); return result.data; }
+
+export async function createUser(data) {
+  try { const result = await api.post('/users', data); return { success: true, user: result.data }; }
+  catch (error) { return { success: false, error: error.message }; }
 }
 
-export function getUserById(id) {
-  return getUsers().find((u) => u.id === id) || null;
+export async function updateUser(id, updates) {
+  try { await api.put(`/users/${id}`, updates); return { success: true }; }
+  catch (error) { return { success: false, error: error.message }; }
 }
 
-export function createUser({ fullName, username, email, role, status, password }) {
-  const users = loadCollection(USERS_KEY, DEMO_USERS);
-
-  if (users.some((u) => u.username.toLowerCase() === username.toLowerCase())) {
-    return { success: false, error: 'This username is already taken.' };
-  }
-  if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-    return { success: false, error: 'This email is already registered.' };
-  }
-
-  const newUser = {
-    id: genId('u'),
-    fullName,
-    username,
-    email,
-    role,
-    status: status || 'active',
-    password,
-    lastActivity: new Date().toISOString(),
-  };
-  saveCollection(USERS_KEY, [newUser, ...users]);
-  logActivity({ user: 'System Administrator', action: `Created user "${fullName}"`, module: 'Users', status: 'success' });
-  return { success: true, user: newUser };
-}
-
-export function updateUser(id, updates) {
-  const users = loadCollection(USERS_KEY, DEMO_USERS);
-  const next = users.map((u) => (u.id === id ? { ...u, ...updates } : u));
-  saveCollection(USERS_KEY, next);
-  return { success: true };
-}
-
-export function setUserStatus(id, status) {
-  const result = updateUser(id, { status });
-  const user = getUserById(id);
-  if (result.success && user) {
-    logActivity({
-      user: 'System Administrator',
-      action: `${status === 'active' ? 'Activated' : 'Deactivated'} user "${user.fullName}"`,
-      module: 'Users',
-      status: 'success',
-    });
-  }
-  return result;
-}
+export async function setUserStatus(id, status) { try { await api.patch(`/users/${id}/status`, { status }); return { success: true }; } catch (error) { return { success: false, error: error.message }; } }
+export async function deleteUser(id) { try { await api.delete(`/users/${id}`); return { success: true }; } catch (error) { return { success: false, error: error.message }; } }

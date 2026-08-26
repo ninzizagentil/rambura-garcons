@@ -1,36 +1,48 @@
-import { DEMO_USERS } from '../data/users';
+import { api, clearTokens, setTokens } from './api';
 
 const SESSION_KEY = 'rg_auth_session';
+
+function loginErrorMessage(error) {
+  // A browser `TypeError: Failed to fetch` means the API is unavailable (or
+  // blocked by the network), not that the user supplied an invalid password.
+  // Do not expose that implementation detail in the login form.
+  if (error?.message === 'Failed to fetch' || error?.name === 'TypeError') {
+    return 'We could not connect to the server. Please check your connection and try again.';
+  }
+
+  // Preserve useful messages returned by the API, while always falling back
+  // to a clear, actionable message for unexpected failures.
+  return error?.message || 'Unable to sign in right now. Please try again.';
+}
 
 /**
  * Demo authentication only — checks against local mock users.
  * Swap the body of this function for a real API call (e.g. POST /auth/login)
  * when a backend is connected; the return shape can stay the same.
  */
-export function login({ identifier, password }) {
-  const found = DEMO_USERS.find(
-    (u) => (u.username === identifier || u.email === identifier) && u.password === password
-  );
-  if (!found) {
-    return { success: false, error: 'Invalid username/email or password.' };
+export async function login({ identifier, password }) {
+  try {
+    const result = await api.post('/auth/login', { identifier, password });
+    setTokens(result.data);
+    persistSession(result.data.user);
+    window.dispatchEvent(new Event('rg:authenticated'));
+    return { success: true, user: result.data.user };
+  } catch (error) {
+    return { success: false, error: loginErrorMessage(error) };
   }
-  if (found.status !== 'active') {
-    return { success: false, error: 'This account has been deactivated. Contact the administrator.' };
-  }
-  // eslint-disable-next-line no-unused-vars
-  const { password: _pw, ...safeUser } = found;
-  persistSession(safeUser);
-  return { success: true, user: safeUser };
 }
 
-export function logout() {
+export async function logout() {
+  try { await api.post('/auth/logout', {}); } catch { /* session may already be expired */ }
+  clearTokens();
   localStorage.removeItem(SESSION_KEY);
 }
 
-export function getSession() {
+export async function getSession() {
   try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const result = await api.get('/auth/me');
+    persistSession(result.data);
+    return result.data;
   } catch {
     localStorage.removeItem(SESSION_KEY);
     return null;
@@ -46,7 +58,6 @@ export function persistSession(user) {
  * permission matrix (per the Roles & Permissions admin screen) can slot in
  * without changing the call sites that use hasPermission().
  */
-export function hasPermission(user, _permission) {
-  if (!user) return false;
-  return true; // demo: role-level access already covers current module scope
+export function hasPermission(user, permission) {
+  return !!user && (user.role === 'admin' || user.permissions?.includes(permission));
 }

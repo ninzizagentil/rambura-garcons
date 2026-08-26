@@ -40,28 +40,22 @@ export default function BookFormModal({ open, onClose, book, onSaved }) {
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError('');
     if (!validate()) return;
     setSaving(true);
 
-    setTimeout(() => {
-      let result;
-      if (isEdit) {
-        result = updateBook(book.id, { ...form, totalCopies: Number(form.totalCopies) });
-        result = { success: true, ...result };
-      } else {
-        result = createBook(form);
-      }
-      setSaving(false);
-      if (!result.success) {
-        setServerError(result.error);
-        return;
-      }
-      showToast(isEdit ? 'Book updated successfully.' : 'Book added to catalogue.', 'success');
-      onSaved(result.book);
-    }, 400);
+    const result = isEdit
+      ? await updateBook(book.id, { ...form, totalCopies: Number(form.totalCopies) })
+      : await createBook(form);
+    setSaving(false);
+    if (!result.success) {
+      setServerError(result.error);
+      return;
+    }
+    showToast(isEdit ? 'Book updated successfully.' : 'Book added to catalogue.', 'success');
+    onSaved(result.book);
   };
 
   return (

@@ -1,7 +1,9 @@
 import { useState, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Menu, X, ChevronDown, Phone, Mail, MapPin, User, ShieldCheck } from 'lucide-react';
+import { Menu, X, ChevronDown, Phone, Mail, MapPin } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import BrandMark from '../common/BrandMark';
+import SocialLinks from '../common/SocialLinks';
 
 const NAV = [
   { label: 'Home', to: '/' },
@@ -176,18 +178,7 @@ export default function PublicNavbar() {
               Nyabihu District, Rwanda
             </span>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-semibold"
-            >
-              <ShieldCheck className="w-3 h-3" aria-hidden="true" />
-              Login
-            </Link>
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/15 text-white">
-              <User className="w-3.5 h-3.5" aria-hidden="true" />
-            </span>
-          </div>
+          <SocialLinks size="sm" />
         </div>
       </div>
 
@@ -195,9 +186,10 @@ export default function PublicNavbar() {
       <div className="bg-white">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-[72px] flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3 shrink-0" onClick={() => setOpen(false)}>
-            <span className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-[var(--color-deep-green)] text-[var(--color-gold)] font-display font-bold text-lg">
-              RG
-            </span>
+            <BrandMark
+              containerClassName="w-11 h-11 rounded-full bg-[var(--color-deep-green)] text-[var(--color-gold)] font-display font-bold text-lg"
+              fallback="RG"
+            />
             <span className="leading-tight">
               <span className="block font-display font-bold text-[15px] tracking-wide text-[var(--color-deep-green)] uppercase">
                 Rambura Garçons
