@@ -1,9 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getGallery } from '../../services/contentService';
+import { getGallery, useContentVersion } from '../../services/contentService';
 import PageHero from '../../components/common/PageHero';
 
 export default function Gallery() {
+  useContentVersion();
   const [index, setIndex] = useState(null);
   const gallery = getGallery();
   const open = index !== null;
@@ -36,16 +37,16 @@ export default function Gallery() {
               key={img.id}
               type="button"
               onClick={() => setIndex(i)}
-              className="aspect-square rounded-[var(--radius-card)] overflow-hidden relative group hover:opacity-90 transition-opacity"
+              className="group relative aspect-square overflow-hidden rounded-[24px] border border-[var(--color-border-gray)] bg-white shadow-[0_18px_35px_rgba(15,61,46,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(15,61,46,0.12)]"
               aria-label={`View photo: ${img.caption}`}
             >
               <img
                 src={img.image}
                 alt={img.caption}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
-              <span className="absolute inset-x-0 bottom-0 bg-black/60 text-white text-xs px-2 py-1.5 text-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.72))] text-white text-xs px-2 py-1.5 text-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                 {img.caption}
               </span>
             </button>

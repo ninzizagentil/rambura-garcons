@@ -1,38 +1,23 @@
-/**
- * CRITICAL STOCK RULE — never broken anywhere in the app:
- * the Stock category must contain ONLY "Foods" and "Electronic Devices".
- */
+// Stock categories are limited to these values.
 export const STOCK_CATEGORIES = ['Foods', 'Electronic Devices'];
 
-// Fixed "today" anchor used across the Stock module's demo data (forms default
-// to this date, expiry/ageing math is relative to it) so the seeded records
-// stay meaningfully in Low Stock / Expiring Soon / Expired buckets regardless
-// of the real device clock.
+// Fixed date for demo stock data.
 export const STOCK_TODAY = '2026-08-18';
 
 export const STOCK_UNITS = ['kg', 'litres', 'bags', 'cartons', 'boxes', 'pieces', 'units', 'sets'];
 
-// Storage locations used across the inventory (item location, stock transfers).
+// Inventory storage locations.
 export const STOCK_LOCATIONS = ['Main Store', 'Kitchen Store', 'ICT Lab Store', 'Admin Store'];
 
 export const DAMAGE_REASONS = ['Broken', 'Faulty', 'Physical Damage', 'Water Damage', 'Other'];
 export const REMOVAL_REASONS = ['Damaged', 'Expired', 'Lost', 'Broken', 'Obsolete', 'Other'];
 
-// Reasons a physical stock count can differ from the system quantity.
 export const ADJUSTMENT_REASONS = ['Stock Count Correction', 'Data Entry Error', 'Theft / Loss', 'Spoilage', 'Found Extra Stock', 'Other'];
 
-// Reasons stock is moved between storage locations.
 export const TRANSFER_REASONS = ['Department Request', 'Rebalancing Stock', 'Relocation', 'Kitchen Requisition', 'ICT Lab Setup', 'Other'];
 
-// Days-out threshold used to flag a batch as "Expiring Soon" rather than "Valid".
 export const EXPIRY_WARNING_DAYS = 30;
 
-// quantity/minLevel are tuned so several items sit at/under minimum (Low Stock),
-// one sits at zero (Out of Stock), and several sit comfortably above it (Normal).
-//
-// `code` — short catalogue code shown in the inventory table (category prefix + index).
-// `unitPrice` — RWF price per unit, used to derive each item's stock value (quantity × unitPrice).
-// `expiryDate`/`batchNumber` — only meaningful for perishable (Foods) items; omitted for Electronic Devices.
 export const SEED_ITEMS = [
   { id: 'i1', name: 'Rice', code: 'RCE-001', category: 'Foods', unit: 'kg', quantity: 40, minLevel: 50, unitPrice: 2000, description: 'Kitchen staple for student meals.', location: 'Kitchen Store', supplier: 'Kigali Grain Suppliers Ltd', batchNumber: 'RCE-B24', expiryDate: '2026-12-01' },
   { id: 'i2', name: 'Dry Beans', code: 'DBN-002', category: 'Foods', unit: 'kg', quantity: 120, minLevel: 60, unitPrice: 1500, description: 'Kitchen staple for student meals.', location: 'Kitchen Store', supplier: 'Kigali Grain Suppliers Ltd', batchNumber: 'DBN-B11', expiryDate: '2027-03-01' },
@@ -48,24 +33,17 @@ export const SEED_ITEMS = [
   { id: 'i12', name: 'Extension Cables', code: 'EXC-012', category: 'Electronic Devices', unit: 'pieces', quantity: 9, minLevel: 10, unitPrice: 8000, description: 'Power extension cables for labs and offices.', location: 'ICT Lab Store', supplier: 'TechSupply Rwanda' },
 ];
 
-// Suppliers who provide stock. `itemsSupplied` is derived at read-time in
-// stockService (matched against SEED_ITEMS by supplier name), not stored here,
-// so it always reflects the live catalogue rather than going stale.
 export const SEED_SUPPLIERS = [
   { id: 's1', name: 'Kigali Grain Suppliers Ltd', contactPerson: 'Jean Baptiste Uwimana', phone: '+250 788 123 456', email: 'sales@kigaligrain.rw', address: 'Kigali, Rwanda', status: 'active', notes: 'Primary supplier for kitchen staples.' },
   { id: 's2', name: 'Rambura Millers Co-op', contactPerson: 'Vestine Mukamana', phone: '+250 788 234 567', email: 'contact@ramburamillers.coop.rw', address: 'Rambura Sector, Nyabihu District', status: 'active', notes: 'Local cooperative — flour and salt.' },
   { id: 's3', name: 'TechSupply Rwanda', contactPerson: 'Eric Mugisha', phone: '+250 788 345 678', email: 'orders@techsupplyrwanda.rw', address: 'Nyabugogo, Kigali', status: 'active', notes: 'ICT equipment and electronics.' },
 ];
 
-// Damaged-stock reports. `status`: 'reported' (still logged as damaged, action pending)
-// or 'disposed' (has since been moved into SEED_REMOVED — kept here for its own history).
 export const SEED_DAMAGED = [
   { id: 'd1', itemId: 'i8', itemName: 'Classroom Projectors', category: 'Electronic Devices', unit: 'units', quantity: 1, reason: 'Physical Damage', date: '2026-08-09', reportedBy: 'Emmanuel Nshuti', notes: 'Screen cracked during transport to Science Block.', status: 'reported' },
   { id: 'd2', itemId: 'i12', itemName: 'Extension Cables', category: 'Electronic Devices', unit: 'pieces', quantity: 2, reason: 'Faulty', date: '2026-08-13', reportedBy: 'Emmanuel Nshuti', notes: 'Sparking on power-up, withdrawn from use.', status: 'reported' },
 ];
 
-// Permanent disposal/removal log. NEVER delete entries from this list —
-// it is the audit trail for stock that has left the system for good.
 export const SEED_REMOVED = [
   { id: 'r1', itemId: 'i10', itemName: 'UPS Backup Units', category: 'Electronic Devices', unit: 'units', quantityRemoved: 1, remainingQuantity: 6, reason: 'Damaged', date: '2026-08-11', responsibleUser: 'Emmanuel Nshuti', approvedBy: 'Bro. Alphonse Ntawuruhunga', notes: 'Battery swollen and unsafe to keep in service.' },
 ];

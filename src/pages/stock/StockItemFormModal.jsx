@@ -119,7 +119,17 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
           />
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Input label="Quantity" type="number" min="0" required value={form.quantity} onChange={update('quantity')} error={errors.quantity} />
+          <Input
+            label="Quantity"
+            type="number"
+            min="0"
+            required
+            value={form.quantity}
+            onChange={update('quantity')}
+            error={errors.quantity}
+            disabled={isEdit}
+            hint={isEdit ? 'Quantity can\'t be edited here — use Stock Adjustment to change it (keeps the audit trail accurate).' : undefined}
+          />
           <Input label="Minimum Stock Level" type="number" min="0" required value={form.minLevel} onChange={update('minLevel')} error={errors.minLevel} />
         </div>
         <Input

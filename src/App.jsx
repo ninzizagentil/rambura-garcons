@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 import PublicLayout from './layouts/PublicLayout';
@@ -5,79 +6,72 @@ import DashboardLayout from './layouts/DashboardLayout';
 import { ProtectedRoute, RoleProtectedRoute } from './routes/ProtectedRoute';
 import { ROLES } from './data/roles';
 
-// Public pages
-import Home from './pages/public/Home';
-import About from './pages/public/About';
-import Academics from './pages/public/Academics';
-import Departments from './pages/public/Departments';
-import Staff from './pages/public/Staff';
-import News from './pages/public/News';
-import NewsDetails from './pages/public/NewsDetails';
-import Gallery from './pages/public/Gallery';
-import Admissions from './pages/public/Admissions';
-import Contact from './pages/public/Contact';
+const lazyPage = (loader) => lazy(loader);
 
-// Auth pages
-import Login from './pages/auth/Login';
-import ForgotPassword from './pages/auth/ForgotPassword';
+const Home = lazyPage(() => import('./pages/public/Home'));
+const About = lazyPage(() => import('./pages/public/About'));
+const Academics = lazyPage(() => import('./pages/public/Academics'));
+const Departments = lazyPage(() => import('./pages/public/Departments'));
+const Staff = lazyPage(() => import('./pages/public/Staff'));
+const News = lazyPage(() => import('./pages/public/News'));
+const NewsDetails = lazyPage(() => import('./pages/public/NewsDetails'));
+const Gallery = lazyPage(() => import('./pages/public/Gallery'));
+const Admissions = lazyPage(() => import('./pages/public/Admissions'));
+const Contact = lazyPage(() => import('./pages/public/Contact'));
+const Login = lazyPage(() => import('./pages/auth/Login'));
+const ForgotPassword = lazyPage(() => import('./pages/auth/ForgotPassword'));
+const AdminDashboard = lazyPage(() => import('./pages/admin/AdminDashboard'));
+const LibraryDashboard = lazyPage(() => import('./pages/library/LibraryDashboard'));
+const StockDashboard = lazyPage(() => import('./pages/stock/StockDashboard'));
+const ManagementDashboard = lazyPage(() => import('./pages/management/ManagementDashboard'));
+const Users = lazyPage(() => import('./pages/admin/Users'));
+const RolesPermissions = lazyPage(() => import('./pages/admin/RolesPermissions'));
+const WebsiteManagement = lazyPage(() => import('./pages/admin/WebsiteManagement'));
+const ActivityAudit = lazyPage(() => import('./pages/admin/ActivityAudit'));
+const AdminReports = lazyPage(() => import('./pages/admin/AdminReports'));
+const Settings = lazyPage(() => import('./pages/admin/Settings'));
+const Books = lazyPage(() => import('./pages/library/Books'));
+const BookDetails = lazyPage(() => import('./pages/library/BookDetails'));
+const BorrowedBooks = lazyPage(() => import('./pages/library/BorrowedBooks'));
+const OverdueBooks = lazyPage(() => import('./pages/library/OverdueBooks'));
+const Returns = lazyPage(() => import('./pages/library/Returns'));
+const BorrowingHistory = lazyPage(() => import('./pages/library/BorrowingHistory'));
+const LibraryReports = lazyPage(() => import('./pages/library/LibraryReports'));
+const StockItems = lazyPage(() => import('./pages/stock/StockItems'));
+const StockItemDetails = lazyPage(() => import('./pages/stock/StockItemDetails'));
+const StockIn = lazyPage(() => import('./pages/stock/StockIn'));
+const StockOut = lazyPage(() => import('./pages/stock/StockOut'));
+const StockAdjustment = lazyPage(() => import('./pages/stock/StockAdjustment'));
+const StockTransfer = lazyPage(() => import('./pages/stock/StockTransfer'));
+const Suppliers = lazyPage(() => import('./pages/stock/Suppliers'));
+const Transactions = lazyPage(() => import('./pages/stock/Transactions'));
+const LowStock = lazyPage(() => import('./pages/stock/LowStock'));
+const OutOfStock = lazyPage(() => import('./pages/stock/OutOfStock'));
+const DamagedItems = lazyPage(() => import('./pages/stock/DamagedItems'));
+const ExpiredItems = lazyPage(() => import('./pages/stock/ExpiredItems'));
+const RemovedDisposed = lazyPage(() => import('./pages/stock/RemovedDisposed'));
+const UsageAnalytics = lazyPage(() => import('./pages/stock/UsageAnalytics'));
+const StockReports = lazyPage(() => import('./pages/stock/StockReports'));
+const ManagementLibraryReports = lazyPage(() => import('./pages/management/LibraryReports'));
+const ManagementStockReports = lazyPage(() => import('./pages/management/StockReports'));
+const ManagementInsights = lazyPage(() => import('./pages/management/ManagementInsights'));
+const ManagementApplications = lazyPage(() => import('./pages/management/Applications'));
+const Notifications = lazyPage(() => import('./pages/shared/Notifications'));
+const Profile = lazyPage(() => import('./pages/shared/Profile'));
+const ChangePassword = lazyPage(() => import('./pages/shared/ChangePassword'));
+const AccessRestricted = lazyPage(() => import('./pages/shared/AccessRestricted'));
+const SuccessPage = lazyPage(() => import('./pages/shared/StatusPages').then((module) => ({ default: module.SuccessPage })));
+const ErrorPage = lazyPage(() => import('./pages/shared/StatusPages').then((module) => ({ default: module.ErrorPage })));
+const NotFoundPage = lazyPage(() => import('./pages/shared/StatusPages').then((module) => ({ default: module.NotFoundPage })));
 
-// Dashboards
-import AdminDashboard from './pages/admin/AdminDashboard';
-import LibraryDashboard from './pages/library/LibraryDashboard';
-import StockDashboard from './pages/stock/StockDashboard';
-import ManagementDashboard from './pages/management/ManagementDashboard';
-
-// Admin module
-import Users from './pages/admin/Users';
-import RolesPermissions from './pages/admin/RolesPermissions';
-import WebsiteManagement from './pages/admin/WebsiteManagement';
-import ActivityAudit from './pages/admin/ActivityAudit';
-import AdminReports from './pages/admin/AdminReports';
-import Settings from './pages/admin/Settings';
-
-// Library module
-import Books from './pages/library/Books';
-import BookDetails from './pages/library/BookDetails';
-import BorrowedBooks from './pages/library/BorrowedBooks';
-import OverdueBooks from './pages/library/OverdueBooks';
-import Returns from './pages/library/Returns';
-import BorrowingHistory from './pages/library/BorrowingHistory';
-import LibraryReports from './pages/library/LibraryReports';
-
-// Stock module
-import StockItems from './pages/stock/StockItems';
-import StockItemDetails from './pages/stock/StockItemDetails';
-import StockIn from './pages/stock/StockIn';
-import StockOut from './pages/stock/StockOut';
-import StockAdjustment from './pages/stock/StockAdjustment';
-import StockTransfer from './pages/stock/StockTransfer';
-import Suppliers from './pages/stock/Suppliers';
-import Transactions from './pages/stock/Transactions';
-import LowStock from './pages/stock/LowStock';
-import OutOfStock from './pages/stock/OutOfStock';
-import DamagedItems from './pages/stock/DamagedItems';
-import ExpiredItems from './pages/stock/ExpiredItems';
-import RemovedDisposed from './pages/stock/RemovedDisposed';
-import UsageAnalytics from './pages/stock/UsageAnalytics';
-import StockReports from './pages/stock/StockReports';
-
-// Management module
-import ManagementLibraryReports from './pages/management/LibraryReports';
-import ManagementStockReports from './pages/management/StockReports';
-import ManagementInsights from './pages/management/ManagementInsights';
-import ManagementApplications from './pages/management/Applications';
-
-// Shared
-import Notifications from './pages/shared/Notifications';
-import Profile from './pages/shared/Profile';
-import ChangePassword from './pages/shared/ChangePassword';
-import AccessRestricted from './pages/shared/AccessRestricted';
-import { SuccessPage, ErrorPage, NotFoundPage } from './pages/shared/StatusPages';
+function LoadingPage() {
+  return <div className="flex min-h-[40vh] items-center justify-center text-sm text-[var(--color-gray-500)]">Loading...</div>;
+}
 
 export default function App() {
   return (
-    <Routes>
-      {/* ---------- PUBLIC WEBSITE ---------- */}
+    <Suspense fallback={<LoadingPage />}>
+      <Routes>
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
@@ -91,11 +85,9 @@ export default function App() {
         <Route path="/contact" element={<Contact />} />
       </Route>
 
-      {/* ---------- AUTH ---------- */}
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      {/* ---------- SHARED (any authenticated role) ---------- */}
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
           <Route path="/notifications" element={<Notifications />} />
@@ -104,7 +96,6 @@ export default function App() {
         </Route>
       </Route>
 
-      {/* ---------- ADMIN ---------- */}
       <Route element={<RoleProtectedRoute allow={[ROLES.ADMIN]} />}>
         <Route element={<DashboardLayout />}>
           <Route path="/admin" element={<AdminDashboard />} />
@@ -117,7 +108,6 @@ export default function App() {
         </Route>
       </Route>
 
-      {/* ---------- LIBRARIAN (+ Admin can also view Library MIS) ---------- */}
       <Route element={<RoleProtectedRoute allow={[ROLES.LIBRARIAN, ROLES.ADMIN]} />}>
         <Route element={<DashboardLayout />}>
           <Route path="/library" element={<LibraryDashboard />} />
@@ -131,7 +121,6 @@ export default function App() {
         </Route>
       </Route>
 
-      {/* ---------- STOCK MANAGER (+ Admin) ---------- */}
       <Route element={<RoleProtectedRoute allow={[ROLES.STOCK_MANAGER, ROLES.ADMIN]} />}>
         <Route element={<DashboardLayout />}>
           <Route path="/stock" element={<StockDashboard />} />
@@ -153,7 +142,6 @@ export default function App() {
         </Route>
       </Route>
 
-      {/* ---------- MANAGEMENT (+ Admin) ---------- */}
       <Route element={<RoleProtectedRoute allow={[ROLES.MANAGEMENT, ROLES.ADMIN]} />}>
         <Route element={<DashboardLayout />}>
           <Route path="/management" element={<ManagementDashboard />} />
@@ -164,11 +152,11 @@ export default function App() {
         </Route>
       </Route>
 
-      {/* ---------- STATUS / FALLBACK ---------- */}
       <Route path="/access-restricted" element={<AccessRestricted />} />
       <Route path="/success" element={<SuccessPage />} />
       <Route path="/error" element={<ErrorPage />} />
       <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 }

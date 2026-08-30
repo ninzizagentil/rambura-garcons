@@ -3,14 +3,14 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { AuthProvider } from './context/AuthContext'
 import { AppProvider } from './context/AppContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { NotificationProvider } from './context/NotificationContext'
 import { ToastProvider } from './context/ToastContext'
 
-// Remove records created by the former browser-only repositories. Authentication
-// tokens and UI preferences intentionally remain local to this browser.
+// Remove legacy business records from local storage.
 const LEGACY_BUSINESS_KEYS = [
   'rg_users', 'rg_books', 'rg_loans', 'rg_stock_items', 'rg_stock_transactions',
   'rg_stock_damaged', 'rg_stock_removed', 'rg_stock_suppliers', 'rg_activity',
@@ -23,18 +23,20 @@ LEGACY_BUSINESS_KEYS.forEach((key) => window.localStorage.removeItem(key))
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
-      <ThemeProvider>
-        <AuthProvider>
-          <AppProvider>
-            <NotificationProvider>
-              <ToastProvider>
-                <App />
-              </ToastProvider>
-            </NotificationProvider>
-          </AppProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppProvider>
+              <NotificationProvider>
+                <ToastProvider>
+                  <App />
+                </ToastProvider>
+              </NotificationProvider>
+            </AppProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </StrictMode>,
 )

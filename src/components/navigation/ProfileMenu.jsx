@@ -51,7 +51,7 @@ export default function ProfileMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-56 bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card-hover py-1.5 z-30"
+          className="absolute right-0 mt-2 w-56 bg-[var(--sidebar-bg)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card-hover py-1.5 z-30"
         >
           {PROFILE_NAV.map((item) =>
             item.action === 'logout' ? (

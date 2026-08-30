@@ -28,10 +28,10 @@ function NavItem({ item, collapsed }) {
         title={collapsed ? item.label : undefined}
         className={({ isActive }) =>
           cn(
-            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+            'flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
             isActive
-              ? 'bg-[rgba(255,255,255,0.16)] text-white'
-              : 'text-[rgba(255,255,255,0.8)] hover:bg-[rgba(255,255,255,0.1)] hover:text-white'
+              ? 'bg-[linear-gradient(135deg,_rgba(44,103,84,0.12),_rgba(217,164,65,0.08))] text-[var(--sidebar-nav-active-text)] shadow-[inset_0_0_0_1px_rgba(44,103,84,0.08)]'
+              : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)]'
           )
         }
       >
@@ -51,10 +51,10 @@ function NavItem({ item, collapsed }) {
         title={item.label}
         className={({ isActive }) =>
           cn(
-            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+            'flex items-center justify-center rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
             isActive || childActive
-              ? 'bg-[rgba(255,255,255,0.16)] text-white'
-              : 'text-[rgba(255,255,255,0.8)] hover:bg-[rgba(255,255,255,0.1)] hover:text-white'
+              ? 'bg-[linear-gradient(135deg,_rgba(44,103,84,0.12),_rgba(217,164,65,0.08))] text-[var(--sidebar-nav-active-text)] shadow-[inset_0_0_0_1px_rgba(44,103,84,0.08)]'
+              : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)]'
           )
         }
       >
@@ -70,10 +70,10 @@ function NavItem({ item, collapsed }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className={cn(
-          'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+          'w-full flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
           childActive
-            ? 'bg-[rgba(255,255,255,0.16)] text-white'
-            : 'text-[rgba(255,255,255,0.8)] hover:bg-[rgba(255,255,255,0.1)] hover:text-white'
+            ? 'bg-[linear-gradient(135deg,_rgba(44,103,84,0.12),_rgba(217,164,65,0.08))] text-[var(--sidebar-nav-active-text)] shadow-[inset_0_0_0_1px_rgba(44,103,84,0.08)]'
+            : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)]'
         )}
       >
         <item.icon className="w-[18px] h-[18px] flex-shrink-0" aria-hidden="true" />
@@ -81,17 +81,17 @@ function NavItem({ item, collapsed }) {
         <ChevronDown className={cn('w-4 h-4 flex-shrink-0 transition-transform duration-200', open && 'rotate-180')} aria-hidden="true" />
       </button>
       {open && (
-        <div className="mt-0.5 ml-[13px] pl-[19px] border-l border-[rgba(255,255,255,0.15)] space-y-0.5">
+        <div className="mt-1 ml-[13px] space-y-1 border-l border-[var(--sidebar-border)] pl-[18px]">
           {item.children.map((child) => (
             <NavLink
               key={child.to}
               to={child.to}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  'flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200',
                   isActive
-                    ? 'bg-[rgba(255,255,255,0.16)] text-white'
-                    : 'text-[rgba(255,255,255,0.72)] hover:bg-[rgba(255,255,255,0.1)] hover:text-white'
+                    ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)]'
+                    : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)]'
                 )
               }
             >
@@ -113,22 +113,24 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        'hidden md:flex flex-col bg-[var(--color-deep-green)] text-white h-screen sticky top-0 transition-[width] duration-200',
-        sidebarCollapsed ? 'w-[76px]' : 'w-[264px]'
+        'hidden md:flex flex-col h-screen sticky top-0 border-r border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] shadow-[0_20px_45px_rgba(14,43,39,0.12)] backdrop-blur-sm transition-[width] duration-200',
+        sidebarCollapsed ? 'w-[82px]' : 'w-[272px]'
       )}
       aria-label="Main navigation"
     >
-      <div className="flex items-center gap-2.5 px-4 h-16 border-b border-[rgba(255,255,255,0.12)] flex-shrink-0">
-        <BrandMark containerClassName="w-9 h-9 rounded-lg bg-[var(--color-gold)] flex-shrink-0" />
+      <div className="flex h-20 items-center gap-3 border-b border-[var(--sidebar-border)] bg-[radial-gradient(circle_at_top_left,_rgba(44,103,84,0.12),_transparent_35%),linear-gradient(135deg,_rgba(44,103,84,0.04),_rgba(217,164,65,0.03))] px-4 flex-shrink-0">
+        <div className="rounded-2xl border border-[rgba(44,103,84,0.12)] bg-[linear-gradient(135deg,_var(--color-gold),_#f2d299)] p-2 shadow-sm">
+          <BrandMark containerClassName="w-8 h-8 rounded-xl bg-[var(--color-white)]/80 flex-shrink-0" />
+        </div>
         {!sidebarCollapsed && (
-          <div className="leading-tight overflow-hidden">
-            <p className="font-display font-semibold text-sm text-white whitespace-nowrap">Rambura Garçons</p>
-            <p className="text-[11px] text-[rgba(255,255,255,0.65)] whitespace-nowrap">{ROLE_LABELS[role]}</p>
+          <div className="overflow-hidden leading-tight">
+            <p className="font-display text-sm font-semibold tracking-[0.08em] text-[var(--sidebar-text)] uppercase">Rambura</p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--sidebar-text-secondary)]">{ROLE_LABELS[role]}</p>
           </div>
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-3 px-2.5 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto px-2.5 py-4 space-y-1.5">
         {navItems.map((item) => (
           <NavItem key={item.to} item={item} collapsed={sidebarCollapsed} />
         ))}
@@ -137,7 +139,7 @@ export default function Sidebar() {
       <button
         type="button"
         onClick={toggleSidebar}
-        className="flex items-center gap-2 px-4 py-3.5 border-t border-[rgba(255,255,255,0.12)] text-[rgba(255,255,255,0.75)] hover:text-white text-sm"
+        className="mx-2 mb-3 flex items-center justify-center gap-2 rounded-2xl border border-[var(--sidebar-border)] bg-[var(--color-white)]/80 px-3 py-3 text-sm font-medium text-[var(--sidebar-text-secondary)] shadow-sm transition hover:border-[var(--color-medium-green)]/40 hover:text-[var(--sidebar-text)]"
         aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
         {sidebarCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}

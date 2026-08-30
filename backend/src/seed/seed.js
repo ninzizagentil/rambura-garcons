@@ -25,7 +25,7 @@ import { SEED_ITEMS, SEED_SUPPLIERS } from '../../../src/data/stock.js';
 import { PROGRAMS, DEPARTMENTS, STAFF, NEWS, GALLERY } from '../../../src/data/content.js';
 
 const users = [
-  ['Jean de Dieu Habimana', 'admin', 'admin@ramburagarcons.rw', 'Admin@123', 'admin'],
+  ['Jean de Dieu Habimana', 'admin', 'ninzizaaime31@gmail.com', 'Admin@123', 'admin'],
   ['Marie Claire Uwase', 'librarian', 'librarian@ramburagarcons.rw', 'Library@123', 'librarian'],
   ['Emmanuel Nshuti', 'stock', 'stock@ramburagarcons.rw', 'Stock@123', 'stock_manager'],
   ['Bro. Alphonse Ntawuruhunga', 'director', 'director@ramburagarcons.rw', 'Director@123', 'management'],
@@ -37,15 +37,15 @@ await User.insertMany(await Promise.all(users.map(async ([fullName, username, em
   fullName, username, email, role, passwordHash: await bcrypt.hash(password, 12), status: 'active', lastActivity: new Date(),
 }))));
 await Promise.all([Book.deleteMany({}), StockItem.deleteMany({}), Supplier.deleteMany({}), Program.deleteMany({}), Department.deleteMany({}), Staff.deleteMany({}), News.deleteMany({}), Gallery.deleteMany({}), WebsiteSetting.deleteMany({})]);
-await Book.insertMany(SEED_BOOKS.map(({ id, ...book }) => book));
-const suppliers = await Supplier.insertMany(SEED_SUPPLIERS.map(({ id, ...supplier }) => supplier));
+await Book.insertMany(SEED_BOOKS.map(({ id: _id, ...book }) => book));
+const suppliers = await Supplier.insertMany(SEED_SUPPLIERS.map(({ id: _id, ...supplier }) => supplier));
 const supplierByName = Object.fromEntries(suppliers.map((supplier) => [supplier.name, supplier._id]));
-await StockItem.insertMany(SEED_ITEMS.map(({ id, supplier, ...item }) => ({ ...item, supplierId: supplierByName[supplier] })));
-await Department.insertMany(DEPARTMENTS.map(({ id, ...department }) => department));
-await Program.insertMany(PROGRAMS.map(({ id, ...program }) => ({ ...program, description: program.description || program.summary })));
-await Staff.insertMany(STAFF.map(({ id, ...staff }) => ({ ...staff, biography: staff.biography || staff.bio })));
-await News.insertMany(NEWS.map(({ id, date, ...news }) => ({ ...news, published: true, publishedAt: date })));
-await Gallery.insertMany(GALLERY.map(({ id, ...gallery }) => ({ ...gallery, title: gallery.title || gallery.caption, caption: gallery.caption })));
+await StockItem.insertMany(SEED_ITEMS.map(({ id: _id, supplier, ...item }) => ({ ...item, supplierId: supplierByName[supplier] })));
+await Department.insertMany(DEPARTMENTS.map(({ id: _id, ...department }) => department));
+await Program.insertMany(PROGRAMS.map(({ id: _id, ...program }) => ({ ...program, description: program.description || program.summary })));
+await Staff.insertMany(STAFF.map(({ id: _id, ...staff }) => ({ ...staff, biography: staff.biography || staff.bio })));
+await News.insertMany(NEWS.map(({ id: _id, date, ...news }) => ({ ...news, date, published: true, publishedAt: date })));
+await Gallery.insertMany(GALLERY.map(({ id: _id, ...gallery }) => ({ ...gallery, title: gallery.title || gallery.caption, caption: gallery.caption })));
 await WebsiteSetting.create({ key: 'default', schoolName: 'Rambura Garçons TVET School' });
 await Promise.all([Role, Permission, AuditLog, Notification, Loan, StockTransaction, DamagedStock, DisposedStock, Report, SystemSetting].map((model) => model.createCollection().catch(() => {})));
 const permissionKeys = ['users.view', 'users.create', 'users.update', 'users.delete', 'website.view', 'website.create', 'website.update', 'website.delete', 'library.view', 'library.books.create', 'library.books.update', 'library.books.delete', 'library.borrow', 'library.return', 'library.reports', 'stock.view', 'stock.create', 'stock.update', 'stock.delete', 'stock.in', 'stock.out', 'stock.adjust', 'stock.transfer', 'stock.damage', 'stock.dispose', 'stock.suppliers', 'stock.reports', 'applications.view', 'applications.update', 'reports.view', 'audit.view', 'settings.view', 'settings.update'];

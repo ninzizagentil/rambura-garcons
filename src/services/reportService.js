@@ -8,7 +8,7 @@ export async function getStockUsageSummary(limit = 5) { const result = await api
 
 export async function exportReport(reportName, format = 'csv') {
   const path = reportName.toLowerCase().includes('library') ? '/reports/library/circulation' : '/reports/stock/inventory';
-  const response = await fetch(`${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '')}${path}?format=${format}`, { headers: { Authorization: `Bearer ${localStorage.getItem('rg_access_token') || ''}` } });
+  const response = await fetch(`${(import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')}${path}?format=${format}`, { headers: { Authorization: `Bearer ${localStorage.getItem('rg_access_token') || ''}` } });
   if (!response.ok) throw new Error('Report download failed');
   const blob = await response.blob();
   const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = `${reportName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${format}`; link.click(); URL.revokeObjectURL(url);

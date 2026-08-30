@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, ClipboardEdit } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
@@ -8,7 +8,7 @@ import Alert from '../../components/feedback/Alert';
 import { useToast } from '../../context/ToastContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
-import { getItems, stockAdjustment, isLowStock } from '../../services/stockService';
+import { getItems, stockAdjustment, isLowStock, refreshStock } from '../../services/stockService';
 import { STOCK_TODAY as TODAY, ADJUSTMENT_REASONS } from '../../data/stock';
 import { logActivity } from '../../services/activityService';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
@@ -22,7 +22,14 @@ export default function StockAdjustment() {
   const { addNotification } = useNotifications();
   const { user } = useAuth();
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
-  const items = useMemo(() => getItems(), []);
+  const [items, setItems] = useState(() => getItems());
+
+  useEffect(() => {
+    const refresh = () => setItems(getItems());
+    window.addEventListener('rg:stock-updated', refresh);
+    refreshStock().catch(() => {});
+    return () => window.removeEventListener('rg:stock-updated', refresh);
+  }, []);
 
   const [step, setStep] = useState('form'); // form | confirm | success
   const [form, setForm] = useState({

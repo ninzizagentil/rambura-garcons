@@ -16,7 +16,6 @@ import UserFormModal from './UserFormModal';
 export default function Users() {
   const { showToast } = useToast();
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -24,7 +23,7 @@ export default function Users() {
   const [editingUser, setEditingUser] = useState(null);
   const [confirmTarget, setConfirmTarget] = useState(null);
 
-  const refresh = async () => { setLoading(true); try { setUsers(await getUsers()); } finally { setLoading(false); } };
+  const refresh = async () => { setUsers(await getUsers({ limit: 200 })); };
   useEffect(() => { refresh(); }, []);
 
   const filtered = useMemo(() => {
@@ -40,12 +39,15 @@ export default function Users() {
     });
   }, [users, search, roleFilter, statusFilter]);
 
-  const handleToggleStatus = () => {
+  const handleToggleStatus = async () => {
     if (!confirmTarget) return;
     const newStatus = confirmTarget.status === 'active' ? 'inactive' : 'active';
-    setUserStatus(confirmTarget.id, newStatus).then((result) => { if (!result.success) showToast(result.error, 'error'); return refresh(); });
-    showToast(`${confirmTarget.fullName} was ${newStatus === 'active' ? 'reactivated' : 'deactivated'}.`, 'success');
+    const target = confirmTarget;
     setConfirmTarget(null);
+    const result = await setUserStatus(target.id, newStatus);
+    if (!result.success) { showToast(result.error, 'error'); return; }
+    showToast(`${target.fullName} was ${newStatus === 'active' ? 'reactivated' : 'deactivated'}.`, 'success');
+    refresh();
   };
 
   const columns = [

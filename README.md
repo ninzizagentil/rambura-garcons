@@ -7,9 +7,43 @@ React + Vite + Tailwind CSS v4 frontend, built in 5 phases per the project spec.
 ## Run locally
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm --prefix backend install
+npm run seed     # creates the database + collections and inserts demo users/books/stock (one-time, see below)
+npm run dev:backend # starts the API on localhost:5000
+npm run dev      # starts the frontend on http://localhost:5173
 npm run build    # production build to /dist
 ```
+
+Run `dev:backend` and `dev` in separate terminals (or use
+`npm run dev:all` to run frontend + backend together in one terminal).
+The browser only calls `http://localhost:5173/api`; Vite proxies those requests
+to the backend at `http://localhost:5000`, so no frontend CORS configuration is
+needed during development. The backend connects to MongoDB using the
+`MONGODB_URI` in `backend/.env`.
+
+### Creating the database (`npm run seed`)
+MongoDB (whether local or Atlas) has no database or collections until
+something writes to it — connecting alone does not create them. Run
+`npm run seed` once, after `backend/.env` is pointed at your database, to:
+- create the `rambura_garcons` database and every collection (users, books,
+  stock items, roles, permissions, etc.)
+- insert the 4 demo login accounts below
+- insert the sample books, stock items, staff, programs, and website content
+
+This is destructive — it wipes and re-inserts users/books/stock/etc. every
+time it's run, so only run it once per fresh database, not on every
+`npm install`.
+
+### Using MongoDB Atlas
+Set `MONGODB_URI` in `backend/.env` to your Atlas connection string, e.g.:
+```
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/rambura_garcons?retryWrites=true&w=majority
+```
+(the `/rambura_garcons` before the `?` sets the database name). Run
+`npm run seed` followed by `npm run dev:backend`
+— the seed script will create the database and collections directly inside
+your Atlas cluster, visible immediately in Atlas's Collections tab or in
+MongoDB Compass connected to the same URI.
 
 ## Demo accounts (Login page)
 | Username   | Password      | Role                     |

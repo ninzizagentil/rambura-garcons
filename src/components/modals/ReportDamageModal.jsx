@@ -45,28 +45,26 @@ export default function ReportDamageModal({ open, onClose, item, onReported }) {
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
     setSaving(true);
     setServerError('');
-    setTimeout(() => {
-      const res = reportDamage({ itemId: item.id, ...form });
-      setSaving(false);
-      if (!res.success) {
-        setServerError(res.error);
-        return;
-      }
-      showToast(`Damage reported for "${item.name}".`, 'success');
-      logActivity({
-        user: form.reportedBy,
-        action: `Reported damage: ${item.name} (${form.quantity} ${item.unit}, ${form.reason})`,
-        module: 'Stock',
-        status: 'warning',
-      });
-      onReported?.();
-      onClose();
-    }, 400);
+    const res = await reportDamage({ itemId: item.id, ...form });
+    setSaving(false);
+    if (!res.success) {
+      setServerError(res.error);
+      return;
+    }
+    showToast(`Damage reported for "${item.name}".`, 'success');
+    logActivity({
+      user: form.reportedBy,
+      action: `Reported damage: ${item.name} (${form.quantity} ${item.unit}, ${form.reason})`,
+      module: 'Stock',
+      status: 'warning',
+    });
+    onReported?.();
+    onClose();
   };
 
   return (

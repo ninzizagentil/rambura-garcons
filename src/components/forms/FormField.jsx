@@ -8,13 +8,13 @@ const fieldClasses = (hasError, dark) =>
         'w-full rounded-[var(--radius-control)] border bg-[var(--color-navy-field)] px-3.5 py-2.5 text-sm text-white',
         'placeholder:text-white/40 transition-colors duration-150',
         'focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)] focus:border-[var(--color-gold)]',
-        hasError ? 'border-[var(--color-status-red)]' : 'border-[var(--color-navy-border)]'
+        hasError ? 'border-[var(--color-gold)]' : 'border-[var(--color-navy-border)]'
       )
     : cn(
         'w-full rounded-[var(--radius-control)] border bg-[var(--color-white)] px-3.5 py-2.5 text-sm text-[var(--color-dark-gray)]',
         'placeholder:text-[var(--color-mid-gray)] transition-colors duration-150',
         'focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)] focus:border-[var(--color-medium-green)]',
-        hasError ? 'border-[var(--color-status-red)]' : 'border-[var(--color-border-gray)]'
+        hasError ? 'border-[var(--color-gold)]' : 'border-[var(--color-border-gray)]'
       );
 
 function FieldWrapper({ id, label, required, error, hint, dark, children }) {
@@ -22,13 +22,13 @@ function FieldWrapper({ id, label, required, error, hint, dark, children }) {
     <div className="flex flex-col gap-1.5">
       {label && (
         <label htmlFor={id} className={cn('text-sm font-medium', dark ? 'text-white' : 'text-[var(--color-dark-gray)]')}>
-          {label} {required && <span className={dark ? 'text-[var(--color-gold)]' : 'text-[var(--color-status-red)]'} aria-hidden="true">*</span>}
+          {label} {required && <span className='text-[var(--color-gold)]' aria-hidden="true">*</span>}
         </label>
       )}
       {children}
       {hint && !error && <p className={cn('text-xs', dark ? 'text-white/50' : 'text-[var(--color-mid-gray)]')}>{hint}</p>}
       {error && (
-        <p className={cn('flex items-center gap-1 text-xs font-medium', dark ? 'text-red-400' : 'text-[var(--color-status-red)]')} role="alert">
+        <p className={cn('flex items-center gap-1 text-xs font-medium', dark ? 'text-[var(--color-gold)]' : 'text-[var(--color-gold)]')} role="alert">
           <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" />
           {error}
         </p>

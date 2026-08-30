@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Download, BookOpen, BookMarked, CheckCircle2, AlertTriangle,
   Eye, RotateCcw, Bell, Printer, CalendarRange,
@@ -18,7 +18,7 @@ import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import { useToast } from '../../context/ToastContext';
-import { getLoans, getBooks, returnBook, daysOverdue } from '../../services/bookService';
+import { getLoans, getBooks, refreshLibrary, returnBook, daysOverdue } from '../../services/bookService';
 import { exportToCSV } from '../../utils/export';
 
 const PAGE_SIZE = 5;
@@ -33,7 +33,7 @@ export default function BorrowingHistory() {
   const { viewOnly } = useModuleAccess(ROLES.LIBRARIAN);
 
   const [loans, setLoans] = useState(() => getLoans());
-  const books = useMemo(() => getBooks(), []);
+  const [books, setBooks] = useState(() => getBooks());
   const bookById = useMemo(() => Object.fromEntries(books.map((b) => [b.id, b])), [books]);
 
   const [search, setSearch] = useState('');
@@ -47,7 +47,15 @@ export default function BorrowingHistory() {
   const [confirmReturn, setConfirmReturn] = useState(null);
   const [processing, setProcessing] = useState(false);
 
-  const refresh = () => setLoans(getLoans());
+  const refresh = () => {
+    setLoans(getLoans());
+    setBooks(getBooks());
+  };
+  useEffect(() => {
+    window.addEventListener('rg:library-updated', refresh);
+    refreshLibrary().catch(() => {});
+    return () => window.removeEventListener('rg:library-updated', refresh);
+  }, []);
 
   // A loan's real-world status: returned stays returned; otherwise it's
   // overdue the moment today passes its due date, else still borrowed.
@@ -97,16 +105,18 @@ export default function BorrowingHistory() {
 
   const hasActiveFilters = search || statusFilter || bookFilter || dateFrom || dateTo;
 
-  const handleReturn = () => {
+  const handleReturn = async () => {
     if (!confirmReturn) return;
     setProcessing(true);
-    setTimeout(() => {
-      returnBook(confirmReturn.id);
-      setProcessing(false);
-      showToast(`"${confirmReturn.bookTitle}" marked as returned.`, 'success');
-      refresh();
-      setConfirmReturn(null);
-    }, 400);
+    const result = await returnBook(confirmReturn.id);
+    setProcessing(false);
+    if (!result.success) {
+      showToast(result.error, 'error');
+      return;
+    }
+    showToast(`"${confirmReturn.bookTitle}" marked as returned.`, 'success');
+    refresh();
+    setConfirmReturn(null);
   };
 
   const handleNotify = (loan) => showToast(`Overdue reminder sent to ${loan.borrower}.`, 'info');

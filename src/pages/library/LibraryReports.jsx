@@ -1,25 +1,60 @@
-import { useState } from 'react';
-import { Download } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Download, Printer } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 import PageHeader from '../../components/layout/PageHeader';
 import { ChartCard } from '../../components/cards/InsightChartCards';
 import { FilterDropdown } from '../../components/common/SearchBar';
 import Button from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
-import { getBooks } from '../../services/bookService';
+import { getBooks, getLoans, refreshLibrary } from '../../services/bookService';
 import { exportToCSV } from '../../utils/export';
+import { printReport } from '../../utils/print';
 
-const CIRCULATION = [
-  { month: 'Apr', loans: 62, returns: 58 }, { month: 'May', loans: 74, returns: 69 },
-  { month: 'Jun', loans: 58, returns: 60 }, { month: 'Jul', loans: 81, returns: 75 },
-  { month: 'Aug', loans: 69, returns: 64 },
-];
 const PIE_COLORS = ['var(--color-medium-green)', 'var(--color-gold)', 'var(--color-status-blue)', 'var(--color-status-amber)'];
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// Builds the last 5 calendar months (oldest -> newest, ending this month) and
+// counts real loans/returns falling in each, from actual loan records.
+function buildCirculation(loans) {
+  const now = new Date();
+  const months = [];
+  for (let i = 4; i >= 0; i -= 1) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ key: `${d.getFullYear()}-${d.getMonth()}`, month: MONTH_LABELS[d.getMonth()], loans: 0, returns: 0 });
+  }
+  const byKey = Object.fromEntries(months.map((m) => [m.key, m]));
+  loans.forEach((l) => {
+    if (l.borrowDate) {
+      const bd = new Date(l.borrowDate);
+      const key = `${bd.getFullYear()}-${bd.getMonth()}`;
+      if (byKey[key]) byKey[key].loans += 1;
+    }
+    if (l.returnDate) {
+      const rd = new Date(l.returnDate);
+      const key = `${rd.getFullYear()}-${rd.getMonth()}`;
+      if (byKey[key]) byKey[key].returns += 1;
+    }
+  });
+  return months;
+}
 
 export default function LibraryReports() {
   const { showToast } = useToast();
   const [range, setRange] = useState('');
-  const books = getBooks();
+  const [books, setBooks] = useState(() => getBooks());
+  const [loans, setLoans] = useState(() => getLoans());
+
+  useEffect(() => {
+    const refresh = () => {
+      setBooks(getBooks());
+      setLoans(getLoans());
+    };
+    window.addEventListener('rg:library-updated', refresh);
+    refreshLibrary().catch(() => {});
+    return () => window.removeEventListener('rg:library-updated', refresh);
+  }, []);
+
+  const circulation = useMemo(() => buildCirculation(loans), [loans]);
 
   const byCategory = books.reduce((acc, b) => {
     acc[b.category] = (acc[b.category] || 0) + b.totalCopies;
@@ -44,13 +79,30 @@ export default function LibraryReports() {
     showToast('Library report downloaded as CSV.', 'success');
   };
 
+  const handlePrint = () => {
+    const columns = [
+      { key: 'title', header: 'Title' },
+      { key: 'category', header: 'Category' },
+      { key: 'totalCopies', header: 'Total Copies' },
+      { key: 'availableCopies', header: 'Available' },
+      { key: 'borrowedCopies', header: 'Borrowed' },
+    ];
+    const ok = printReport('Library Reports', columns, books);
+    if (!ok) showToast('Enable pop-ups to print this report.', 'error');
+  };
+
   return (
     <div>
       <PageHeader
         title="Library Reports"
         description="Circulation, trends, and availability."
         breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Reports' }]}
-        actions={<Button variant="secondary" icon={Download} onClick={handleExport}>Export</Button>}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" icon={Printer} onClick={handlePrint}>Print</Button>
+            <Button variant="secondary" icon={Download} onClick={handleExport}>Export</Button>
+          </div>
+        }
       />
 
       <div className="flex flex-wrap gap-3 mb-5">
@@ -60,7 +112,7 @@ export default function LibraryReports() {
       <div className="grid lg:grid-cols-2 gap-5 mb-5">
         <ChartCard title="Circulation" description="Loans vs. returns per month">
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={CIRCULATION}>
+            <BarChart data={circulation}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-gray)" />
               <XAxis dataKey="month" stroke="var(--color-mid-gray)" fontSize={12} />
               <YAxis stroke="var(--color-mid-gray)" fontSize={12} />

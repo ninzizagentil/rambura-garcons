@@ -63,7 +63,7 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card-hover z-30 max-h-[70vh] flex flex-col">
+        <div className="absolute right-0 mt-2 w-80 bg-[var(--sidebar-bg)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card-hover z-30 max-h-[70vh] flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border-gray)]">
             <p className="font-semibold text-sm text-[var(--color-dark-gray)]">Notifications</p>
             <div className="flex items-center gap-3">

@@ -1,4 +1,5 @@
 import { api } from './api';
+import { uploadImage } from './imageService';
 
 let books = [];
 let loans = [];
@@ -6,7 +7,11 @@ let loaded = false;
 let loading;
 
 function normalizeBook(book) {
-  return { ...book, id: book.id || book._id, availableCopies: book.availableCopies ?? (book.totalCopies - book.borrowedCopies) };
+  const value = { ...book, id: book.id || book._id, availableCopies: book.availableCopies ?? (book.totalCopies - book.borrowedCopies) };
+  // The API stores the cover as { imageUrl, publicId }; the form and cover
+  // <img> tags just want the URL string.
+  if (value.coverImage && typeof value.coverImage === 'object') value.coverImage = value.coverImage.imageUrl || '';
+  return value;
 }
 
 function normalizeLoan(loan) {
@@ -37,12 +42,25 @@ export function getLoans() { return loans; }
 export function getLoansForBook(bookId) { return loans.filter((loan) => loan.bookId === bookId); }
 export function isLibraryLoaded() { return loaded; }
 
+// A freshly-picked cover comes in as a data: URL from ImageField — it has to
+// be uploaded to Cloudinary first so the backend gets a real { imageUrl,
+// publicId } object instead of a giant base64 string it would silently drop.
+async function withUploadedCover(data) {
+  const payload = { ...data };
+  if (payload.coverImage?.startsWith?.('data:')) {
+    payload.coverImage = await uploadImage(payload.coverImage, 'rambura-garcons/library');
+  } else if (!payload.coverImage) {
+    delete payload.coverImage; // don't wipe an existing cover with a blank value
+  }
+  return payload;
+}
+
 export async function createBook(data) {
-  try { const result = await api.post('/library/books', data); await refreshLibrary(); return { success: true, book: normalizeBook(result.data) }; }
+  try { const payload = await withUploadedCover(data); const result = await api.post('/library/books', payload); await refreshLibrary(); return { success: true, book: normalizeBook(result.data) }; }
   catch (error) { return { success: false, error: error.message }; }
 }
 export async function updateBook(id, updates) {
-  try { await api.put(`/library/books/${id}`, updates); await refreshLibrary(); return { success: true }; }
+  try { const payload = await withUploadedCover(updates); await api.put(`/library/books/${id}`, payload); await refreshLibrary(); return { success: true }; }
   catch (error) { return { success: false, error: error.message }; }
 }
 export async function borrowBook(data) {

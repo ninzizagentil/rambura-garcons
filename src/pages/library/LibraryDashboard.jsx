@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, CheckCircle2, BookMarked, AlertTriangle, TrendingUp, PieChart } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
@@ -6,16 +6,24 @@ import StatCard from '../../components/cards/StatCard';
 import { InsightCard } from '../../components/cards/InsightChartCards';
 import ActivityFeedCard from '../../components/cards/ActivityFeedCard';
 import { useAuth } from '../../context/AuthContext';
-import { getBooks, getLoans, daysOverdue } from '../../services/bookService';
+import { getBooks, getLoans, refreshLibrary, daysOverdue } from '../../services/bookService';
 import { getActivity } from '../../services/activityService';
 
 export default function LibraryDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const books = useMemo(() => getBooks(), []);
-  const loans = useMemo(() => getLoans(), []);
+  const [libraryVersion, setLibraryVersion] = useState(0);
+  const books = useMemo(() => getBooks(), [libraryVersion]);
+  const loans = useMemo(() => getLoans(), [libraryVersion]);
   const activity = useMemo(() => getActivity().filter((a) => a.module === 'Library').slice(0, 5), []);
+
+  useEffect(() => {
+    const handleUpdate = () => setLibraryVersion((version) => version + 1);
+    window.addEventListener('rg:library-updated', handleUpdate);
+    refreshLibrary().catch(() => {});
+    return () => window.removeEventListener('rg:library-updated', handleUpdate);
+  }, []);
 
   const totalCopies = books.reduce((sum, b) => sum + b.totalCopies, 0);
   const availableCopies = books.reduce((sum, b) => sum + b.availableCopies, 0);

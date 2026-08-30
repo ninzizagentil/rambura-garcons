@@ -9,7 +9,14 @@ let suppliers = [];
 let loading;
 
 function normalizeItem(item) {
-  return { ...item, id: item.id || item._id, value: item.value ?? item.stockValue ?? item.quantity * (item.unitPrice || 0) };
+  const expiry = getExpiryStatus(item.expiryDate);
+  return {
+    ...item,
+    id: item.id || item._id,
+    value: item.value ?? item.stockValue ?? item.quantity * (item.unitPrice || 0),
+    expiryStatus: expiry?.status ?? null,
+    expiryDaysRemaining: expiry?.daysRemaining ?? null,
+  };
 }
 function normalizeList(result) { return Array.isArray(result.data) ? result.data : []; }
 

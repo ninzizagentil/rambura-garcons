@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, PackagePlus } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
@@ -9,12 +9,19 @@ import { EmptyState } from '../../components/feedback/States';
 import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
-import { getLowStockItems } from '../../services/stockService';
+import { getLowStockItems, refreshStock } from '../../services/stockService';
 
 export default function LowStock() {
   const navigate = useNavigate();
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
-  const [items] = useState(getLowStockItems());
+  const [items, setItems] = useState(() => getLowStockItems());
+
+  useEffect(() => {
+    const refresh = () => setItems(getLowStockItems());
+    window.addEventListener('rg:stock-updated', refresh);
+    refreshStock().catch(() => {});
+    return () => window.removeEventListener('rg:stock-updated', refresh);
+  }, []);
 
   const columns = [
     { key: 'name', header: 'Item' },

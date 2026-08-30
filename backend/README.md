@@ -8,7 +8,8 @@ Express + Mongoose backend for the Rambura Garçons TVET School MIS.
 2. Copy `.env.example` to `.env` and set secrets.
 3. From the repository root run `npm install` and `npm --prefix backend install`.
 4. Seed demo data with `npm --prefix backend run seed`.
-5. Run the API with `npm --prefix backend run dev`.
+5. Ensure `MONGODB_URI` in `.env` points to the MongoDB instance you want to use.
+6. Run the API with `npm --prefix backend run dev`.
 
 The API listens on `http://localhost:5000` and uses database `rambura_garcons`.
 

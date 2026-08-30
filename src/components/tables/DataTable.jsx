@@ -53,7 +53,7 @@ export default function DataTable({
               <th
                 key={col.key}
                 scope="col"
-                className="text-left font-semibold text-[var(--color-mid-gray)] uppercase tracking-wide text-xs px-4 py-3 whitespace-nowrap"
+                className="text-left font-bold text-[var(--color-dark-gray)] uppercase tracking-[0.12em] text-[11px] px-4 py-3 whitespace-nowrap"
               >
                 {col.sortable && onSort ? (
                   <button
@@ -104,7 +104,7 @@ export default function DataTable({
                   </td>
                 )}
                 {columns.map((col) => (
-                  <td key={col.key} className="px-4 py-3.5 text-[var(--color-dark-gray)] whitespace-nowrap">
+                  <td key={col.key} className="px-4 py-3.5 text-[var(--color-dark-gray)] font-medium whitespace-nowrap">
                     {col.render ? col.render(row) : row[col.key]}
                   </td>
                 ))}

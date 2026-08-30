@@ -1,14 +1,20 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { Calendar, ArrowLeft } from 'lucide-react';
-import { getNews } from '../../services/contentService';
+import { getNews, useContentVersion, isContentLoaded } from '../../services/contentService';
 
 export default function NewsDetails() {
   const { slug } = useParams();
+  useContentVersion();
   const news = getNews();
   const article = news.find((n) => n.slug === slug);
   const related = news.filter((n) => n.slug !== slug).slice(0, 2);
 
-  if (!article) return <Navigate to="/news" replace />;
+  if (!article) {
+    // Content may simply not have finished loading yet — only bounce the
+    // visitor away once we know for sure the article doesn't exist.
+    if (!isContentLoaded()) return null;
+    return <Navigate to="/news" replace />;
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-4 md:px-6 py-14">

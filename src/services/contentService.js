@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { api } from './api';
+import { uploadImage } from './imageService';
 
 // The public site is rendered before its first API request completes. Keep a
 // complete hero shape here so an unavailable or still-starting backend cannot
@@ -17,6 +19,8 @@ const DEFAULT_HERO = {
 
 const cache = { hero: DEFAULT_HERO, programs: [], departments: [], staff: [], news: [], gallery: [], settings: {} };
 let loading;
+let contentLoaded = false;
+export function isContentLoaded() { return contentLoaded; }
 
 function id(value) { return value?.id || value?._id; }
 function normalize(item) {
@@ -41,12 +45,30 @@ export async function refreshContent() {
     cache.hero = hero.data || {};
     cache.programs = list(programs); cache.departments = list(departments); cache.staff = list(staff);
     cache.news = list(news); cache.gallery = list(gallery); cache.settings = settings.data || {};
+    contentLoaded = true;
     window.dispatchEvent(new Event('rg:content-updated'));
     return cache;
   }).finally(() => { loading = null; });
   return loading;
 }
 if (typeof window !== 'undefined') refreshContent().catch(() => {});
+
+// Every getXxx() below reads a plain in-memory cache that's populated by the
+// async refreshContent() above (and updated after every create/update/delete).
+// A component that just calls getPrograms() etc. during render captures a
+// snapshot at mount time — if the initial fetch hasn't resolved yet (or an
+// edit happens later), nothing tells React to re-render, so the page can be
+// stuck showing empty/stale content forever. Call this hook in any component
+// that reads the content cache so it re-renders whenever the cache changes.
+export function useContentVersion() {
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    const bump = () => setVersion((v) => v + 1);
+    window.addEventListener('rg:content-updated', bump);
+    return () => window.removeEventListener('rg:content-updated', bump);
+  }, []);
+  return version;
+}
 
 export function getHero() { return { ...DEFAULT_HERO, ...cache.hero, stats: cache.hero?.stats || DEFAULT_HERO.stats }; }
 export function getPrograms() { return cache.programs; }
@@ -60,7 +82,23 @@ export function getContactInfo() { return cache.settings.contact || cache.settin
 export function getContactSettings() { return getContactInfo(); }
 
 async function mutate(method, path, data) {
-  try { const result = await api[method](path, data); await refreshContent(); return { success: true, item: normalize(result.data), data: result.data }; }
+  try {
+    const payload = { ...data };
+    // Both "image" (programs/departments/news/gallery) and "photo" (staff) are
+    // picture fields — whichever one is present and holds a freshly-picked
+    // data: URL needs to be uploaded before it's sent to the API. The folder
+    // is derived from the resource in the path so files land in the right
+    // Cloudinary bucket instead of always under "news".
+    const resource = path.split('/').filter(Boolean)[1] || 'misc';
+    for (const key of ['image', 'photo']) {
+      if (payload[key]?.startsWith?.('data:')) {
+        payload[key] = await uploadImage(payload[key], `rambura-garcons/${resource || 'misc'}`);
+      }
+    }
+    const result = await api[method](path, payload);
+    await refreshContent();
+    return { success: true, item: normalize(result.data), data: result.data };
+  }
   catch (error) { return { success: false, error: error.message }; }
 }
 export async function updateHero(data) { const result = await mutate('put', '/admin/website/hero', data); return { ...result, hero: result.data || result.item }; }

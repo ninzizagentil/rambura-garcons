@@ -4,17 +4,17 @@ import { cn } from '../../utils/cn';
 
 const VARIANTS = {
   primary:
-    'bg-[var(--color-medium-green)] text-white hover:bg-[var(--color-deep-green-600)] disabled:opacity-50',
+    'bg-[var(--gold)] text-[var(--dark-bg)] hover:bg-[var(--gold-hover)] disabled:opacity-50 shadow-[0_12px_24px_rgba(217,164,65,0.2)]',
   secondary:
-    'bg-[var(--color-white)] text-[var(--color-heading)] border border-[var(--color-border-gray)] hover:bg-[var(--color-off-white)] disabled:opacity-50',
+    'bg-transparent text-[var(--text-primary)] border border-[var(--gold)] hover:bg-[var(--gold)] hover:text-[var(--dark-bg)] disabled:opacity-50',
   outline:
-    'bg-transparent text-[var(--color-medium-green)] border border-[var(--color-medium-green)] hover:bg-[var(--color-light-green-100)] disabled:opacity-50',
+    'bg-transparent text-[var(--gold)] border border-[var(--gold)] hover:bg-[var(--gold)] hover:text-[var(--dark-bg)] disabled:opacity-50',
   danger:
     'bg-[var(--color-status-red)] text-white hover:opacity-90 disabled:opacity-50',
   ghost:
-    'bg-transparent text-[var(--color-dark-gray)] hover:bg-[var(--color-soft-gray)] disabled:opacity-50',
+    'bg-transparent text-[var(--text-primary)] hover:bg-[var(--surface)] disabled:opacity-50',
   gold:
-    'bg-[var(--color-gold)] text-white hover:opacity-90 disabled:opacity-50',
+    'bg-[var(--gold)] text-[var(--dark-bg)] hover:bg-[var(--gold-hover)] disabled:opacity-50',
 };
 
 const SIZES = {

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Boxes, PackageCheck, PackageMinus, PackagePlus, TrendingDown, TrendingUp,
@@ -12,6 +12,7 @@ import { Badge } from '../../components/common/Badge';
 import {
   getItems, getTransactions, getLowStockItems, getOutOfStockItems, getExpiredItems,
   getExpiringSoonItems, getDamagedItems, getRemovedItems, getTotalStockValue, getUsageByItem,
+  refreshStock,
 } from '../../services/stockService';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
@@ -41,16 +42,36 @@ export default function StockDashboard() {
   const navigate = useNavigate();
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
 
-  const items = useMemo(() => getItems(), []);
-  const transactions = useMemo(() => getTransactions(), []);
-  const lowStock = useMemo(() => getLowStockItems(), []);
-  const outOfStock = useMemo(() => getOutOfStockItems(), []);
-  const expired = useMemo(() => getExpiredItems(), []);
-  const expiringSoon = useMemo(() => getExpiringSoonItems(), []);
-  const damaged = useMemo(() => getDamagedItems(), []);
-  const removed = useMemo(() => getRemovedItems(), []);
-  const totalValue = useMemo(() => getTotalStockValue(), []);
-  const usage = useMemo(() => getUsageByItem(), []);
+  const [items, setItems] = useState(() => getItems());
+  const [transactions, setTransactions] = useState(() => getTransactions());
+  const [lowStock, setLowStock] = useState(() => getLowStockItems());
+  const [outOfStock, setOutOfStock] = useState(() => getOutOfStockItems());
+  const [expired, setExpired] = useState(() => getExpiredItems());
+  const [expiringSoon, setExpiringSoon] = useState(() => getExpiringSoonItems());
+  const [damaged, setDamaged] = useState(() => getDamagedItems());
+  const [removed, setRemoved] = useState(() => getRemovedItems());
+  const [totalValue, setTotalValue] = useState(() => getTotalStockValue());
+  const [usage, setUsage] = useState(() => getUsageByItem());
+
+  const refresh = () => {
+    setItems(getItems());
+    setTransactions(getTransactions());
+    setLowStock(getLowStockItems());
+    setOutOfStock(getOutOfStockItems());
+    setExpired(getExpiredItems());
+    setExpiringSoon(getExpiringSoonItems());
+    setDamaged(getDamagedItems());
+    setRemoved(getRemovedItems());
+    setTotalValue(getTotalStockValue());
+    setUsage(getUsageByItem());
+  };
+
+  useEffect(() => {
+    window.addEventListener('rg:stock-updated', refresh);
+    refreshStock().catch(() => {});
+    return () => window.removeEventListener('rg:stock-updated', refresh);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const totalItems = items.length;
   const inStock = items.filter((i) => i.quantity > 0).length;

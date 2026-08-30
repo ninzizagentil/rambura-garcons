@@ -19,7 +19,7 @@ import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { useToast } from '../../context/ToastContext';
 import { ROLES } from '../../data/roles';
-import { getItems, deleteItem } from '../../services/stockService';
+import { getItems, refreshStock, deleteItem } from '../../services/stockService';
 import { STOCK_CATEGORIES, STOCK_UNITS } from '../../data/stock';
 import { exportToCSV } from '../../utils/export';
 import { cn } from '../../utils/cn';
@@ -84,7 +84,7 @@ export default function StockItems() {
 
   const fetchItems = () => {
     try {
-      setItems(getItems());
+      setItems([...getItems()]);
       setError(null);
       return true;
     } catch {
@@ -93,17 +93,20 @@ export default function StockItems() {
     }
   };
 
+  const refresh = () => fetchItems();
+
   useEffect(() => {
+    window.addEventListener('rg:stock-updated', refresh);
     setLoading(true);
-    const timer = setTimeout(() => {
-      fetchItems();
-      setLoading(false);
-    }, 450);
-    return () => clearTimeout(timer);
+    refreshStock()
+      .catch(() => setError('Failed to load stock items. Please try again.'))
+      .finally(() => {
+        fetchItems();
+        setLoading(false);
+      });
+    return () => window.removeEventListener('rg:stock-updated', refresh);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const refresh = () => fetchItems();
 
   // Reset to page 1 whenever the result set could change shape.
   useEffect(() => {

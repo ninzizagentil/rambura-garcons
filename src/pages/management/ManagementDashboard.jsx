@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Package, AlertTriangle, TrendingDown, TrendingUp, BookMarked, GraduationCap } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
@@ -14,13 +14,24 @@ import { getApplications } from '../../services/applicationService';
 export default function ManagementDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [applications, setApplications] = useState([]);
 
   const books = useMemo(() => getBooks(), []);
   const loans = useMemo(() => getLoans(), []);
   const items = useMemo(() => getItems(), []);
   const lowStock = useMemo(() => getLowStockItems(), []);
   const usage = useMemo(() => getUsageByItem(), []);
-  const applications = useMemo(() => getApplications(), []);
+  useEffect(() => {
+    let active = true;
+    getApplications()
+      .then((data) => {
+        if (active) setApplications(data);
+      })
+      .catch(() => {
+        if (active) setApplications([]);
+      });
+    return () => { active = false; };
+  }, []);
   const activity = useMemo(
     () => getActivity().filter((a) => ['Library', 'Stock', 'Management', 'Admissions'].includes(a.module)).slice(0, 5),
     []

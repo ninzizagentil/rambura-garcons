@@ -4,13 +4,15 @@ import { Input, Select, Textarea } from '../../components/forms/FormField';
 import { FormSection } from '../../components/cards/InsightChartCards';
 import Button from '../../components/common/Button';
 import PageHero from '../../components/common/PageHero';
-import { getPrograms, getAdmissionsInfo } from '../../services/contentService';
-import { getSiteImage } from '../../services/imageService';
+import { getPrograms, getAdmissionsInfo, useContentVersion } from '../../services/contentService';
+import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 import { submitApplication } from '../../services/applicationService';
 
 const REQUIRED_FIELDS = ['fullName', 'email', 'phone', 'program'];
 
 export default function Admissions() {
+  const contentVersion = useContentVersion();
+  useSiteImageVersion();
   const [programs, setPrograms] = useState([]);
   const [info, setInfo] = useState({ intro: '', requirements: [], dates: [], process: '', contactLine: '' });
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', program: '', message: '' });
@@ -24,7 +26,7 @@ export default function Admissions() {
       setPrograms(nextPrograms);
       setInfo(nextInfo);
     }).catch((error) => setServerError(error.message));
-  }, []);
+  }, [contentVersion]);
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -57,93 +59,220 @@ export default function Admissions() {
   return (
     <div>
       <PageHero title="Admissions">
-        <p className="text-white/80 mt-3">{info.intro}</p>
+        <p className="text-[var(--text-secondary)] mt-3">{info.intro}</p>
       </PageHero>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 -mt-8">
-        <div className="rounded-[var(--radius-card)] overflow-hidden aspect-[21/9] shadow-card-hover">
+        <div className="overflow-hidden rounded-[28px] aspect-[21/9] shadow-[0_28px_60px_rgba(15,61,46,0.12)] ring-1 ring-[rgba(15,61,46,0.06)]">
           <img src={getSiteImage('admissions.hero')} alt="Students at Rambura Garçons" className="w-full h-full object-cover" loading="lazy" />
         </div>
       </div>
 
-      <section className="max-w-5xl mx-auto px-4 md:px-6 py-14 grid lg:grid-cols-2 gap-10">
-        <div className="space-y-8">
-          <div>
-            <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-[var(--color-dark-gray)] mb-2">
-              <ListChecks className="w-5 h-5 text-[var(--color-medium-green)]" /> Requirements
-            </h2>
-            <ul className="text-sm text-[var(--color-mid-gray)] space-y-1.5 list-disc list-inside">
-              {info.requirements.map((r) => <li key={r}>{r}</li>)}
-            </ul>
-          </div>
-          <div>
-            <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-[var(--color-dark-gray)] mb-2">
-              <CalendarDays className="w-5 h-5 text-[var(--color-medium-green)]" /> Important Dates
-            </h2>
-            <ul className="text-sm text-[var(--color-mid-gray)] space-y-1.5">
-              {info.dates.map((d) => <li key={d}>{d}</li>)}
-            </ul>
-          </div>
-          <div>
-            <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-[var(--color-dark-gray)] mb-2">
-              <FileText className="w-5 h-5 text-[var(--color-medium-green)]" /> Admission Process
-            </h2>
-            <p className="text-sm text-[var(--color-mid-gray)]">
-              {info.process}
-            </p>
-          </div>
-          <div>
-            <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-[var(--color-dark-gray)] mb-2">
-              <Phone className="w-5 h-5 text-[var(--color-medium-green)]" /> Contact
-            </h2>
-            <p className="text-sm text-[var(--color-mid-gray)]">{info.contactLine}</p>
-          </div>
+      <section className="max-w-5xl mx-auto px-4 md:px-6 py-14">
+        <div className="mb-12">
+          <h2 className="font-display text-3xl font-bold text-[var(--text-primary)] mb-3">
+            Admission Information
+          </h2>
+          <p className="text-[var(--text-secondary)] text-lg">Everything you need to know before applying</p>
+          <span className="block w-16 h-1.5 rounded-full bg-[var(--gold)] mt-4" aria-hidden="true" />
         </div>
 
-        <div className="bg-gradient-to-b from-[var(--color-navy-800)] to-[var(--color-navy-900)] border border-white/10 shadow-xl rounded-2xl p-6 sm:p-8">
-          {submitted ? (
-            <div className="text-center py-8">
-              <CheckCircle2 className="w-10 h-10 text-[var(--color-gold)] mx-auto mb-3" aria-hidden="true" />
-              <p className="font-display font-semibold text-white">Application received</p>
-              <p className="text-sm text-white/70 mt-1">
-                Thank you, {form.fullName.split(' ')[0]}. We'll contact you at {form.email} with next steps.
+        <div className="grid lg:grid-cols-2 gap-10">
+          <div className="space-y-6">
+            <div className="mb-2">
+              <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <span className="text-[var(--gold)]">##</span> Requirements
+              </h2>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">What you need to qualify for admission</p>
+            </div>
+            
+            <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.1)]">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(201,140,46,0.12)]">
+                  <ListChecks className="w-5 h-5 text-[var(--gold)]" />
+                </div>
+                <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">
+                  Admission Requirements
+                </h3>
+              </div>
+              <ul className="text-sm text-[var(--text-secondary)] space-y-2.5">
+                {info.requirements.map((r, idx) => (
+                  <li key={r} className="flex gap-3 items-start">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--gold)] text-white text-xs font-bold flex-shrink-0 mt-0.5">✓</span>
+                    <span>{r}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-8 mb-2">
+              <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <span className="text-[var(--gold)]">##</span> Important Dates
+              </h2>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">Key dates for the admission cycle</p>
+            </div>
+
+            <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.1)]">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(201,140,46,0.12)]">
+                  <CalendarDays className="w-5 h-5 text-[var(--gold)]" />
+                </div>
+                <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">
+                  Important Dates
+                </h3>
+              </div>
+              <ul className="text-sm text-[var(--text-secondary)] space-y-2.5">
+                {info.dates.map((d) => (
+                  <li key={d} className="flex gap-3 items-start">
+                    <span className="text-[var(--gold)] font-semibold flex-shrink-0">•</span>
+                    <span>{d}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-8 mb-2">
+              <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <span className="text-[var(--gold)]">##</span> Admission Process
+              </h2>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">How our admission process works</p>
+            </div>
+
+            <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.1)]">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(201,140,46,0.12)]">
+                  <FileText className="w-5 h-5 text-[var(--gold)]" />
+                </div>
+                <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">
+                  Step-by-Step Process
+                </h3>
+              </div>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                {info.process}
+              </p>
+            </div>
+
+            <div className="mt-8 mb-2">
+              <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
+                <span className="text-[var(--gold)]">##</span> Contact & Support
+              </h2>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">Questions? We're here to help</p>
+            </div>
+
+            <div className="rounded-[24px] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(201,140,46,0.06),rgba(44,103,84,0.04))] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.08)]">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(201,140,46,0.15)]">
+                  <Phone className="w-5 h-5 text-[var(--gold)]" />
+                </div>
+                <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">Get in Touch</h3>
+              </div>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                {info.contactLine}
+              </p>
+              <div className="mt-5 pt-5 border-t border-[var(--border)] space-y-2">
+                <a href="tel:+250788123456" className="flex items-center gap-2.5 text-sm font-medium text-[var(--gold)] hover:text-[var(--gold-hover)] transition-colors">
+                  <Phone className="w-4 h-4" />
+                  +250 788 123 456
+                </a>
+                <a href="mailto:info@ramburagarcons.rw" className="flex items-center gap-2.5 text-sm font-medium text-[var(--gold)] hover:text-[var(--gold-hover)] transition-colors">
+                  <Mail className="w-4 h-4" />
+                  info@ramburagarcons.rw
+                </a>
+              </div>
+            </div>
+            </div>
+
+          <div className="border border-[var(--border)] shadow-[0_20px_45px_rgba(0,0,0,0.12)] rounded-[28px] p-6 sm:p-8 bg-[var(--surface)] backdrop-blur-sm sticky top-20">
+            {submitted ? (
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[rgba(46,154,102,0.12)] mb-4">
+                <CheckCircle2 className="w-7 h-7 text-[var(--success)]" aria-hidden="true" />
+              </div>
+              <p className="font-display font-semibold text-lg text-[var(--text-primary)]">Application Submitted Successfully!</p>
+              <p className="text-sm text-[var(--text-secondary)] mt-2">
+                Thank you, <span className="font-semibold">{form.fullName.split(' ')[0]}</span>. We'll review your application and contact you at <span className="font-semibold">{form.email}</span> with next steps within 3-5 business days.
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} noValidate className="space-y-5">
-              {serverError && <p className="text-sm text-red-200">{serverError}</p>}
+            <form onSubmit={handleSubmit} noValidate className="space-y-6">
+              {serverError && (
+                <div className="p-4 rounded-lg bg-[rgba(201,140,46,0.1)] border border-[var(--gold)] text-[var(--gold)] text-sm font-medium">
+                  {serverError}
+                </div>
+              )}
               <div>
-                <h2 className="font-display text-xl font-semibold text-white">Application Form</h2>
-                <span className="block w-10 h-1 rounded-full bg-[var(--color-gold)] mt-2" aria-hidden="true" />
+                <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)]">Admission Application</h2>
+                <p className="text-sm text-[var(--text-secondary)] mt-1">Complete the form below to apply for any of our programs.</p>
+                <span className="block w-12 h-1 rounded-full bg-[var(--gold)] mt-3" aria-hidden="true" />
               </div>
-              <FormSection>
-                <Input dark icon={User} label="Full Name" required value={form.fullName} onChange={update('fullName')} error={errors.fullName} />
-                <Input dark icon={Mail} label="Email" type="email" required value={form.email} onChange={update('email')} error={errors.email} />
-                <Input dark icon={Phone} label="Phone" required value={form.phone} onChange={update('phone')} error={errors.phone} />
-                <Select
-                  dark
-                  icon={GraduationCap}
-                  label="Program"
-                  required
-                  value={form.program}
-                  onChange={update('program')}
-                  error={errors.program}
-                  options={programs.map((p) => ({ value: p.slug, label: p.title }))}
-                />
-              </FormSection>
-              <Textarea dark label="Message (optional)" value={form.message} onChange={update('message')} placeholder="Anything else we should know?" />
-              <div className="flex items-center gap-5 pt-1">
-                <Button type="submit" variant="gold" className="flex-1" icon={Send} iconPosition="right" loading={saving} disabled={saving}>Submit Application</Button>
+              
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-[var(--text-primary)] text-sm mb-4 flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--gold)] text-white text-xs font-bold">1</span>
+                    Personal Information
+                  </h3>
+                  <div className="space-y-4 pl-7">
+                    <Input icon={User} label="Full Name" placeholder="Your complete name" required value={form.fullName} onChange={update('fullName')} error={errors.fullName} />
+                    <Input icon={Mail} label="Email Address" type="email" placeholder="your.email@example.com" required value={form.email} onChange={update('email')} error={errors.email} />
+                    <Input icon={Phone} label="Phone Number" placeholder="+250 xxx xxx xxx" required value={form.phone} onChange={update('phone')} error={errors.phone} />
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-[var(--text-primary)] text-sm mb-4 flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--gold)] text-white text-xs font-bold">2</span>
+                    Program Selection
+                  </h3>
+                  <div className="pl-7">
+                    <Select
+                      icon={GraduationCap}
+                      label="Select Your Program"
+                      placeholder="Choose a program you wish to apply for"
+                      required
+                      value={form.program}
+                      onChange={update('program')}
+                      error={errors.program}
+                      options={programs.map((p) => ({ value: p.slug, label: p.title }))}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-[var(--text-primary)] text-sm mb-4 flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--gold)] text-white text-xs font-bold">3</span>
+                    Additional Information
+                  </h3>
+                  <div className="pl-7">
+                    <Textarea 
+                      label="Message (Optional)" 
+                      value={form.message} 
+                      onChange={update('message')} 
+                      placeholder="Tell us anything else we should know about your application..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
+                <Button type="submit" variant="gold" className="flex-1" icon={Send} iconPosition="right" loading={saving} disabled={saving}>
+                  {saving ? 'Submitting...' : 'Submit Application'}
+                </Button>
                 <button
                   type="button"
-                  className="text-sm font-medium text-white/70 hover:text-white transition-colors"
-                  onClick={() => setForm({ fullName: '', email: '', phone: '', program: '', message: '' })}
+                  className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors px-4 py-2.5"
+                  onClick={() => {
+                    setForm({ fullName: '', email: '', phone: '', program: '', message: '' });
+                    setErrors({});
+                  }}
                 >
-                  Cancel
+                  Clear
                 </button>
               </div>
             </form>
           )}
+        </div>
         </div>
       </section>
     </div>

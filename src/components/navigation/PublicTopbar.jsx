@@ -1,5 +1,5 @@
 import { Phone, Mail, MapPin, Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
-import { getContactInfo } from '../../services/contentService';
+import { getContactInfo, useContentVersion } from '../../services/contentService';
 
 const PORTAL_LINKS = [
   { label: 'Student Portal', to: '/login' },
@@ -16,6 +16,7 @@ const SOCIALS = [
 ];
 
 export default function PublicTopbar() {
+  useContentVersion();
   const contact = getContactInfo();
 
   return (

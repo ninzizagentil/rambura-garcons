@@ -23,12 +23,7 @@ export default function Modal({ open, onClose, title, children, footer, size = '
 
   const sizes = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' };
 
-  // Portal into the dashboard's own root (present only while a dashboard
-  // route is mounted — see DashboardLayout.jsx) so the modal inherits the
-  // scoped dark-mode CSS variables when opened from a dashboard page.
-  // On public pages that root doesn't exist, so this falls back to
-  // document.body exactly as before — always light, matching the rest of
-  // the public site regardless of the dashboard's theme preference.
+  // Keep dashboard modals inside the themed dashboard root.
   const portalTarget = document.querySelector('[data-dashboard-root]') || document.body;
 
   return createPortal(

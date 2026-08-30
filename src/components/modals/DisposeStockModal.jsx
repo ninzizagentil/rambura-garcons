@@ -72,31 +72,29 @@ export default function DisposeStockModal({ open, onClose, item, damagedRecord, 
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
     setSaving(true);
     setServerError('');
-    setTimeout(() => {
-      const res = isDamagedFlow
-        ? disposeDamagedItem({ damagedId: damagedRecord.id, approvedBy: form.approvedBy, notes: form.notes })
-        : disposeStock({ itemId: item.id, ...form });
-      setSaving(false);
-      if (!res.success) {
-        setServerError(res.error);
-        return;
-      }
-      const name = target.itemName || target.name;
-      showToast(`${name} moved to Removed / Disposed.`, 'success');
-      logActivity({
-        user: form.approvedBy,
-        action: `Disposed stock: ${name} (${isDamagedFlow ? damagedRecord.quantity : form.quantity} ${target.unit})`,
-        module: 'Stock',
-        status: 'warning',
-      });
-      onDisposed?.();
-      onClose();
-    }, 400);
+    const res = isDamagedFlow
+      ? await disposeDamagedItem({ damagedId: damagedRecord.id, approvedBy: form.approvedBy, notes: form.notes })
+      : await disposeStock({ itemId: item.id, ...form });
+    setSaving(false);
+    if (!res.success) {
+      setServerError(res.error);
+      return;
+    }
+    const name = target.itemName || target.name;
+    showToast(`${name} moved to Removed / Disposed.`, 'success');
+    logActivity({
+      user: form.approvedBy,
+      action: `Disposed stock: ${name} (${isDamagedFlow ? damagedRecord.quantity : form.quantity} ${target.unit})`,
+      module: 'Stock',
+      status: 'warning',
+    });
+    onDisposed?.();
+    onClose();
   };
 
   const name = target.itemName || target.name;

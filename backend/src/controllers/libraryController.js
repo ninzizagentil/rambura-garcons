@@ -18,8 +18,17 @@ export async function getBooks(req, res) {
   return list(res, data, { page, limit, total, totalPages: Math.ceil(total / limit) });
 }
 export async function getBook(req, res) { const book = await Book.findById(req.params.id); return book ? ok(res, book) : fail(res, 'Book not found', 404); }
-export async function createBook(req, res) { const book = await Book.create({ ...req.body, totalCopies: Number(req.body.totalCopies), borrowedCopies: 0 }); await recordAudit(req, { action: 'Book created', module: 'Library', resourceType: 'Book', resourceId: book._id, description: `Created book ${book.title}` }); return ok(res, book, 'Book created', 201); }
-export async function updateBook(req, res) { const allowed = ['title', 'author', 'category', 'bookCode', 'description', 'coverImage', 'totalCopies', 'active']; const updates = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key))); const book = await Book.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true }); return book ? ok(res, book, 'Book updated') : fail(res, 'Book not found', 404); }
+// coverImage is stored as { imageUrl, publicId }; guard against a plain
+// string (or blank value) slipping through and silently wiping the cover.
+function normalizeCover(payload) {
+  if (!('coverImage' in payload)) return payload;
+  const value = payload.coverImage;
+  if (!value || (typeof value === 'string' && !value.trim())) delete payload.coverImage;
+  else if (typeof value === 'string') payload.coverImage = { imageUrl: value };
+  return payload;
+}
+export async function createBook(req, res) { const book = await Book.create({ ...normalizeCover({ ...req.body }), totalCopies: Number(req.body.totalCopies), borrowedCopies: 0 }); await recordAudit(req, { action: 'Book created', module: 'Library', resourceType: 'Book', resourceId: book._id, description: `Created book ${book.title}` }); return ok(res, book, 'Book created', 201); }
+export async function updateBook(req, res) { const allowed = ['title', 'author', 'category', 'bookCode', 'description', 'coverImage', 'totalCopies', 'active']; const updates = normalizeCover(Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)))); const book = await Book.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true }); return book ? ok(res, book, 'Book updated') : fail(res, 'Book not found', 404); }
 export async function deleteBook(req, res) { const book = await Book.findByIdAndUpdate(req.params.id, { active: false }, { new: true }); return book ? ok(res, book, 'Book archived') : fail(res, 'Book not found', 404); }
 
 export async function borrowBook(req, res) {

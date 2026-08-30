@@ -3,11 +3,8 @@ import { api, clearTokens, setTokens } from './api';
 const SESSION_KEY = 'rg_auth_session';
 
 function loginErrorMessage(error) {
-  // A browser `TypeError: Failed to fetch` means the API is unavailable (or
-  // blocked by the network), not that the user supplied an invalid password.
-  // Do not expose that implementation detail in the login form.
   if (error?.message === 'Failed to fetch' || error?.name === 'TypeError') {
-    return 'We could not connect to the server. Please check your connection and try again.';
+    return 'The server is unavailable. Start the backend and MongoDB, then try again.';
   }
 
   // Preserve useful messages returned by the API, while always falling back

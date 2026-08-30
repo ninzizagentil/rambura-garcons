@@ -35,22 +35,78 @@ export function printReport(title, columns, rows) {
       <head>
         <title>${printEscape(title)}</title>
         <style>
-          body { font-family: -apple-system, Segoe UI, Arial, sans-serif; padding: 32px; color: #222; }
-          h1 { font-size: 18px; margin-bottom: 2px; }
-          p.meta { font-size: 12px; color: #666; margin-top: 0; margin-bottom: 20px; }
-          table { width: 100%; border-collapse: collapse; font-size: 12px; }
-          th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; }
-          th { background: #f3f5f2; text-transform: uppercase; font-size: 10px; letter-spacing: 0.03em; }
-          tr:nth-child(even) { background: #fafafa; }
+          @page { size: A4 portrait; margin: 18mm; }
+          body {
+            margin: 0;
+            padding: 28px;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #1f2937;
+            background: #ffffff;
+          }
+          .page {
+            max-width: 100%;
+          }
+          .brand {
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #2C6754;
+            margin-bottom: 6px;
+            font-weight: 700;
+          }
+          h1 {
+            font-size: 24px;
+            margin: 0 0 6px;
+            color: #0E2B27;
+          }
+          .meta {
+            font-size: 12px;
+            color: #52656d;
+            margin: 0 0 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #dfe8e2;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            table-layout: fixed;
+          }
+          th, td {
+            border: 1px solid #d7dfd9;
+            padding: 8px 10px;
+            text-align: left;
+            vertical-align: top;
+            word-wrap: break-word;
+          }
+          th {
+            background: #edf4f0;
+            color: #153A2F;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-size: 9px;
+          }
+          tr:nth-child(even) td {
+            background: #fafcfb;
+          }
+          .empty {
+            text-align: center;
+            color: #667085;
+            padding: 18px;
+            font-style: italic;
+          }
         </style>
       </head>
       <body>
-        <h1>${printEscape(title)}</h1>
-        <p class="meta">Rambura Garçons — Generated ${printEscape(stamp)} · ${rows.length} record${rows.length === 1 ? '' : 's'}</p>
-        <table>
-          <thead><tr>${head}</tr></thead>
-          <tbody>${body || '<tr><td colspan="' + columns.length + '">No records.</td></tr>'}</tbody>
-        </table>
+        <div class="page">
+          <div class="brand">Rambura Garçons</div>
+          <h1>${printEscape(title)}</h1>
+          <p class="meta">Generated ${printEscape(stamp)} · ${rows.length} record${rows.length === 1 ? '' : 's'}</p>
+          <table>
+            <thead><tr>${head}</tr></thead>
+            <tbody>${body || '<tr><td class="empty" colspan="' + columns.length + '">No records available.</td></tr>'}</tbody>
+          </table>
+        </div>
       </body>
     </html>
   `);

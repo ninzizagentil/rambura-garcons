@@ -1,4 +1,5 @@
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -23,14 +24,28 @@ import { notFound, errorHandler } from './middleware/error.js';
 import { ok } from './utils/api.js';
 
 const app = express();
+app.use(compression({ threshold: '1kb' }));
 app.use(helmet());
-app.use(cors({ origin: env.clientUrl, credentials: true }));
+app.use(cors({
+	origin: (origin, callback) => {
+		const isConfiguredClient = origin === env.clientUrl;
+		const isLocalDevelopmentClient = env.nodeEnv !== 'production'
+			&& /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin || '');
+
+		callback(null, !origin || isConfiguredClient || isLocalDevelopmentClient);
+	},
+	credentials: true,
+}));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draft-8' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
 app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
-app.get('/api/health', (_req, res) => ok(res, { database: databaseStatus() }, 'Rambura Garçons API is running'));
+app.get('/api/health', (_req, res) => {
+	const database = databaseStatus();
+	const status = database === 'connected' ? 200 : 503;
+	return ok(res, { database }, database === 'connected' ? 'Rambura Garçons API is running' : 'Database unavailable', status);
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/audit-logs', auditRoutes);
 app.use('/api/users', userRoutes);

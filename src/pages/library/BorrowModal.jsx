@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Input, Select } from '../../components/forms/FormField';
 import Modal from '../../components/modals/Modal';
 import Button from '../../components/common/Button';
@@ -6,29 +6,39 @@ import Alert from '../../components/feedback/Alert';
 import { borrowBook } from '../../services/bookService';
 import { useToast } from '../../context/ToastContext';
 
-const TODAY = '2026-08-18';
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
 function addDays(dateStr, days) {
   const d = new Date(dateStr);
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
 
-const EMPTY_FORM = { borrower: '', borrowerType: 'Student', borrowDate: TODAY, dueDate: addDays(TODAY, 14) };
+function emptyForm() {
+  const borrowDate = today();
+  return { borrower: '', borrowerType: 'Student', borrowDate, dueDate: addDays(borrowDate, 14) };
+}
 
 export default function BorrowModal({ open, onClose, book, onBorrowed }) {
   const { showToast } = useToast();
   const [step, setStep] = useState('form'); // form | confirm
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [saving, setSaving] = useState(false);
 
   const reset = () => {
     setStep('form');
-    setForm(EMPTY_FORM);
+    setForm(emptyForm());
     setErrors({});
     setServerError('');
   };
+
+  useEffect(() => {
+    if (!open || !book) return;
+    reset();
+  }, [open, book?.id]);
 
   const handleClose = () => {
     reset();
@@ -41,6 +51,7 @@ export default function BorrowModal({ open, onClose, book, onBorrowed }) {
     const next = {};
     if (!form.borrower?.trim()) next.borrower = 'Borrower name is required.';
     if (!form.dueDate) next.dueDate = 'Due date is required.';
+    if (form.borrowDate && form.dueDate && form.dueDate < form.borrowDate) next.dueDate = 'Due date cannot be before the borrowing date.';
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -76,7 +87,16 @@ export default function BorrowModal({ open, onClose, book, onBorrowed }) {
       ) : step === 'form' ? (
         <form onSubmit={handleContinue} noValidate className="space-y-4">
           <p className="text-xs text-[var(--color-mid-gray)]">{book.availableCopies} of {book.totalCopies} copies available.</p>
-          <Input label="Borrower" required value={form.borrower} onChange={update('borrower')} error={errors.borrower} placeholder="Full name" />
+          <Input
+            label="Borrower Name"
+            required
+            value={form.borrower}
+            onChange={update('borrower')}
+            error={errors.borrower}
+            placeholder="Enter full borrower name"
+            autoComplete="name"
+            hint="Write the full name of the person borrowing the book."
+          />
           <Select
             label="Borrower Type"
             value={form.borrowerType}

@@ -27,8 +27,8 @@ function MobileNavItem({ item, onNavigate }) {
           cn(
             'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium',
             isActive
-              ? 'bg-[rgba(255,255,255,0.16)] text-white'
-              : 'text-[rgba(255,255,255,0.8)] hover:bg-[rgba(255,255,255,0.1)] hover:text-white'
+              ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)]'
+              : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)]'
           )
         }
       >
@@ -47,8 +47,8 @@ function MobileNavItem({ item, onNavigate }) {
         className={cn(
           'w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium',
           childActive
-            ? 'bg-[rgba(255,255,255,0.16)] text-white'
-            : 'text-[rgba(255,255,255,0.8)] hover:bg-[rgba(255,255,255,0.1)] hover:text-white'
+            ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)]'
+            : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)]'
         )}
       >
         <item.icon className="w-[18px] h-[18px] flex-shrink-0" aria-hidden="true" />
@@ -66,8 +66,8 @@ function MobileNavItem({ item, onNavigate }) {
                 cn(
                   'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium',
                   isActive
-                    ? 'bg-[rgba(255,255,255,0.16)] text-white'
-                    : 'text-[rgba(255,255,255,0.72)] hover:bg-[rgba(255,255,255,0.1)] hover:text-white'
+                    ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)]'
+                    : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)]'
                 )
               }
             >
@@ -91,13 +91,13 @@ export default function MobileMenu() {
   return (
     <div className="fixed inset-0 z-40 md:hidden">
       <div className="absolute inset-0 bg-[rgba(0,0,0,0.4)]" onClick={closeMobileMenu} aria-hidden="true" />
-      <div className="absolute inset-y-0 left-0 w-[280px] bg-[var(--color-deep-green)] text-white flex flex-col">
-        <div className="flex items-center justify-between px-4 h-16 border-b border-[rgba(255,255,255,0.12)]">
+      <div className="absolute inset-y-0 left-0 w-[280px] bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] flex flex-col">
+        <div className="flex items-center justify-between px-4 h-16 border-b border-[var(--sidebar-border)]">
           <div className="flex items-center gap-2.5">
             <BrandMark containerClassName="w-9 h-9 rounded-lg bg-[var(--color-gold)]" />
             <div className="leading-tight">
-              <p className="font-display font-semibold text-sm text-white">Rambura Garçons</p>
-              <p className="text-[11px] text-[rgba(255,255,255,0.65)]">{ROLE_LABELS[role]}</p>
+              <p className="font-display font-semibold text-sm text-[var(--sidebar-text)]">Rambura Garçons</p>
+              <p className="text-[11px] text-[var(--sidebar-text-secondary)]">{ROLE_LABELS[role]}</p>
             </div>
           </div>
           <button type="button" onClick={closeMobileMenu} aria-label="Close menu" className="p-1.5 text-[rgba(255,255,255,0.8)] hover:text-white">

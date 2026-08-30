@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { api } from '../services/api';
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../services/notificationService';
 
 const NotificationContext = createContext(null);
@@ -94,6 +95,12 @@ export function NotificationProvider({ children }) {
     };
     setNotifications((prev) => [notification, ...prev]);
     if (hydrated.current && soundEnabled) playChime();
+    
+    // Persist to backend
+    api.post('/notifications', { type, message, link: to }).catch(() => {
+      // Fail silently if backend save fails — the in-memory notification is already shown
+    });
+    
     return notification;
   }, [soundEnabled]);
 

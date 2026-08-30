@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Pencil, Trash2, Plus, Save, ExternalLink, History, RotateCcw, ImageOff,
-  LayoutPanelTop, GraduationCap, Building2, Users, Newspaper, Images,
+  LayoutPanelTop, GraduationCap, Building2, Users, Newspaper, Images, CalendarDays,
   ClipboardList, Phone, ImageIcon, ChevronRight,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
@@ -17,9 +17,10 @@ import ImageField from '../../components/forms/ImageField';
 import { EmptyState } from '../../components/feedback/States';
 import { Badge } from '../../components/common/Badge';
 import { useToast } from '../../context/ToastContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
-import { getActivity } from '../../services/activityService';
-import { getSiteImageSlots, updateSiteImage, resetSiteImage } from '../../services/imageService';
+import { getActivity, logActivity, useActivityVersion } from '../../services/activityService';
+import { getSiteImageSlots, updateSiteImage, resetSiteImage, useSiteImageVersion } from '../../services/imageService';
 import { cn } from '../../utils/cn';
 import {
   getHero, updateHero,
@@ -30,6 +31,7 @@ import {
   getGallery, createGalleryImage, updateGalleryImage, deleteGalleryImage,
   getAdmissionsInfo, updateAdmissionsInfo,
   getContactInfo, updateContactInfo,
+  useContentVersion,
 } from '../../services/contentService';
 
 /**
@@ -93,25 +95,25 @@ function SectionSidebar({ active, onChange, counts }) {
           onClick={() => onChange(s.value)}
           className={cn(
             'shrink-0 flex items-center gap-2 pl-2.5 pr-3 py-2 rounded-full border backdrop-blur-xl transition-all duration-200',
-            'focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2',
+            'focus-visible:outline-2 focus-visible:outline-[var(--color-gold)] focus-visible:outline-offset-2',
             isActive
-              ? 'bg-[var(--color-white)] border-white shadow-[0_6px_16px_rgba(0,0,0,0.22)]'
-              : 'bg-white/10 border-white/25 hover:bg-white/20'
+              ? 'bg-[var(--sidebar-bg)] border-[var(--sidebar-border)] shadow-[0_6px_16px_rgba(0,0,0,0.08)]'
+              : 'bg-[white] border-[var(--sidebar-border)] hover:bg-[var(--sidebar-nav-hover-bg)]'
           )}
         >
           <span
             className={cn(
               'inline-flex items-center justify-center w-6 h-6 rounded-full shrink-0',
-              isActive ? 'bg-[var(--color-light-green-100)] text-[var(--color-heading)]' : 'bg-white/15 text-white'
+              isActive ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)]' : 'bg-[var(--color-soft-gray)] text-[var(--sidebar-text)]'
             )}
           >
             <Icon className="w-3.5 h-3.5" aria-hidden="true" />
           </span>
-          <span className={cn('text-xs font-semibold whitespace-nowrap', isActive ? 'text-[var(--color-heading)]' : 'text-white')}>
+          <span className={cn('text-xs font-semibold whitespace-nowrap', isActive ? 'text-[var(--sidebar-text)]' : 'text-[var(--sidebar-text-secondary)]')}>
             {s.label}
           </span>
           {count !== null && count !== undefined && (
-            <span className={cn('text-[10px] font-bold', isActive ? 'text-[var(--color-medium-green)]' : 'text-white/90')}>
+            <span className={cn('text-[10px] font-bold', isActive ? 'text-[var(--color-gold)]' : 'text-[var(--sidebar-text-secondary)]')}>
               {count}
             </span>
           )}
@@ -126,10 +128,10 @@ function SectionSidebar({ active, onChange, counts }) {
         onClick={() => onChange(s.value)}
         className={cn(
           'group relative w-full flex items-center gap-3 text-left pl-3.5 pr-3 py-2.5 rounded-xl border backdrop-blur-xl transition-all duration-200 ease-out',
-          'focus-visible:outline-2 focus-visible:outline-white focus-visible:outline-offset-2',
+          'focus-visible:outline-2 focus-visible:outline-[var(--color-gold)] focus-visible:outline-offset-2',
           isActive
-            ? 'bg-[var(--color-white)] border-white shadow-[0_8px_20px_rgba(0,0,0,0.25)] translate-x-0.5'
-            : 'bg-white/[0.06] border-white/15 hover:bg-white/[0.14] hover:border-white/30'
+            ? 'bg-[var(--sidebar-bg)] border-[var(--sidebar-border)] shadow-[0_8px_20px_rgba(17,24,39,0.08)] translate-x-0.5'
+            : 'bg-white border-[var(--sidebar-border)] hover:bg-[var(--sidebar-nav-hover-bg)]'
         )}
       >
         <span
@@ -143,17 +145,17 @@ function SectionSidebar({ active, onChange, counts }) {
           className={cn(
             'inline-flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-colors',
             isActive
-              ? 'bg-[var(--color-light-green-100)] text-[var(--color-heading)]'
-              : 'bg-white/10 text-white group-hover:bg-white/20'
+              ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-text)]'
+              : 'bg-[var(--color-soft-gray)] text-[var(--sidebar-text)] group-hover:bg-[var(--sidebar-nav-hover-bg)]'
           )}
         >
           <Icon className="w-4.5 h-4.5" aria-hidden="true" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className={cn('block text-sm font-semibold truncate', isActive ? 'text-[var(--color-heading)]' : 'text-white')}>
+          <span className={cn('block text-sm font-semibold truncate', isActive ? 'text-[var(--sidebar-text)]' : 'text-[var(--sidebar-text)]')}>
             {s.label}
           </span>
-          <span className={cn('block text-[11px] leading-snug truncate', isActive ? 'text-[var(--color-mid-gray)]' : 'text-white/85')}>
+          <span className={cn('block text-[11px] leading-snug truncate', isActive ? 'text-[var(--sidebar-text-secondary)]' : 'text-[var(--sidebar-text-secondary)]')}>
             {s.description}
           </span>
         </span>
@@ -161,7 +163,7 @@ function SectionSidebar({ active, onChange, counts }) {
           <span
             className={cn(
               'text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0',
-              isActive ? 'bg-[var(--color-light-green-100)] text-[var(--color-heading)]' : 'bg-white/10 text-white/95'
+              isActive ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--color-gold)]' : 'bg-[var(--color-soft-gray)] text-[var(--sidebar-text-secondary)]'
             )}
           >
             {count}
@@ -170,7 +172,7 @@ function SectionSidebar({ active, onChange, counts }) {
         <ChevronRight
           className={cn(
             'w-4 h-4 shrink-0 transition-all duration-200',
-            isActive ? 'text-[var(--color-medium-green)] opacity-100' : 'text-white opacity-0 -translate-x-1 group-hover:opacity-50 group-hover:translate-x-0'
+            isActive ? 'text-[var(--color-gold)] opacity-100' : 'text-[var(--sidebar-text-secondary)] opacity-0 -translate-x-1 group-hover:opacity-70 group-hover:translate-x-0'
           )}
           aria-hidden="true"
         />
@@ -181,17 +183,17 @@ function SectionSidebar({ active, onChange, counts }) {
   return (
     <nav
       aria-label="Website content sections"
-      className="relative overflow-hidden rounded-[var(--radius-card)] bg-gradient-to-b from-[var(--color-deep-green)] via-[var(--color-medium-green-600)] to-[var(--color-deep-green-600)] w-full lg:w-72 shrink-0 lg:sticky lg:top-6"
+      className="relative overflow-hidden rounded-[var(--radius-card)] bg-[var(--sidebar-bg)] w-full lg:w-72 shrink-0 lg:sticky lg:top-6 border border-[var(--sidebar-border)]"
     >
       {/* Ambient glow blobs so the glass rows have something to blur against */}
-      <div className="pointer-events-none absolute -top-14 -right-10 w-48 h-48 rounded-full bg-[var(--color-light-green)] opacity-25 blur-3xl" aria-hidden="true" />
-      <div className="pointer-events-none absolute -bottom-16 -left-10 w-56 h-56 rounded-full bg-[var(--color-gold)] opacity-20 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -top-14 -right-10 w-48 h-48 rounded-full bg-[var(--color-soft-gray)] opacity-70 blur-3xl" aria-hidden="true" />
+      <div className="pointer-events-none absolute -bottom-16 -left-10 w-56 h-56 rounded-full bg-[var(--color-gold)] opacity-10 blur-3xl" aria-hidden="true" />
 
       {/* ≥lg: full vertical menu, grouped with headings */}
       <div className="hidden lg:block relative p-4 max-h-[calc(100vh-3rem)] overflow-y-auto">
         {SECTION_GROUPS.map((grp, i) => (
-          <div key={grp.group} className={i > 0 ? 'mt-5 pt-5 border-t border-white/10' : ''}>
-            <p className="px-1 mb-2 font-display text-[11px] font-bold tracking-[0.12em] uppercase text-white/80">
+          <div key={grp.group} className={i > 0 ? 'mt-5 pt-5 border-t border-[rgba(255,255,255,0.10)]' : ''}>
+            <p className="px-1 mb-2 font-display text-[11px] font-bold tracking-[0.12em] uppercase text-[var(--color-gold)]">
               {grp.group}
             </p>
             <div className="space-y-1.5">
@@ -205,7 +207,7 @@ function SectionSidebar({ active, onChange, counts }) {
       <div className="lg:hidden relative p-4 space-y-3">
         {SECTION_GROUPS.map((grp) => (
           <div key={grp.group}>
-            <p className="mb-1.5 font-display text-[10px] font-bold tracking-[0.12em] uppercase text-white/80">
+            <p className="mb-1.5 font-display text-[10px] font-bold tracking-[0.12em] uppercase text-[var(--color-gold)]">
               {grp.group}
             </p>
             <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
@@ -233,14 +235,16 @@ function EntityFormModal({ open, onClose, title, fields, initial, onSubmit }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Reset local form state whenever a different record (or "new") is opened.
-  useMemo(() => { setValues(initial || {}); setError(''); }, [initial, open]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const set = (key) => (e) => setValues((v) => ({ ...v, [key]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const missing = fields.find((f) => f.required && !String(values[f.key] ?? '').trim());
+    if (missing) {
+      setError(`${missing.label} is required.`);
+      return;
+    }
     setSaving(true);
     const result = await onSubmit(values);
     setSaving(false);
@@ -277,7 +281,9 @@ function EntityFormModal({ open, onClose, title, fields, initial, onSubmit }) {
             <Input
               key={f.key}
               label={f.label}
+              type={f.type || 'text'}
               required={f.required}
+              icon={f.icon}
               value={values[f.key] ?? ''}
               onChange={set(f.key)}
               hint={f.hint}
@@ -320,11 +326,17 @@ function Thumb({ src, alt, round = false }) {
  * directly on their own tab, right alongside that item's text.)
  */
 function SiteImagesPanel({ user, notify, notifyError, bumpActivity }) {
+  const imageVersion = useSiteImageVersion();
   const [slots, setSlots] = useState(getSiteImageSlots());
   const [drafts, setDrafts] = useState({});
   const [savingPath, setSavingPath] = useState(null);
 
   const refresh = () => setSlots(getSiteImageSlots());
+
+  // Site image overrides load asynchronously (refreshSiteImages() at module
+  // init). Re-pull whenever the cache changes so a still-loading or
+  // just-edited-elsewhere set of custom photos shows up here reliably.
+  useEffect(() => { refresh(); }, [imageVersion]);
   const draftFor = (path, fallback) => (drafts[path] ?? fallback);
 
   const handleSave = async (path) => {
@@ -358,16 +370,16 @@ function SiteImagesPanel({ user, notify, notifyError, bumpActivity }) {
 
   return (
     <div className="p-6 space-y-8">
-      <p className="text-sm text-[var(--color-mid-gray)] max-w-2xl">
+      <p className="text-sm font-medium leading-relaxed text-[var(--color-dark-gray)] max-w-2xl">
         These are the page photos that aren't tied to a specific Program, Department, Staff member, News article, or
         Gallery item — browse for a new photo and save. "Reset" brings back the original photo.
       </p>
       {Object.entries(groups).map(([group, items]) => (
-        <div key={group}>
+        <div key={group} className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(17,58,48,0.04))] p-4">
           <p className="text-sm font-semibold text-[var(--color-dark-gray)] mb-3">{group}</p>
           <div className="grid sm:grid-cols-2 gap-4">
             {items.map((slot) => (
-              <div key={slot.path} className="border border-[var(--color-border-gray)] rounded-[var(--radius-card)] p-4">
+              <div key={slot.path} className="border border-[var(--color-border-gray)] rounded-[var(--radius-card)] bg-[var(--color-soft-gray)] p-4 shadow-[0_8px_18px_rgba(0,0,0,0.04)]">
                 <div className="flex gap-3">
                   <div className="w-20 h-20 rounded-md overflow-hidden shrink-0 bg-[var(--color-soft-gray)]">
                     <img src={slot.url} alt={slot.label} className="w-full h-full object-cover" loading="lazy" />
@@ -410,8 +422,11 @@ function SiteImagesPanel({ user, notify, notifyError, bumpActivity }) {
 
 export default function WebsiteManagement() {
   const { showToast } = useToast();
+  const { addNotification } = useNotifications();
   const { user } = useAuth();
   const [tab, setTab] = useState('hero');
+  const contentVersion = useContentVersion();
+  const activityVersion = useActivityVersion();
 
   // List collections — kept in state so the table re-renders instantly after edits.
   const [programs, setPrograms] = useState(getPrograms());
@@ -430,6 +445,37 @@ export default function WebsiteManagement() {
   const [contactForm, setContactForm] = useState(getContactInfo());
   const [savingSingle, setSavingSingle] = useState(false);
 
+  // These forms hold in-progress admin edits, so a background content-update
+  // event (another admin's change, or the initial fetch finishing late)
+  // must not stomp on text the user is actively typing. Each ref flips to
+  // true the moment the admin edits that form, and back to false once their
+  // own save lands — only then is it safe to resync from the cache again.
+  const heroDirty = useRef(false);
+  const admissionsDirty = useRef(false);
+  const contactDirty = useRef(false);
+  const editHero = (updater) => { heroDirty.current = true; setHeroForm(updater); };
+  const editAdmissions = (updater) => { admissionsDirty.current = true; setAdmissionsForm(updater); };
+  const editContact = (updater) => { contactDirty.current = true; setContactForm(updater); };
+
+  // The list/table data and the three single-object forms above all read
+  // from contentService's in-memory cache, which fills in asynchronously
+  // (see useContentVersion in contentService.js). Re-pull everything here
+  // whenever that cache changes — on the initial load once it resolves, and
+  // after any create/update/delete anywhere (including another admin's).
+  useEffect(() => {
+    setPrograms(getPrograms());
+    setDepartments(getDepartments());
+    setStaff(getStaff());
+    setNews(getNews());
+    setGallery(getGallery());
+    if (!heroDirty.current) setHeroForm(getHero());
+    if (!admissionsDirty.current) {
+      const a = getAdmissionsInfo();
+      setAdmissionsForm({ ...a, requirements: toLines(a.requirements), dates: toLines(a.dates) });
+    }
+    if (!contactDirty.current) setContactForm(getContactInfo());
+  }, [contentVersion]);
+
   // Modal state shared by every list tab.
   const [formModal, setFormModal] = useState({ open: false, mode: 'add', item: null });
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -437,9 +483,17 @@ export default function WebsiteManagement() {
 
   const recentActivity = useMemo(
     () => getActivity().filter((a) => a.module === 'Website').slice(0, 6),
-    [refreshTick] // eslint-disable-line react-hooks/exhaustive-deps
+    [refreshTick, activityVersion]
   );
   const bumpActivity = () => setRefreshTick((n) => n + 1);
+  const recordWebsiteAction = (action, status = 'success') => {
+    logActivity({
+      user: user?.fullName || user?.username || 'Admin',
+      action,
+      module: 'Website',
+      status,
+    });
+  };
 
   const notify = (msg) => showToast(msg, 'success');
   const notifyError = (msg) => showToast(msg, 'error');
@@ -451,13 +505,22 @@ export default function WebsiteManagement() {
     const result = await updateHero(heroForm, user);
     setSavingSingle(false);
     if (result.success) {
+      heroDirty.current = false;
       setHeroForm(result.hero);
+      recordWebsiteAction('Updated the Home Hero section');
       notify('Homepage hero content saved.');
+      addNotification({
+        type: 'website',
+        message: 'Home Hero section has been updated.',
+        to: '/admin/website',
+      });
       bumpActivity();
+    } else {
+      notifyError(result.error);
     }
   };
   const setStat = (i, field) => (e) => {
-    setHeroForm((h) => {
+    editHero((h) => {
       const stats = [...h.stats];
       stats[i] = { ...stats[i], [field]: e.target.value };
       return { ...h, stats };
@@ -483,7 +546,13 @@ export default function WebsiteManagement() {
     if (resolved.success) {
       setPrograms(getPrograms());
       setFormModal({ open: false, mode: 'add', item: null });
+      recordWebsiteAction(formModal.mode === 'add' ? 'Added a new program' : 'Updated a program');
       notify(formModal.mode === 'add' ? 'Program added.' : 'Program updated.');
+      addNotification({
+        type: 'website',
+        message: formModal.mode === 'add' ? `Program "${values.title}" has been added.` : `Program "${values.title}" has been updated.`,
+        to: '/admin/website',
+      });
       bumpActivity();
     } else {
       notifyError(resolved.error);
@@ -494,7 +563,13 @@ export default function WebsiteManagement() {
     await deleteProgram(deleteTarget.id, user);
     setPrograms(getPrograms());
     setDeleteTarget(null);
+    recordWebsiteAction('Deleted a program');
     notify('Program deleted.');
+    addNotification({
+      type: 'website',
+      message: `Program "${deleteTarget.title}" has been deleted.`,
+      to: '/admin/website',
+    });
     bumpActivity();
   };
 
@@ -516,7 +591,13 @@ export default function WebsiteManagement() {
     if (resolved.success) {
       setDepartments(getDepartments());
       setFormModal({ open: false, mode: 'add', item: null });
+      recordWebsiteAction(formModal.mode === 'add' ? 'Added a department' : 'Updated a department');
       notify(formModal.mode === 'add' ? 'Department added.' : 'Department updated.');
+      addNotification({
+        type: 'website',
+        message: formModal.mode === 'add' ? `Department "${values.name}" has been added.` : `Department "${values.name}" has been updated.`,
+        to: '/admin/website',
+      });
       bumpActivity();
     } else {
       notifyError(resolved.error);
@@ -527,7 +608,13 @@ export default function WebsiteManagement() {
     await deleteDepartment(deleteTarget.id, user);
     setDepartments(getDepartments());
     setDeleteTarget(null);
+    recordWebsiteAction('Deleted a department');
     notify('Department deleted.');
+    addNotification({
+      type: 'website',
+      message: `Department "${deleteTarget.name}" has been deleted.`,
+      to: '/admin/website',
+    });
     bumpActivity();
   };
 
@@ -549,7 +636,13 @@ export default function WebsiteManagement() {
     if (resolved.success) {
       setStaff(getStaff());
       setFormModal({ open: false, mode: 'add', item: null });
+      recordWebsiteAction(formModal.mode === 'add' ? 'Added a staff member' : 'Updated a staff member');
       notify(formModal.mode === 'add' ? 'Staff member added.' : 'Staff member updated.');
+      addNotification({
+        type: 'website',
+        message: formModal.mode === 'add' ? `Staff member "${values.name}" has been added.` : `Staff member "${values.name}" has been updated.`,
+        to: '/admin/website',
+      });
       bumpActivity();
     } else {
       notifyError(resolved.error);
@@ -560,14 +653,20 @@ export default function WebsiteManagement() {
     await deleteStaffMember(deleteTarget.id, user);
     setStaff(getStaff());
     setDeleteTarget(null);
+    recordWebsiteAction('Removed a staff member');
     notify('Staff member removed.');
+    addNotification({
+      type: 'website',
+      message: `Staff member "${deleteTarget.name}" has been removed.`,
+      to: '/admin/website',
+    });
     bumpActivity();
   };
 
   /* ── News ────────────────────────────────────────────────────────── */
   const newsFields = [
     { key: 'title', label: 'Title', required: true },
-    { key: 'date', label: 'Date (YYYY-MM-DD)', required: true, hint: 'e.g. 2026-08-19' },
+    { key: 'date', label: 'Date', type: 'date', icon: CalendarDays, required: true },
     { key: 'excerpt', label: 'Short Excerpt (shown on News list)', type: 'textarea', required: true },
     { key: 'content', label: 'Full Article Content', type: 'textarea', rows: 6, required: true },
     { key: 'image', label: 'Photo', type: 'image', required: true, hint: 'Shown on the News list and the article page.' },
@@ -582,7 +681,13 @@ export default function WebsiteManagement() {
     if (resolved.success) {
       setNews(getNews());
       setFormModal({ open: false, mode: 'add', item: null });
+      recordWebsiteAction(formModal.mode === 'add' ? 'Published a news article' : 'Updated a news article');
       notify(formModal.mode === 'add' ? 'Article published.' : 'Article updated.');
+      addNotification({
+        type: 'website',
+        message: formModal.mode === 'add' ? `News article "${values.title}" has been published.` : `News article "${values.title}" has been updated.`,
+        to: '/admin/website',
+      });
       bumpActivity();
     } else {
       notifyError(resolved.error);
@@ -593,7 +698,13 @@ export default function WebsiteManagement() {
     await deleteNewsArticle(deleteTarget.id, user);
     setNews(getNews());
     setDeleteTarget(null);
+    recordWebsiteAction('Deleted a news article');
     notify('Article deleted.');
+    addNotification({
+      type: 'website',
+      message: `News article "${deleteTarget.title}" has been deleted.`,
+      to: '/admin/website',
+    });
     bumpActivity();
   };
 
@@ -612,7 +723,13 @@ export default function WebsiteManagement() {
     if (resolved.success) {
       setGallery(getGallery());
       setFormModal({ open: false, mode: 'add', item: null });
+      recordWebsiteAction(formModal.mode === 'add' ? 'Added a gallery image' : 'Updated a gallery image');
       notify(formModal.mode === 'add' ? 'Image added.' : 'Caption updated.');
+      addNotification({
+        type: 'website',
+        message: formModal.mode === 'add' ? `Gallery image "${values.caption}" has been added.` : `Gallery image caption has been updated.`,
+        to: '/admin/website',
+      });
       bumpActivity();
     } else {
       notifyError(resolved.error);
@@ -623,33 +740,59 @@ export default function WebsiteManagement() {
     await deleteGalleryImage(deleteTarget.id, user);
     setGallery(getGallery());
     setDeleteTarget(null);
+    recordWebsiteAction('Deleted a gallery image');
     notify('Image deleted.');
+    addNotification({
+      type: 'website',
+      message: `Gallery image has been deleted.`,
+      to: '/admin/website',
+    });
     bumpActivity();
   };
 
   /* ── Admissions & Contact (single-object forms) ─────────────────── */
-  const saveAdmissions = (e) => {
+  const saveAdmissions = async (e) => {
     e.preventDefault();
     setSavingSingle(true);
-    const result = updateAdmissionsInfo(
+    const result = await updateAdmissionsInfo(
       { ...admissionsForm, requirements: fromLines(admissionsForm.requirements), dates: fromLines(admissionsForm.dates) },
       user
     );
     setSavingSingle(false);
     if (result.success) {
+      admissionsDirty.current = false;
+      const a = getAdmissionsInfo();
+      setAdmissionsForm({ ...a, requirements: toLines(a.requirements), dates: toLines(a.dates) });
+      recordWebsiteAction('Updated the Admissions page');
       notify('Admissions page content saved.');
+      addNotification({
+        type: 'website',
+        message: 'Admissions page has been updated.',
+        to: '/admin/website',
+      });
       bumpActivity();
+    } else {
+      notifyError(result.error);
     }
   };
-  const saveContact = (e) => {
+  const saveContact = async (e) => {
     e.preventDefault();
     setSavingSingle(true);
-    const result = updateContactInfo(contactForm, user);
+    const result = await updateContactInfo(contactForm, user);
     setSavingSingle(false);
     if (result.success) {
-      setContactForm(result.info);
+      contactDirty.current = false;
+      setContactForm(getContactInfo());
+      recordWebsiteAction('Updated the Contact information');
       notify('Contact page information saved.');
+      addNotification({
+        type: 'website',
+        message: 'Contact page information has been updated.',
+        to: '/admin/website',
+      });
       bumpActivity();
+    } else {
+      notifyError(result.error);
     }
   };
 
@@ -677,14 +820,14 @@ export default function WebsiteManagement() {
   const renderTab = () => {
     if (tab === 'hero') {
       return (
-        <form onSubmit={saveHero} className="p-6 space-y-5 max-w-2xl">
-          <p className="text-sm text-[var(--color-mid-gray)]">
+        <form onSubmit={saveHero} className="p-6 space-y-5 max-w-3xl">
+          <p className="text-sm font-medium leading-relaxed text-[var(--color-dark-gray)]">
             This is the banner shown at the top of the public Home page — the eyebrow tag, main heading, intro
             paragraph, and the four stat numbers.
           </p>
-          <Input label="Eyebrow tag" required value={heroForm.eyebrow} onChange={(e) => setHeroForm((h) => ({ ...h, eyebrow: e.target.value }))} />
-          <Input label="Main Heading" required value={heroForm.title} onChange={(e) => setHeroForm((h) => ({ ...h, title: e.target.value }))} />
-          <Textarea label="Intro Paragraph" required rows={3} value={heroForm.subtitle} onChange={(e) => setHeroForm((h) => ({ ...h, subtitle: e.target.value }))} />
+          <Input label="Eyebrow tag" required value={heroForm.eyebrow} onChange={(e) => editHero((h) => ({ ...h, eyebrow: e.target.value }))} />
+          <Input label="Main Heading" required value={heroForm.title} onChange={(e) => editHero((h) => ({ ...h, title: e.target.value }))} />
+          <Textarea label="Intro Paragraph" required rows={3} value={heroForm.subtitle} onChange={(e) => editHero((h) => ({ ...h, subtitle: e.target.value }))} />
           <div>
             <p className="text-sm font-medium text-[var(--color-dark-gray)] mb-2">Stat Bar (4 numbers shown below the hero)</p>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -783,16 +926,16 @@ export default function WebsiteManagement() {
 
     if (tab === 'admissions') {
       return (
-        <form onSubmit={saveAdmissions} className="p-6 space-y-5 max-w-2xl">
-          <p className="text-sm text-[var(--color-mid-gray)]">
+        <form onSubmit={saveAdmissions} className="p-6 space-y-5 max-w-3xl">
+          <p className="text-sm font-medium leading-relaxed text-[var(--color-dark-gray)]">
             Content shown on the public Admissions page: the intro line, requirements list, important dates, the
             process paragraph, and the contact line. For lists, put one item per line.
           </p>
-          <Textarea label="Intro line" required value={admissionsForm.intro} onChange={(e) => setAdmissionsForm((a) => ({ ...a, intro: e.target.value }))} />
-          <Textarea label="Requirements (one per line)" required rows={5} value={admissionsForm.requirements} onChange={(e) => setAdmissionsForm((a) => ({ ...a, requirements: e.target.value }))} />
-          <Textarea label="Important Dates (one per line)" required rows={5} value={admissionsForm.dates} onChange={(e) => setAdmissionsForm((a) => ({ ...a, dates: e.target.value }))} />
-          <Textarea label="Admission Process paragraph" required rows={3} value={admissionsForm.process} onChange={(e) => setAdmissionsForm((a) => ({ ...a, process: e.target.value }))} />
-          <Input label="Contact line" required value={admissionsForm.contactLine} onChange={(e) => setAdmissionsForm((a) => ({ ...a, contactLine: e.target.value }))} />
+          <Textarea label="Intro line" required value={admissionsForm.intro} onChange={(e) => editAdmissions((a) => ({ ...a, intro: e.target.value }))} />
+          <Textarea label="Requirements (one per line)" required rows={5} value={admissionsForm.requirements} onChange={(e) => editAdmissions((a) => ({ ...a, requirements: e.target.value }))} />
+          <Textarea label="Important Dates (one per line)" required rows={5} value={admissionsForm.dates} onChange={(e) => editAdmissions((a) => ({ ...a, dates: e.target.value }))} />
+          <Textarea label="Admission Process paragraph" required rows={3} value={admissionsForm.process} onChange={(e) => editAdmissions((a) => ({ ...a, process: e.target.value }))} />
+          <Input label="Contact line" required value={admissionsForm.contactLine} onChange={(e) => editAdmissions((a) => ({ ...a, contactLine: e.target.value }))} />
           <Button type="submit" variant="primary" icon={Save} loading={savingSingle}>Save Admissions Content</Button>
         </form>
       );
@@ -800,14 +943,14 @@ export default function WebsiteManagement() {
 
     if (tab === 'contact') {
       return (
-        <form onSubmit={saveContact} className="p-6 space-y-5 max-w-2xl">
-          <p className="text-sm text-[var(--color-mid-gray)]">
+        <form onSubmit={saveContact} className="p-6 space-y-5 max-w-3xl">
+          <p className="text-sm font-medium leading-relaxed text-[var(--color-dark-gray)]">
             Address, phone, email, and map location shown on the public Contact page.
           </p>
-          <Textarea label="Address" required value={contactForm.address} onChange={(e) => setContactForm((c) => ({ ...c, address: e.target.value }))} />
-          <Input label="Phone" required value={contactForm.phone} onChange={(e) => setContactForm((c) => ({ ...c, phone: e.target.value }))} />
-          <Input label="Email" required type="email" value={contactForm.email} onChange={(e) => setContactForm((c) => ({ ...c, email: e.target.value }))} />
-          <Input label="Map search query" required value={contactForm.mapQuery} onChange={(e) => setContactForm((c) => ({ ...c, mapQuery: e.target.value }))} hint="Used to locate the school on the embedded Google Map." />
+          <Textarea label="Address" required value={contactForm.address} onChange={(e) => editContact((c) => ({ ...c, address: e.target.value }))} />
+          <Input label="Phone" required value={contactForm.phone} onChange={(e) => editContact((c) => ({ ...c, phone: e.target.value }))} />
+          <Input label="Email" required type="email" value={contactForm.email} onChange={(e) => editContact((c) => ({ ...c, email: e.target.value }))} />
+          <Input label="Map search query" required value={contactForm.mapQuery} onChange={(e) => editContact((c) => ({ ...c, mapQuery: e.target.value }))} hint="Used to locate the school on the embedded Google Map." />
           <Button type="submit" variant="primary" icon={Save} loading={savingSingle}>Save Contact Info</Button>
         </form>
       );
@@ -863,17 +1006,17 @@ export default function WebsiteManagement() {
           }}
         />
 
-        <div className="flex-1 min-w-0 w-full bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
+        <div className="flex-1 min-w-0 w-full bg-[var(--surface)] rounded-[1.5rem] border border-[var(--border)] shadow-[0_20px_45px_rgba(15,23,42,0.06)] overflow-hidden">
           {currentSection && (
-            <div className="flex items-center gap-3 px-6 pt-5 pb-4 border-b border-[var(--color-border-gray)]">
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--color-light-green-100)] text-[var(--color-heading)] shrink-0">
+            <div className="flex items-center gap-3 px-6 pt-5 pb-4 border-b border-[var(--border)] bg-[var(--sidebar-nav-hover-bg)]">
+              <span className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-text)] shrink-0 ring-1 ring-[var(--border)]">
                 <currentSection.icon className="w-5 h-5" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <h2 className="font-display text-base font-semibold text-[var(--color-dark-gray)] truncate">
+                <h2 className="font-display text-lg font-semibold text-[var(--text-primary)] truncate">
                   {currentSection.label}
                 </h2>
-                <p className="text-xs text-[var(--color-mid-gray)] truncate">{currentSection.description}</p>
+                <p className="text-xs font-medium text-[var(--text-secondary)] truncate">{currentSection.description}</p>
               </div>
             </div>
           )}
@@ -882,28 +1025,30 @@ export default function WebsiteManagement() {
       </div>
 
       {/* Recent website actions — everything performed from this panel, most recent first */}
-      <div className="mt-6 bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="flex items-center gap-2 font-display text-sm font-semibold text-[var(--color-dark-gray)]">
-            <History className="w-4 h-4 text-[var(--color-medium-green)]" aria-hidden="true" /> Recent Website Actions
+      <div className="mt-6 bg-[var(--surface)] rounded-[1.5rem] border border-[var(--border)] p-5 shadow-[0_16px_38px_rgba(15,23,42,0.06)]">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="flex items-center gap-2 font-display text-sm font-semibold text-[var(--text-primary)]">
+            <History className="w-4 h-4 text-[var(--color-gold)]" aria-hidden="true" /> Recent Website Actions
           </h2>
-          <Link to="/admin/activity" className="text-xs font-semibold text-[var(--color-medium-green)] hover:underline">
+          <Link to="/admin/activity" className="text-xs font-semibold text-[var(--text-secondary)] hover:underline">
             View full audit log
           </Link>
         </div>
         {recentActivity.length === 0 ? (
           <p className="text-sm text-[var(--color-mid-gray)]">No website actions recorded yet.</p>
         ) : (
-          <ul className="divide-y divide-[var(--color-border-gray)]">
+          <ul className="space-y-2">
             {recentActivity.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                <div>
-                  <span className="font-medium text-[var(--color-dark-gray)]">{a.user}</span>{' '}
-                  <span className="text-[var(--color-mid-gray)]">{a.action}</span>
+              <li key={a.id} className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--sidebar-nav-hover-bg)] px-3 py-2.5 text-sm">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-[var(--text-primary)]">{a.user}</span>
+                    <span className="text-[var(--text-secondary)]">{a.action}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge tone={a.status === 'warning' ? 'amber' : 'green'}>{a.status}</Badge>
-                  <span className="text-xs text-[var(--color-mid-gray)]">
+                  <span className="text-[11px] font-medium text-[var(--text-secondary)] whitespace-nowrap">
                     {new Date(a.date).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -915,6 +1060,7 @@ export default function WebsiteManagement() {
 
       {isListTab && (
         <EntityFormModal
+          key={`${tab}-${formModal.mode}-${formModal.item?.id || 'new'}-${formModal.open ? 'open' : 'closed'}`}
           open={formModal.open}
           onClose={() => setFormModal({ open: false, mode: 'add', item: null })}
           title={modalTitles[tab]}

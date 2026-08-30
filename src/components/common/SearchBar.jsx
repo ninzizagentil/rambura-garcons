@@ -10,7 +10,7 @@ export function SearchBar({ value, onChange, placeholder = 'Search…', classNam
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="w-full rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-white)] pl-9 pr-9 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)] focus:border-[var(--color-medium-green)]"
+        className="w-full rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] pl-9 pr-9 py-2.5 text-sm text-[var(--color-dark-gray)] placeholder:text-[var(--color-mid-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)] focus:border-[var(--color-medium-green)]"
       />
       {value && (
         <button
@@ -34,11 +34,11 @@ export function FilterDropdown({ label, value, onChange, options }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
-        className="rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-white)] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)]"
+        className="rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] px-3 py-2.5 text-sm text-[var(--color-dark-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)]"
       >
-        <option value="">{label}</option>
+        <option value="" className="text-[var(--color-dark-gray)] bg-[var(--color-white)]">{label}</option>
         {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
+          <option key={opt.value} value={opt.value} className="text-[var(--color-dark-gray)] bg-[var(--color-white)]">
             {opt.label}
           </option>
         ))}

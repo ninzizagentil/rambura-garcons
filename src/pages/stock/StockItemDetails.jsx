@@ -8,7 +8,7 @@ import { EmptyState } from '../../components/feedback/States';
 import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
-import { getItemById, getTransactionsForItem } from '../../services/stockService';
+import { getItemById, getTransactionsForItem, refreshStock } from '../../services/stockService';
 import StockItemFormModal from './StockItemFormModal';
 
 export default function StockItemDetails() {
@@ -20,15 +20,21 @@ export default function StockItemDetails() {
   const [transactions, setTransactions] = useState(() => getTransactionsForItem(id));
   const [editOpen, setEditOpen] = useState(searchParams.get('edit') === '1');
 
-  useEffect(() => {
-    setItem(getItemById(id));
-    setTransactions(getTransactionsForItem(id));
-  }, [id]);
-
   const refresh = () => {
     setItem(getItemById(id));
     setTransactions(getTransactionsForItem(id));
   };
+
+  useEffect(() => {
+    const refreshForId = () => {
+      setItem(getItemById(id));
+      setTransactions(getTransactionsForItem(id));
+    };
+    refreshForId();
+    window.addEventListener('rg:stock-updated', refreshForId);
+    refreshStock().catch(() => {});
+    return () => window.removeEventListener('rg:stock-updated', refreshForId);
+  }, [id]);
 
   if (!item) return <Navigate to="/stock/items" replace />;
 

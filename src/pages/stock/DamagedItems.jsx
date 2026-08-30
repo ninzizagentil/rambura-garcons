@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Trash2, AlertTriangle } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable from '../../components/tables/DataTable';
@@ -11,18 +11,25 @@ import ReportDamageModal from '../../components/modals/ReportDamageModal';
 import DisposeStockModal from '../../components/modals/DisposeStockModal';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
-import { getDamagedItems, getItems } from '../../services/stockService';
+import { getDamagedItems, getItems, refreshStock } from '../../services/stockService';
 
 export default function DamagedItems() {
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
 
-  const [records, setRecords] = useState(getDamagedItems());
+  const [records, setRecords] = useState(() => getDamagedItems());
   const [reportItemId, setReportItemId] = useState('');
   const [reportOpen, setReportOpen] = useState(false);
   const [disposeTarget, setDisposeTarget] = useState(null);
 
   const items = getItems().filter((i) => i.quantity > 0);
   const refresh = () => setRecords(getDamagedItems());
+
+  useEffect(() => {
+    window.addEventListener('rg:stock-updated', refresh);
+    refreshStock().catch(() => {});
+    return () => window.removeEventListener('rg:stock-updated', refresh);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const columns = [
     { key: 'itemName', header: 'Item' },

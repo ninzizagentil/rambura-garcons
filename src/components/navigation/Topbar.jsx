@@ -93,7 +93,7 @@ function GlobalSearch() {
           role="combobox"
           aria-expanded={open && results.length > 0}
           aria-controls="global-search-results"
-          className="w-full rounded-full border border-[var(--color-border-gray)] bg-[var(--color-off-white)] text-[var(--color-dark-gray)] pl-9 pr-8 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)] focus:border-[var(--color-medium-green)] focus:bg-[var(--color-white)]"
+          className="w-full rounded-full border border-[var(--color-border-gray)] bg-[linear-gradient(135deg,_rgba(44,103,84,0.03),_rgba(217,164,65,0.03))] text-[var(--color-dark-gray)] pl-9 pr-8 py-2.5 text-sm shadow-inner transition-all focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)]/30 focus:border-[var(--color-medium-green)] focus:bg-[var(--sidebar-bg)]"
         />
         {query && (
           <button
@@ -114,7 +114,7 @@ function GlobalSearch() {
         <div
           id="global-search-results"
           role="listbox"
-          className="absolute left-0 right-0 mt-2 bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card-hover py-1.5 z-30 max-h-80 overflow-y-auto"
+          className="absolute left-0 right-0 mt-2 bg-[var(--sidebar-bg)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card-hover py-1.5 z-30 max-h-80 overflow-y-auto"
         >
           {results.length === 0 ? (
             <p className="px-4 py-3 text-sm text-[var(--color-mid-gray)]">No pages match "{query}"</p>
@@ -152,43 +152,52 @@ export default function Topbar({ breadcrumbLabel }) {
   const { toggleMobileMenu } = useApp();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-20 bg-[var(--color-white)] border-b border-[var(--color-border-gray)]">
-      <div className="flex items-center justify-between gap-4 h-16 px-4 md:px-6">
-      <div className="flex items-center gap-3 min-w-0">
-        <button
-          type="button"
-          onClick={toggleMobileMenu}
-          aria-label="Open menu"
-          className="md:hidden p-2 -ml-2 rounded-lg hover:bg-[var(--color-soft-gray)] text-[var(--color-dark-gray)] shrink-0"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-        {breadcrumbLabel && (
-          <p className="hidden sm:block text-sm text-[var(--color-mid-gray)] truncate">{breadcrumbLabel}</p>
-        )}
-      </div>
+    <header className="sticky top-0 z-20 border-b border-[var(--color-border-gray)] bg-[var(--sidebar-bg)]/90 backdrop-blur-xl shadow-[0_8px_24px_rgba(14,43,39,0.06)]">
+      <div className="flex h-18 items-center justify-between gap-4 px-4 md:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={toggleMobileMenu}
+            aria-label="Open menu"
+            className="rounded-xl p-2 text-[var(--color-dark-gray)] hover:bg-[var(--color-soft-gray)] md:hidden"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          {breadcrumbLabel && (
+            <div className="hidden items-center gap-2 rounded-full border border-[var(--color-border-gray)] bg-[var(--sidebar-bg)] px-3 py-1.5 shadow-sm sm:flex">
+              <span className="h-2 w-2 rounded-full bg-[var(--color-status-green)]" aria-hidden="true" />
+              <p className="truncate text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-mid-gray)]">{breadcrumbLabel}</p>
+            </div>
+          )}
+        </div>
 
-      <div className="hidden md:block flex-1 max-w-sm">
-        <GlobalSearch />
-      </div>
+        <div className="hidden flex-1 max-w-md md:block">
+          <GlobalSearch />
+        </div>
 
-      <div className="flex items-center gap-1.5 shrink-0">
-        <button
-          type="button"
-          aria-label="Search"
-          onClick={() => setMobileSearchOpen((v) => !v)}
-          className="md:hidden p-2 rounded-lg hover:bg-[var(--color-soft-gray)] text-[var(--color-dark-gray)]"
-        >
-          <Search className="w-5 h-5" />
-        </button>
-        <ThemeToggle />
-        <NotificationBell />
-        <ProfileMenu />
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            aria-label="Search"
+            onClick={() => setMobileSearchOpen((v) => !v)}
+            className="rounded-xl p-2 text-[var(--color-dark-gray)] hover:bg-[var(--color-soft-gray)] md:hidden"
+          >
+            <Search className="h-5 w-5" />
+          </button>
+          <div className="rounded-full border border-[var(--color-border-gray)] bg-[var(--sidebar-bg)] p-1 shadow-sm">
+            <ThemeToggle />
+          </div>
+          <div className="rounded-full border border-[var(--color-border-gray)] bg-[var(--sidebar-bg)] p-1 shadow-sm">
+            <NotificationBell />
+          </div>
+          <div className="rounded-full border border-[var(--color-border-gray)] bg-[var(--sidebar-bg)] p-1 shadow-sm">
+            <ProfileMenu />
+          </div>
+        </div>
       </div>
-    </div>
 
       {mobileSearchOpen && (
-        <div className="md:hidden px-4 pb-3">
+        <div className="px-4 pb-3 md:hidden">
           <GlobalSearch />
         </div>
       )}

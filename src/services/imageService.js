@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { api } from './api';
 import { IMAGES } from '../data/images';
 import { logActivity } from './activityService';
@@ -12,7 +13,7 @@ export const IMAGE_SLOTS = [
 ];
 let overrides = {};
 
-async function uploadImage(dataUrl, folder) {
+export async function uploadImage(dataUrl, folder) {
   if (!dataUrl?.startsWith('data:')) return { imageUrl: dataUrl, publicId: '' };
   const [meta, encoded] = dataUrl.split(',');
   const mime = meta.match(/data:(.*?);/)?.[1] || 'image/jpeg';
@@ -27,6 +28,19 @@ export async function refreshSiteImages() {
   return overrides;
 }
 if (typeof window !== 'undefined') { refreshSiteImages(); window.addEventListener('rg:authenticated', () => { refreshSiteImages(); }); }
+// Same rationale as useContentVersion in contentService.js: getSiteImage/
+// getSiteImageSlots read a plain in-memory cache that fills in after this
+// module's initial async fetch. Call this hook anywhere that reads them so
+// the component re-renders once real images (or an admin's edit) arrive.
+export function useSiteImageVersion() {
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    const bump = () => setVersion((v) => v + 1);
+    window.addEventListener('rg:images-updated', bump);
+    return () => window.removeEventListener('rg:images-updated', bump);
+  }, []);
+  return version;
+}
 export function getSiteImage(path) { return overrides[path] || IMAGE_SLOTS.find((slot) => slot.path === path)?.default || ''; }
 export function getSiteImageSlots() { return IMAGE_SLOTS.map((slot) => ({ ...slot, url: getSiteImage(slot.path), isCustom: Boolean(overrides[slot.path]) })); }
 export async function updateSiteImage(path, url, actor) {

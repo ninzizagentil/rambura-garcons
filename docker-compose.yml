@@ -1,0 +1,23 @@
+version: "3.8"
+
+# One-command local MongoDB for Rambura Garçons.
+# Usage:
+#   docker compose up -d      # start MongoDB in the background
+#   docker compose down       # stop it
+#   docker compose down -v    # stop it and wipe all data
+#
+# Matches the default MONGODB_URI in backend/.env.example:
+#   mongodb://localhost:27017/rambura_garcons
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: rambura-garcons-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - rambura_mongo_data:/data/db
+
+volumes:
+  rambura_mongo_data:

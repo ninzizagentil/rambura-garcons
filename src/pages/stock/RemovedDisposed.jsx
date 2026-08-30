@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Archive } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable from '../../components/tables/DataTable';
 import { Badge } from '../../components/common/Badge';
 import { EmptyState } from '../../components/feedback/States';
-import { getRemovedItems } from '../../services/stockService';
+import { getRemovedItems, refreshStock } from '../../services/stockService';
 
 const REASON_TONE = {
   Damaged: 'orange',
@@ -16,7 +16,14 @@ const REASON_TONE = {
 };
 
 export default function RemovedDisposed() {
-  const [records] = useState(getRemovedItems());
+  const [records, setRecords] = useState(() => getRemovedItems());
+
+  useEffect(() => {
+    const refresh = () => setRecords(getRemovedItems());
+    window.addEventListener('rg:stock-updated', refresh);
+    refreshStock().catch(() => {});
+    return () => window.removeEventListener('rg:stock-updated', refresh);
+  }, []);
 
   const columns = [
     { key: 'itemName', header: 'Item' },

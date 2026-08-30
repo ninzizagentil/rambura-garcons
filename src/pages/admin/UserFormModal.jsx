@@ -82,14 +82,21 @@ export default function UserFormModal({ open, onClose, user, onSaved }) {
             error={errors.role}
             options={Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }))}
           />
-          <Select
-            label="Status"
-            required
-            value={form.status}
-            onChange={update('status')}
-            options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]}
-          />
+          {!isEdit && (
+            <Select
+              label="Status"
+              required
+              value={form.status}
+              onChange={update('status')}
+              options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]}
+            />
+          )}
         </div>
+        {isEdit && (
+          <p className="text-xs text-[var(--color-mid-gray)]">
+            To activate or deactivate this account, use the status action on the Users list instead.
+          </p>
+        )}
         {!isEdit && (
           <Input
             label="Password"

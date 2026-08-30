@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, PackagePlus, PackageX } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
@@ -10,12 +10,19 @@ import { EmptyState } from '../../components/feedback/States';
 import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
-import { getOutOfStockItems, getTransactionsForItem } from '../../services/stockService';
+import { getOutOfStockItems, getTransactionsForItem, refreshStock } from '../../services/stockService';
 
 export default function OutOfStock() {
   const navigate = useNavigate();
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
-  const [items] = useState(getOutOfStockItems());
+  const [items, setItems] = useState(() => getOutOfStockItems());
+
+  useEffect(() => {
+    const refresh = () => setItems(getOutOfStockItems());
+    window.addEventListener('rg:stock-updated', refresh);
+    refreshStock().catch(() => {});
+    return () => window.removeEventListener('rg:stock-updated', refresh);
+  }, []);
 
   const rows = useMemo(
     () =>

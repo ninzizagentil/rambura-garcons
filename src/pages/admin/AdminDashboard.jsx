@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid,
@@ -12,10 +12,10 @@ import StatCard from '../../components/cards/StatCard';
 import { ChartCard } from '../../components/cards/InsightChartCards';
 import { useAuth } from '../../context/AuthContext';
 import { getUsers } from '../../services/userService';
-import { getLoans } from '../../services/bookService';
-import { getTransactions, getLowStockItems } from '../../services/stockService';
-import { getActivity } from '../../services/activityService';
-import { getNews } from '../../services/contentService';
+import { getLoans, refreshLibrary } from '../../services/bookService';
+import { getTransactions, getLowStockItems, refreshStock } from '../../services/stockService';
+import { getActivity, refreshActivity } from '../../services/activityService';
+import { getNews, refreshContent } from '../../services/contentService';
 
 // Fixed "today" reference, matching the convention already used elsewhere
 // in the app (e.g. bookService.daysOverdue's default).
@@ -76,12 +76,29 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const users = useMemo(() => getUsers(), []);
-  const loans = useMemo(() => getLoans(), []);
-  const transactions = useMemo(() => getTransactions(), []);
-  const lowStock = useMemo(() => getLowStockItems(), []);
-  const activity = useMemo(() => getActivity(), []);
-  const news = useMemo(() => getNews(), []);
+  const [users, setUsers] = useState([]);
+  const [loadError, setLoadError] = useState(null);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      getUsers().then((data) => { if (!cancelled) setUsers(data || []); }),
+      refreshLibrary().catch(() => {}),
+      refreshStock().catch(() => {}),
+      refreshActivity().catch(() => {}),
+      refreshContent().catch(() => {}),
+    ])
+      .then(() => { if (!cancelled) setRefreshTick((t) => t + 1); })
+      .catch((err) => { if (!cancelled) setLoadError(err.message || 'Failed to load dashboard data.'); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const loans = useMemo(() => getLoans(), [refreshTick]);
+  const transactions = useMemo(() => getTransactions(), [refreshTick]);
+  const lowStock = useMemo(() => getLowStockItems(), [refreshTick]);
+  const activity = useMemo(() => getActivity(), [refreshTick]);
+  const news = useMemo(() => getNews(), [refreshTick]);
 
   const activeUsers = users.filter((u) => u.status === 'active').length;
 
@@ -104,6 +121,8 @@ export default function AdminDashboard() {
     [activity]
   );
 
+  const lowStockPreview = useMemo(() => lowStock.slice(0, 3), [lowStock]);
+
   const weekRangeLabel = `${formatDay(daysAgo(6))} – ${formatDay(daysAgo(0))}, 2026`;
 
   const systemStatus = [
@@ -114,19 +133,82 @@ export default function AdminDashboard() {
     { label: 'Stock MIS', description: 'Stock system is operational', icon: Package },
   ];
 
+  const summaryCards = [
+    { label: 'Operational modules', value: '5/5', description: 'All critical systems healthy', accent: 'green' },
+    { label: 'Stock health', value: lowStock.length > 0 ? `${lowStock.length} items` : 'Clear', description: lowStock.length > 0 ? 'Restocking required soon' : 'No critical stock alerts', accent: 'amber' },
+    { label: 'Website coverage', value: `${news.length} posts`, description: 'Fresh content published in the last cycle', accent: 'blue' },
+  ];
+
   return (
-    <div>
+    <div className="space-y-6">
+      {loadError && (
+        <div className="mb-4 rounded-[var(--radius-card)] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          Couldn't load dashboard data: {loadError}. Check that the backend is running and reachable.
+        </div>
+      )}
+
       <PageHeader
         title={`Welcome back, ${user?.fullName?.split(' ')[0]} 👋`}
         description="System overview across the whole platform."
         actions={
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--color-border-gray)] bg-[var(--color-white)] text-xs font-medium text-[var(--color-mid-gray)]">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[var(--color-border-gray)] bg-[var(--color-white)] text-xs font-medium text-[var(--color-mid-gray)] shadow-sm">
             {weekRangeLabel}
           </span>
         }
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <section className="relative overflow-hidden rounded-[28px] border border-[var(--color-border-gray)] bg-gradient-to-br from-[var(--color-white)] via-[var(--color-light-green-100)] to-[var(--color-soft-gray)] p-5 shadow-card md:p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(44,103,84,0.12),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(217,164,65,0.14),_transparent_32%)]" aria-hidden="true" />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <span className="inline-flex items-center rounded-full border border-[var(--color-border-gray)] bg-[var(--color-white)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-mid-gray)]">
+              Executive overview
+            </span>
+            <h2 className="mt-3 font-display text-2xl font-semibold text-[var(--color-dark-gray)] md:text-3xl">
+              Campus operations running smoothly
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-[var(--color-mid-gray)]">
+              Monitor user activity, library circulation, inventory health, and digital operations from one place.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[var(--color-status-green-bg)] px-3 py-1.5 text-xs font-semibold text-[var(--color-status-green)]">
+              <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
+              All core systems online
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-[var(--color-gold-100)] px-3 py-1.5 text-xs font-semibold text-[var(--color-gold)]">
+              <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
+              1 alert needs attention
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {summaryCards.map((item) => (
+          <div key={item.label} className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-4 shadow-card">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-mid-gray)]">{item.label}</p>
+                <p className="mt-2 font-display text-2xl font-semibold text-[var(--color-dark-gray)]">{item.value}</p>
+              </div>
+              <span className={
+                item.accent === 'green'
+                  ? 'inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-status-green-bg)] text-[var(--color-status-green)]'
+                  : item.accent === 'amber'
+                    ? 'inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-status-amber-bg)] text-[var(--color-status-amber)]'
+                    : 'inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-status-blue-bg)] text-[var(--color-status-blue)]'
+              }>
+                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              </span>
+            </div>
+            <p className="mt-3 text-sm text-[var(--color-mid-gray)]">{item.description}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           label="Total Users"
           value={users.length}
@@ -181,41 +263,44 @@ export default function AdminDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <ChartCard title="System Activity Overview" description="Loans, stock transactions and logged events, last 7 days" className="lg:col-span-2">
-          <ResponsiveContainer width="100%" height={260}>
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+        <ChartCard title="System Activity Overview" description="Loans, stock transactions and logged events, last 7 days" className="xl:col-span-2">
+          <ResponsiveContainer width="100%" height={280}>
             <LineChart data={overviewData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-gray)" />
               <XAxis dataKey="label" stroke="var(--color-mid-gray)" fontSize={12} />
               <YAxis stroke="var(--color-mid-gray)" fontSize={12} allowDecimals={false} />
               <Tooltip contentStyle={{ background: 'var(--color-white)', border: '1px solid var(--color-border-gray)', borderRadius: 8, fontSize: 12 }} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Line type="monotone" dataKey="loans" name="Library Loans" stroke="var(--color-medium-green)" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="transactions" name="Stock Transactions" stroke="var(--color-status-blue)" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="activity" name="Logged Events" stroke="var(--color-gold)" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="loans" name="Library Loans" stroke="var(--color-medium-green)" strokeWidth={2.5} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="transactions" name="Stock Transactions" stroke="var(--color-status-blue)" strokeWidth={2.5} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="activity" name="Logged Events" stroke="var(--color-gold)" strokeWidth={2.5} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         </ChartCard>
 
-        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card p-5">
-          <div className="flex items-center justify-between mb-3">
+        <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5 shadow-card">
+          <div className="mb-4 flex items-center justify-between">
             <h3 className="font-display text-base font-semibold text-[var(--color-dark-gray)]">System Status</h3>
+            <span className="rounded-full bg-[var(--color-status-green-bg)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-status-green)]">
+              Healthy
+            </span>
           </div>
-          <ul className="divide-y divide-[var(--color-border-gray)]">
+          <ul className="space-y-3">
             {systemStatus.map((s) => (
-              <li key={s.label} className="flex items-center justify-between gap-3 py-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--color-light-green-100)] text-[var(--color-heading)] flex-shrink-0">
-                    <s.icon className="w-4 h-4" aria-hidden="true" />
+              <li key={s.label} className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] px-3 py-2.5">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-light-green-100)] text-[var(--color-heading)]">
+                    <s.icon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-[var(--color-dark-gray)] truncate">{s.label}</p>
-                    <p className="text-xs text-[var(--color-mid-gray)] truncate">{s.description}</p>
+                    <p className="truncate text-sm font-medium text-[var(--color-dark-gray)]">{s.label}</p>
+                    <p className="truncate text-xs text-[var(--color-mid-gray)]">{s.description}</p>
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--color-status-green-bg)] text-[var(--color-status-green)] text-xs font-medium whitespace-nowrap flex-shrink-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-current" aria-hidden="true" />
-                  Operational
+                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-status-green-bg)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-status-green)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+                  OK
                 </span>
               </li>
             ))}
@@ -223,40 +308,74 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card p-5 mt-5">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display text-base font-semibold text-[var(--color-dark-gray)]">Recent Activities</h3>
-          <button
-            type="button"
-            onClick={() => navigate('/admin/activity')}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-medium-green)] hover:underline"
-          >
-            View all <ArrowRight className="w-3 h-3" aria-hidden="true" />
-          </button>
-        </div>
-        {recentActivity.length === 0 ? (
-          <p className="text-sm text-[var(--color-mid-gray)]">No activity recorded yet.</p>
-        ) : (
-          <ul className="divide-y divide-[var(--color-border-gray)]">
-            {recentActivity.map((a) => {
-              const Icon = MODULE_ICON[a.module] || Activity;
-              return (
-                <li key={a.id} className="flex items-center justify-between gap-3 py-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--color-light-green-100)] text-[var(--color-heading)] flex-shrink-0">
-                      <Icon className="w-4 h-4" aria-hidden="true" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-[var(--color-dark-gray)] truncate">{a.action}</p>
-                      <p className="text-xs text-[var(--color-mid-gray)] truncate">{a.module} · {a.user}</p>
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.3fr_0.7fr]">
+        <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5 shadow-card">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-display text-base font-semibold text-[var(--color-dark-gray)]">Recent Activities</h3>
+            <button
+              type="button"
+              onClick={() => navigate('/admin/activity')}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-medium-green)] hover:underline"
+            >
+              View all <ArrowRight className="h-3 w-3" aria-hidden="true" />
+            </button>
+          </div>
+
+          {recentActivity.length === 0 ? (
+            <p className="text-sm text-[var(--color-mid-gray)]">No activity recorded yet.</p>
+          ) : (
+            <ul className="space-y-3">
+              {recentActivity.map((a) => {
+                const Icon = MODULE_ICON[a.module] || Activity;
+                return (
+                  <li key={a.id} className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] px-3 py-2.5">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-light-green-100)] text-[var(--color-heading)]">
+                        <Icon className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-[var(--color-dark-gray)]">{a.action}</p>
+                        <p className="truncate text-xs text-[var(--color-mid-gray)]">{a.module} · {a.user}</p>
+                      </div>
                     </div>
+                    <span className="flex-shrink-0 text-xs text-[var(--color-mid-gray)]">{timeAgo(a.date)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5 shadow-card">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-display text-base font-semibold text-[var(--color-dark-gray)]">Priority Alerts</h3>
+            <span className="rounded-full bg-[var(--color-status-amber-bg)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-status-amber)]">
+              Watchlist
+            </span>
+          </div>
+
+          {lowStockPreview.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] p-4 text-sm text-[var(--color-mid-gray)]">
+              No stock issues detected.
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {lowStockPreview.map((item) => (
+                <li key={item.id || item.name || item._id} className="rounded-2xl border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-medium text-[var(--color-dark-gray)]">{item.name || item.itemName || 'Inventory item'}</p>
+                    <span className="rounded-full bg-[var(--color-status-amber-bg)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-status-amber)]">
+                      Low stock
+                    </span>
                   </div>
-                  <span className="text-xs text-[var(--color-mid-gray)] whitespace-nowrap flex-shrink-0">{timeAgo(a.date)}</span>
+                  <p className="mt-1 text-xs text-[var(--color-mid-gray)]">
+                    Available: {item.stock ?? item.quantity ?? item.currentStock ?? 0}
+                  </p>
                 </li>
-              );
-            })}
-          </ul>
-        )}
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
