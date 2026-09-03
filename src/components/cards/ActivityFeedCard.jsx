@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { History } from 'lucide-react';
 import { Badge } from '../common/Badge';
 import { cn } from '../../utils/cn';
+import { getActivityStatus, timeAgo } from '../../utils/activityStatus';
 
 /**
  * ActivityFeedCard — beautiful-card wrapper for a short "recent activity"
@@ -30,20 +31,39 @@ export default function ActivityFeedCard({ title = 'Recent Activity', activity =
         <p className="text-sm text-[var(--color-mid-gray)]">{emptyLabel}</p>
       ) : (
         <ul className="divide-y divide-[var(--color-border-gray)]">
-          {activity.map((a) => (
-            <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-              <div className="min-w-0">
-                <span className="font-medium text-[var(--color-dark-gray)]">{a.user}</span>{' '}
-                <span className="text-[var(--color-mid-gray)]">{a.action}</span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Badge tone={a.status === 'warning' ? 'amber' : 'green'}>{a.status}</Badge>
-                <span className="text-xs text-[var(--color-mid-gray)] whitespace-nowrap">
-                  {new Date(a.date).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            </li>
-          ))}
+          {activity.map((a) => {
+            const status = getActivityStatus(a.status);
+            return (
+              <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                <div className="min-w-0 flex items-start gap-2.5">
+                  <span
+                    className={cn(
+                      'mt-1.5 w-1.5 h-1.5 rounded-full shrink-0',
+                      status.tone === 'green' && 'bg-[var(--color-status-green)]',
+                      status.tone === 'red' && 'bg-[var(--color-status-red)]',
+                      status.tone === 'amber' && 'bg-[var(--color-status-amber)]',
+                      status.tone === 'blue' && 'bg-[var(--color-status-blue)]',
+                      status.tone === 'neutral' && 'bg-[var(--color-mid-gray)]'
+                    )}
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0">
+                    <span className="font-medium text-[var(--color-dark-gray)]">{a.user}</span>{' '}
+                    <span className="text-[var(--color-mid-gray)]">{a.action}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge tone={status.tone}>{status.label}</Badge>
+                  <span
+                    className="text-xs text-[var(--color-mid-gray)] whitespace-nowrap"
+                    title={new Date(a.date).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  >
+                    {timeAgo(a.date)}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

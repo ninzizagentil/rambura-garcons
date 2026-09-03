@@ -7,10 +7,11 @@ import IconButton from '../../components/common/IconButton';
 import ConfirmModal from '../../components/modals/ConfirmModal';
 import { EmptyState } from '../../components/feedback/States';
 import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
+import Alert from '../../components/feedback/Alert';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import { useToast } from '../../context/ToastContext';
-import { getLoans, refreshLibrary, returnBook, daysOverdue } from '../../services/bookService';
+import { getLoans, refreshLibrary, returnBook, daysOverdue, getLibraryError } from '../../services/bookService';
 
 export default function OverdueBooks() {
   const { showToast } = useToast();
@@ -18,12 +19,18 @@ export default function OverdueBooks() {
   const [loans, setLoans] = useState(() => getLoans().filter((l) => l.status !== 'returned' && daysOverdue(l.dueDate) > 0));
   const [confirmLoan, setConfirmLoan] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [loadError, setLoadError] = useState(getLibraryError());
 
-  const refresh = () => setLoans(getLoans().filter((l) => l.status !== 'returned' && daysOverdue(l.dueDate) > 0));
+  const refresh = () => { setLoans(getLoans().filter((l) => l.status !== 'returned' && daysOverdue(l.dueDate) > 0)); setLoadError(getLibraryError()); };
+  const onError = (e) => setLoadError(e.detail);
   useEffect(() => {
     window.addEventListener('rg:library-updated', refresh);
+    window.addEventListener('rg:library-error', onError);
     refreshLibrary().catch(() => {});
-    return () => window.removeEventListener('rg:library-updated', refresh);
+    return () => {
+      window.removeEventListener('rg:library-updated', refresh);
+      window.removeEventListener('rg:library-error', onError);
+    };
   }, []);
 
   const handleReturn = () => {
@@ -70,7 +77,9 @@ export default function OverdueBooks() {
         description="Loans past their due date."
         breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Overdue Books' }]}
       />
-      {viewOnly && <ViewOnlyBanner module="Library MIS" />}      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
+      {viewOnly && <ViewOnlyBanner module="Library MIS" />}
+      {loadError && <Alert type="error" title="Couldn't load overdue books" className="mb-4">{loadError}</Alert>}
+      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
         <DataTable columns={columns} data={rows} emptyState={<EmptyState title="No overdue books" message="Nice — every loan is within its due date." />} />
       </div>
 

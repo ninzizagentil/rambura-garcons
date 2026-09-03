@@ -5,6 +5,7 @@ let books = [];
 let loans = [];
 let loaded = false;
 let loading;
+let lastError = null;
 
 function normalizeBook(book) {
   const value = { ...book, id: book.id || book._id, availableCopies: book.availableCopies ?? (book.totalCopies - book.borrowedCopies) };
@@ -27,8 +28,15 @@ export async function refreshLibrary() {
       books = bookResult.data.map(normalizeBook);
       loans = loanResult.data.map(normalizeLoan);
       loaded = true;
+      lastError = null;
       window.dispatchEvent(new Event('rg:library-updated'));
       return { books, loans };
+    })
+    .catch((error) => {
+      lastError = error.message || 'Failed to load library data';
+      console.error('[library] refreshLibrary failed:', error);
+      window.dispatchEvent(new CustomEvent('rg:library-error', { detail: lastError }));
+      throw error;
     })
     .finally(() => { loading = null; });
   return loading;
@@ -41,6 +49,7 @@ export function getBookById(id) { return books.find((book) => book.id === id) ||
 export function getLoans() { return loans; }
 export function getLoansForBook(bookId) { return loans.filter((loan) => loan.bookId === bookId); }
 export function isLibraryLoaded() { return loaded; }
+export function getLibraryError() { return lastError; }
 
 // A freshly-picked cover comes in as a data: URL from ImageField — it has to
 // be uploaded to Cloudinary first so the backend gets a real { imageUrl,

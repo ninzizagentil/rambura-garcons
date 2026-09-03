@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, ArrowRight } from 'lucide-react';
+import { Download, Printer, ArrowRight } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import PageHeader from '../../components/layout/PageHeader';
 import { ChartCard } from '../../components/cards/InsightChartCards';
@@ -9,6 +9,7 @@ import Button from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
 import { getItems, getLowStockItems, getUsageByItem } from '../../services/stockService';
 import { exportToCSV } from '../../utils/export';
+import { printReport } from '../../utils/print';
 
 const PIE_COLORS = ['var(--color-medium-green)', 'var(--color-status-blue)'];
 
@@ -41,13 +42,33 @@ export default function ManagementStockReports() {
     showToast('Stock report downloaded as CSV.', 'success');
   };
 
+  const handlePrint = () => {
+    const ok = printReport(
+      'Management Stock Report',
+      [
+        { key: 'name', header: 'Item' },
+        { key: 'category', header: 'Category' },
+        { key: 'quantity', header: 'Quantity' },
+        { key: 'minLevel', header: 'Minimum Level' },
+        { key: 'status', header: 'Status' },
+      ],
+      items
+    );
+    if (!ok) showToast('Enable pop-ups to print this report.', 'error');
+  };
+
   return (
     <div>
       <PageHeader
         title="Stock Reports"
         description="Stock overview for school management."
         breadcrumb={[{ label: 'Management', to: '/management' }, { label: 'Stock Reports' }]}
-        actions={<Button variant="secondary" icon={Download} onClick={handleExport}>Export</Button>}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" icon={Printer} onClick={handlePrint}>Print</Button>
+            <Button variant="secondary" icon={Download} onClick={handleExport}>Export</Button>
+          </div>
+        }
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">

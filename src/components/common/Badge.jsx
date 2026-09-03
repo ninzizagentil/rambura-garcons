@@ -71,3 +71,5 @@ export function StatusBadge({ status, label, className = '' }) {
     </Badge>
   );
 }
+
+export default Badge;

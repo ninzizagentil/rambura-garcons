@@ -123,14 +123,32 @@ export default function StockOut() {
     return (
       <div>
         <PageHeader title="Stock Out" breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock Out' }]} />
-        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
-          <CheckCircle2 className="w-12 h-12 text-[var(--color-status-green)] mb-4" aria-hidden="true" />
-          <p className="font-display text-lg font-semibold text-[var(--color-dark-gray)]">Stock Out Successful</p>
-          <p className="text-sm text-[var(--color-mid-gray)] mt-1">
-            −{form.quantity} {selectedItem?.unit} issued from "{selectedItem?.name}". New quantity: {result?.newQuantity} {selectedItem?.unit}.
+        <div className="stock-success-state">
+          <CheckCircle2 className="stock-success-icon" aria-hidden="true" />
+          <h3 className="stock-success-title">✨ Stock Out Recorded!</h3>
+          <p className="stock-success-message">
+            Successfully recorded −{form.quantity} {selectedItem?.unit} of {selectedItem?.name}
           </p>
-          <div className="flex gap-3 mt-6">
-            <Button variant="secondary" onClick={() => navigate(`/stock/items/${form.itemId}`)}>View Item Details</Button>
+          <div className="stock-success-details">
+            <div className="stock-success-detail-row">
+              <span className="stock-success-detail-label">Item</span>
+              <span className="stock-success-detail-value">{selectedItem?.name}</span>
+            </div>
+            <div className="stock-success-detail-row">
+              <span className="stock-success-detail-label">Quantity Issued</span>
+              <span className="stock-success-detail-value">−{form.quantity} {selectedItem?.unit}</span>
+            </div>
+            <div className="stock-success-detail-row">
+              <span className="stock-success-detail-label">Remaining</span>
+              <span className="stock-success-detail-value">{result?.newQuantity} {selectedItem?.unit}</span>
+            </div>
+            <div className="stock-success-detail-row">
+              <span className="stock-success-detail-label">Destination</span>
+              <span className="stock-success-detail-value">{form.party}</span>
+            </div>
+          </div>
+          <div className="flex gap-3 flex-wrap justify-center">
+            <Button variant="secondary" onClick={() => navigate(`/stock/items/${form.itemId}`)}>View Item</Button>
             <Button variant="outline" onClick={() => navigate('/stock/transactions')}>View Transactions</Button>
             <Button variant="primary" onClick={startAnother}>Record Another</Button>
           </div>
@@ -143,9 +161,10 @@ export default function StockOut() {
     <div>
       <PageHeader title="Stock Out" description="Issue stock from an item's balance." breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock Out' }]} />
 
-      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-2xl">
+      <div className="stock-form-container">
         {step === 'form' ? (
           <form onSubmit={handleContinue} noValidate className="space-y-4">
+            <h3 className="stock-form-title">📤 Record Stock Out</h3>
             {serverError && <Alert type="error">{serverError}</Alert>}
             <Select
               label="Item"

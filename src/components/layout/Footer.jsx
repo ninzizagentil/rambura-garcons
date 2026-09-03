@@ -21,31 +21,31 @@ export default function Footer() {
   return (
     <footer className="relative mt-14 overflow-hidden border-t border-[var(--footer-border)] bg-[var(--footer-bg)] text-[var(--text-primary)] shadow-[0_-12px_35px_rgba(0,0,0,0.08)]">
       <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(217,164,65,0.08),rgba(217,164,65,0.4),rgba(217,164,65,0.08))]" aria-hidden="true" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(217,164,65,0.08),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(22,75,62,0.18),transparent_22%)]" aria-hidden="true" />
 
-      <div className="relative px-4 py-10 md:px-6 lg:px-8 lg:py-12">
+      <div className="relative px-4 py-12 md:px-6 lg:px-8 lg:py-14">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-8 flex flex-col gap-5 border-b border-[var(--footer-border)] pb-6 md:flex-row md:items-center md:justify-between">
+          <div className="mb-10 flex flex-col gap-6 border-b border-[var(--footer-border)] pb-8 md:flex-row md:items-end md:justify-between">
             <div className="flex items-center gap-3 text-[var(--text-primary)]">
               <BrandMark
-                containerClassName="w-11 h-11 rounded-full bg-white/10 text-[var(--color-gold)] font-display font-bold shadow-inner shadow-white/10"
+                containerClassName="w-11 h-11 rounded-full border border-[var(--footer-border)] bg-white/95 shadow-[0_12px_26px_rgba(15,108,255,0.08)]"
+                imgClassName="p-1.5"
                 fallback="RG"
               />
               <div className="leading-tight">
-                <div className="font-display text-sm font-bold uppercase tracking-[0.16em]">Rambura Garçons</div>
-                <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/60">TVET School</div>
+                <div className="font-display text-base font-bold uppercase tracking-[0.16em]">Rambura Garçons</div>
+                <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--text-secondary)]">TVET Secondary School · Nyabihu</div>
               </div>
             </div>
 
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[var(--footer-border)] bg-[rgba(44,103,84,0.06)] px-3 py-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-primary)] backdrop-blur-sm">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[var(--footer-border)] bg-[rgba(15,108,255,0.06)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--text-primary)] backdrop-blur-sm">
               <span className="h-2 w-2 rounded-full bg-[var(--gold)]" aria-hidden="true" />
               Shaping Future-Ready Skills
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-[28px] border border-[var(--footer-border)] bg-[var(--footer-surface)] p-5 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--text-primary)]">About</p>
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_0.8fr_0.9fr_1.2fr] lg:gap-12">
+            <div>
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-[var(--gold)]">About the school</p>
               <p className="text-sm leading-relaxed text-[var(--text-secondary)]">
                 Building skills. Creating futures.
                 <br />
@@ -56,8 +56,8 @@ export default function Footer() {
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-[var(--footer-border)] bg-[var(--footer-surface)] p-5 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--text-primary)]">Quick Links</p>
+            <div>
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-[var(--gold)]">Explore</p>
               <ul className="space-y-2.5 text-sm text-[var(--text-secondary)]">
                 {QUICK_LINKS.map(([label, to]) => (
                   <li key={to}>
@@ -69,21 +69,25 @@ export default function Footer() {
               </ul>
             </div>
 
-            <div className="rounded-[28px] border border-[var(--footer-border)] bg-[var(--footer-surface)] p-5 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--text-primary)]">Programs</p>
-              <ul className="space-y-2.5 text-sm text-[var(--text-secondary)]">
-                {programs.map((p) => (
-                  <li key={p.slug}>
-                    <Link to={`/academics?program=${p.slug}`} className="inline-flex items-center transition-colors hover:text-[var(--gold)] hover:translate-x-0.5">
-                      {p.title}
-                    </Link>
-                  </li>
-                ))}
+            <div>
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-[var(--gold)]">Programs</p>
+              <ul className="space-y-2.5 text-sm">
+                {programs.length > 0 ? (
+                  programs.map((p) => (
+                    <li key={p.slug}>
+                      <Link to={`/academics?program=${p.slug}`} className="inline-flex items-center transition-colors text-[var(--text-secondary)] hover:text-[var(--gold)] hover:translate-x-0.5">
+                        {p.title}
+                      </Link>
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-[var(--text-secondary)]">Loading programs...</li>
+                )}
               </ul>
             </div>
 
-            <div className="rounded-[28px] border border-[var(--footer-border)] bg-[var(--footer-surface)] p-5 backdrop-blur-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-              <p className="mb-4 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--text-primary)]">Contact Us</p>
+            <div>
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-[var(--gold)]">Contact the school</p>
               <ul className="space-y-3 text-sm text-[var(--text-secondary)]">
                 <li className="flex items-start gap-2.5">
                   <MapPin className="mt-0.5 w-4 h-4 flex-shrink-0 text-[var(--color-gold)]" aria-hidden="true" />
@@ -91,11 +95,11 @@ export default function Footer() {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Phone className="w-4 h-4 flex-shrink-0 text-[var(--color-gold)]" aria-hidden="true" />
-                  <span>+250 788 123 456</span>
+                  <a href="tel:+250788123456" className="transition-colors hover:text-[var(--gold)]">+250 788 123 456</a>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Mail className="w-4 h-4 flex-shrink-0 text-[var(--color-gold)]" aria-hidden="true" />
-                  <span>info@ramburagarcons.rw</span>
+                  <a href="mailto:info@ramburagarcons.rw" className="break-all transition-colors hover:text-[var(--gold)]">info@ramburagarcons.rw</a>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Clock className="w-4 h-4 flex-shrink-0 text-[var(--color-gold)]" aria-hidden="true" />

@@ -3,7 +3,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Eye, EyeOff, GraduationCap, LogIn, ArrowLeft, AlertCircle, User, Lock,
-  BookOpen, Users, Trophy, ShieldCheck, Moon, Sun, HelpCircle, X, Smartphone,
+  BookOpen, Users, Trophy, ShieldCheck, Moon, Sun, HelpCircle, X,
+  ChevronDown, MessageCircle, KeyRound,
   CheckCircle2, Clock, ArrowRight,
 } from 'lucide-react';
 import { Input } from '../../components/forms/FormField';
@@ -12,6 +13,7 @@ import HillRidgeDivider from '../../components/common/HillRidgeDivider';
 import BrandMark from '../../components/common/BrandMark';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useToast } from '../../context/ToastContext';
 import { ROLE_HOME, NAV_BY_ROLE } from '../../data/roles';
 import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 
@@ -38,10 +40,6 @@ const OTHER_DEMO_ACCOUNTS = [
 ];
 
 const REMEMBER_KEY = 'rg_remember_identifier';
-const DEMO_2FA_EMAIL = 'ninzizaaime31@gmail.com';
-
-const generateTwoFACode = () => String(Math.floor(100000 + Math.random() * 900000));
-
 const pageVariants = {
   initial: { x: '-100%', opacity: 0 },
   animate: {
@@ -60,6 +58,7 @@ export default function Login() {
   useSiteImageVersion();
   const { login } = useAuth();
   const { toggleTheme, isDark } = useTheme();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [identifier, setIdentifier] = useState('');
@@ -70,23 +69,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [adminLoading, setAdminLoading] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
-  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
-  const [twoFACode, setTwoFACode] = useState('');
-  const [twoFAEmailCode, setTwoFAEmailCode] = useState('');
-  const [twoFAError, setTwoFAError] = useState('');
   const [showHelp, setShowHelp] = useState(false);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle('dark-public', isDark);
-    root.classList.toggle('dark', isDark);
-    root.style.colorScheme = isDark ? 'dark' : 'light';
-
-    return () => {
-      root.classList.remove('dark-public', 'dark');
-      root.style.colorScheme = '';
-    };
-  }, [isDark]);
+  const [openFaq, setOpenFaq] = useState('getting-started');
 
   useEffect(() => {
     const saved = window.localStorage.getItem(REMEMBER_KEY);
@@ -108,6 +92,7 @@ export default function Login() {
     setError('');
     setIdentifier(account.identifier);
     setPassword(account.password);
+    showToast(`${account.role} demo credentials filled in. Click Sign In to continue.`, 'info');
   };
 
   const redirectAfterLogin = (user) => {
@@ -128,32 +113,13 @@ export default function Login() {
     setLoading(false);
     if (!result.success) {
       setError(result.error);
+      showToast(result.error || 'Sign in failed. Please try again.', 'error');
       return;
     }
 
+    showToast(`Welcome back, ${result.user?.name || result.user?.role || 'there'}!`, 'success');
     persistRememberedIdentifier(identifier, rememberMe);
     redirectAfterLogin(result.user);
-  };
-
-  const handleVerify2FA = async () => {
-    setTwoFAError('');
-    if (!twoFACode || twoFACode.length !== 6 || !/^\d+$/.test(twoFACode)) {
-      setTwoFAError('Please enter a valid 6-digit code.');
-      return;
-    }
-    if (twoFACode !== twoFAEmailCode) {
-      setTwoFAError(`Incorrect code. Use the verification code sent to ${DEMO_2FA_EMAIL}.`);
-      return;
-    }
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setLoading(false);
-
-    const result = await login({ identifier, password });
-    if (result.success) {
-      persistRememberedIdentifier(identifier, rememberMe);
-      redirectAfterLogin(result.user);
-    }
   };
 
   const handleAdminLogin = async () => {
@@ -163,9 +129,11 @@ export default function Login() {
     setAdminLoading(false);
     if (!result.success) {
       setError(result.error);
+      showToast(result.error || 'Administrator sign in failed.', 'error');
       return;
     }
 
+    showToast('Signed in as Administrator.', 'success');
     persistRememberedIdentifier(ADMIN_ACCOUNT.identifier, rememberMe);
     redirectAfterLogin(result.user);
   };
@@ -173,6 +141,11 @@ export default function Login() {
   const handleBackToWebsite = (e) => {
     e.preventDefault();
     setIsLeaving(true);
+  };
+
+  const handleToggleTheme = () => {
+    toggleTheme();
+    showToast(isDark ? 'Light mode on' : 'Dark mode on', 'info', 2000);
   };
 
   return (
@@ -192,33 +165,29 @@ export default function Login() {
               type="button"
               onClick={() => setShowHelp(true)}
               aria-label="Help & FAQ"
-              className="p-2.5 rounded-full bg-white/80 hover:bg-white text-[var(--color-mid-gray)] hover:text-[var(--color-deep-green)] transition-all duration-200 shadow-sm hover:shadow-md backdrop-blur-sm"
+              className="p-2.5 rounded-full bg-[var(--surface)]/80 hover:bg-[var(--surface)] text-[var(--color-mid-gray)] hover:text-[var(--color-deep-green)] transition-all duration-200 shadow-sm hover:shadow-md backdrop-blur-sm"
             >
               <HelpCircle className="w-5 h-5" aria-hidden="true" />
             </button>
             <button
               type="button"
-              onClick={toggleTheme}
+              onClick={handleToggleTheme}
+              className="p-2.5 rounded-full bg-[var(--surface)]/80 hover:bg-[var(--surface)] text-[var(--color-mid-gray)] hover:text-[var(--color-deep-green)] transition-all duration-200 shadow-sm hover:shadow-md backdrop-blur-sm"
               aria-label="Toggle theme"
-              className="p-2.5 rounded-full bg-white/80 hover:bg-white text-[var(--color-mid-gray)] hover:text-[var(--color-deep-green)] transition-all duration-200 shadow-sm hover:shadow-md backdrop-blur-sm"
             >
               {isDark ? <Sun className="w-5 h-5" aria-hidden="true" /> : <Moon className="w-5 h-5" aria-hidden="true" />}
             </button>
           </div>
 
-          <div className="relative w-full max-w-6xl max-h-[92vh] min-h-0 grid lg:grid-cols-2 bg-[var(--color-white)] lg:rounded-[2rem] overflow-y-auto overflow-x-hidden lg:shadow-card-hover">
-
+          <div className="relative w-full max-w-6xl max-h-[92vh] min-h-0 grid lg:grid-cols-2 bg-[var(--surface)] lg:rounded-[2rem] overflow-y-auto overflow-x-hidden lg:shadow-card-hover">
             <div className="relative hidden lg:block overflow-hidden order-1">
               <img
-                src={getSiteImage('home.hero')}
+                src={getSiteImage('home.heroSlides.0')}
                 alt="Rambura Garçons campus, Nyabihu"
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-navy-900)]/98 via-[var(--color-navy-800)]/90 to-[var(--color-navy-900)]/75" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-navy-900)]/100 via-[var(--color-navy-900)]/20 to-transparent" />
-
               <div className="relative h-full flex flex-col justify-between p-10 xl:p-14 pb-20">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 self-start rounded-2xl border border-white/30 bg-black/25 p-3 shadow-[0_12px_30px_rgba(0,0,0,0.16)] backdrop-blur-md dark:border-[#D5A24A]/35 dark:bg-[#0B2D26]/70">
                   <BrandMark
                     containerClassName="w-14 h-14 rounded-full bg-white shadow-lg shrink-0"
                     fallback={<GraduationCap className="w-7 h-7 text-[var(--color-deep-green)]" aria-hidden="true" />}
@@ -229,19 +198,28 @@ export default function Login() {
                   </div>
                 </div>
 
-                <div>
-                  <h2 className="font-display text-4xl xl:text-[2.75rem] font-bold leading-[1.05] max-w-md text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.75)]">
-                    Welcome <span className="text-[var(--color-light-green)] drop-shadow-[0_4px_18px_rgba(0,0,0,0.8)]">Back!</span>
-                  </h2>
-                  <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
-                    Sign in to access your School Management System
-                  </p>
+                <div className="rounded-2xl border border-white/30 bg-white/10 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.18)] backdrop-blur-md">
+                  <div>
+                    <h2 className="font-display text-4xl xl:text-[2.75rem] font-bold leading-[1.05] max-w-md text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.75)]">
+                      Welcome <span className="text-[var(--color-light-green)] drop-shadow-[0_4px_18px_rgba(0,0,0,0.8)]">Back!</span>
+                    </h2>
+                    <p className="mt-3 text-sm font-bold uppercase tracking-[0.18em] text-[var(--color-light-green)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+                      Rambura Garçons Campus
+                    </p>
+                    <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-white/80 drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+                      Nyabihu District, Rwanda
+                    </p>
+                    <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                      Sign in to access your School Management System
+                    </p>
 
-                  <blockquote className="mt-6 pl-4 border-l-2 border-[var(--color-light-green)] text-white/95 font-display font-semibold italic text-lg max-w-xs leading-snug drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
-                    "Quality Education for a Brighter Tomorrow"
-                  </blockquote>
+                    <blockquote className="mt-6 pl-4 border-l-2 border-[var(--color-light-green)] text-white/95 font-display font-semibold italic text-lg max-w-xs leading-snug drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                      "Quality Education for a Brighter Tomorrow"
+                    </blockquote>
+                  </div>
+                </div>
 
-                  <div className="flex flex-wrap gap-x-7 gap-y-4 mt-9">
+                <div className="flex flex-wrap gap-x-7 gap-y-4 mt-9">
                     {PANEL_HIGHLIGHTS.map(({ Icon, text }) => (
                       <div key={text} className="flex flex-col items-center gap-2 w-16 text-center">
                         <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-medium-green)] text-white shrink-0 shadow-md">
@@ -250,7 +228,6 @@ export default function Login() {
                         <span className="text-white text-xs font-semibold leading-tight">{text}</span>
                       </div>
                     ))}
-                  </div>
                 </div>
               </div>
             </div>
@@ -267,29 +244,7 @@ export default function Login() {
               />
             </svg>
 
-            {/* Diagonal hill-ridge wave sash across the bottom of the whole
-                card — the Nyabihu motif standing in for the wave in the
-                reference layout. Desktop only (mobile uses its own strip). */}
-            <svg
-              className="hidden lg:block absolute bottom-0 left-0 w-full h-24 z-20 pointer-events-none"
-              viewBox="0 0 1400 220"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M0,220 L0,120 C160,60 320,150 500,100 C660,55 820,170 980,120 C1120,80 1240,190 1400,150 L1400,220 Z"
-                fill="var(--color-medium-green)"
-              />
-              <path
-                d="M0,220 L0,150 C170,105 330,175 510,140 C670,105 830,190 990,155 C1130,120 1250,205 1400,175 L1400,220 Z"
-                fill="var(--color-light-green)"
-                opacity="0.55"
-              />
-            </svg>
-
-            {/* Right — login form panel, now with the campus itself as the
-                backdrop instead of flat white: a soft white wash keeps the
-                form easy to read while the photo shows through around it */}
+            {/* Right — login form panel with the campus image visible behind it */}
             <div className="relative z-30 flex flex-col items-center justify-center px-5 py-8 sm:px-8 lg:px-10 lg:py-6 order-2">
               <img
                 src={getSiteImage('about.campus')}
@@ -297,57 +252,57 @@ export default function Login() {
                 aria-hidden="true"
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-[var(--color-white)]/92" />
-
               {/* Mobile-only compact hero strip */}
               <div className="relative z-10 lg:hidden w-full max-w-md mb-8 rounded-2xl overflow-hidden h-40 shrink-0">
                 <img
-                  src={getSiteImage('home.hero')}
+                  src={getSiteImage('home.heroSlides.0')}
                   alt="Rambura Garçons campus, Nyabihu"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-navy-900)] via-[var(--color-navy-900)]/60 to-[var(--color-navy-900)]/20" />
                 <div className="relative h-full flex flex-col justify-end p-4">
                   <h2 className="font-display text-lg font-bold text-white leading-tight">
                     Welcome <span className="text-[var(--color-light-green)]">Back!</span>
                   </h2>
+                  <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--color-light-green)]">
+                    Rambura Garçons Campus · Nyabihu
+                  </p>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0">
                   <HillRidgeDivider tone="light" />
                 </div>
               </div>
 
-              <div className="relative z-10 w-full max-w-sm">
+              <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/70 bg-white/90 p-5 shadow-[0_20px_60px_rgba(15,33,63,0.18)] backdrop-blur-xl animate-[fadeInUp_.45s_ease-out_both] motion-reduce:animate-none dark:border-[#2B5448] dark:bg-[#103D34]/90 dark:shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:p-7">
                 <button
                   type="button"
                   onClick={handleBackToWebsite}
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-mid-gray)] hover:text-[var(--color-deep-green)] transition-colors duration-200 mb-5 group"
+                  className="group mb-5 inline-flex items-center gap-2 rounded-xl border border-[var(--color-medium-green)]/25 bg-white/70 px-3 py-2 text-sm font-bold text-[var(--color-deep-green)] shadow-sm backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--color-medium-green)]/50 hover:bg-[var(--color-light-green)]/80 hover:shadow-[0_8px_20px_rgba(15,108,255,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-medium-green)] focus-visible:ring-offset-2 active:translate-y-0 dark:border-[#D5A24A]/40 dark:bg-[#174C40]/80 dark:text-[#F3F7F4] dark:hover:bg-[#184D3C]"
                 >
                   <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" aria-hidden="true" />
                   Back to school website
                 </button>
 
                 {/* Premium header section with brand */}
-                <div className="flex flex-col items-center text-center mb-6">
+                <div className="flex animate-[fadeInUp_.45s_.08s_ease-out_both] motion-reduce:animate-none flex-col items-center text-center mb-6">
                   <div className="mb-6 transform transition-transform duration-300 hover:scale-110">
                     <BrandMark
-                      containerClassName="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--color-light-green)] to-[var(--color-medium-green)] border-4 border-white shadow-lg shrink-0"
-                      fallback={<GraduationCap className="w-10 h-10 text-white" aria-hidden="true" />}
+                      containerClassName="w-20 h-20 rounded-full border-4 border-white bg-white shadow-[0_18px_42px_rgba(15,108,255,0.12)] shrink-0 dark:border-[#2B5448] dark:bg-[#174C40]"
+                      imgClassName="p-2"
+                      fallback={<GraduationCap className="w-10 h-10 text-[var(--color-deep-green)]" aria-hidden="true" />}
                     />
                   </div>
                   <div className="mb-4">
-                    <p className="font-display text-2xl font-black text-[var(--color-deep-green)] uppercase tracking-wider">Rambura Garçons</p>
+                    <p className="font-display text-2xl font-black text-[var(--color-deep-green)] uppercase tracking-wider dark:text-[#F3F7F4]">Rambura Garçons</p>
                     <p className="text-xs font-bold text-[var(--color-medium-green)] uppercase tracking-[0.3em] mt-1">TVET School · Nyabihu</p>
                   </div>
-                  <h1 className="font-display text-3xl font-bold text-[var(--color-dark-gray)] mb-2">Welcome back</h1>
+                  <h1 className="font-display text-3xl font-bold text-[var(--color-dark-gray)] mb-2 dark:text-[#F3F7F4]">Welcome back</h1>
                   <p className="text-sm text-[var(--color-mid-gray)] leading-relaxed">Sign in to your School Management System</p>
                 </div>
 
-                {/* Elevated form card */}
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/40 p-5 sm:p-6 mb-5 shadow-lg">
+                {/* Form panel */}
+                <div className="animate-[fadeInUp_.45s_.16s_ease-out_both] motion-reduce:animate-none mb-5 rounded-2xl border border-[var(--color-medium-green)]/20 bg-[var(--color-light-green)]/70 p-5 shadow-[0_10px_30px_rgba(15,108,255,0.08)] dark:border-[#D5A24A]/35 dark:bg-[#174C40]/80 dark:shadow-[0_10px_30px_rgba(0,0,0,0.22)] sm:p-6">
                   <AnimatePresence mode="wait">
-                    {!twoFAEnabled ? (
-                      <motion.div key="login-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <motion.div key="login-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                         <form onSubmit={handleSubmit} noValidate>
                           <div className="space-y-5">
                             {error && (
@@ -397,16 +352,18 @@ export default function Login() {
                                   value={password}
                                   onChange={(e) => setPassword(e.target.value)}
                                   placeholder="••••••••"
+                                  trailing={(
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowPassword((v) => !v)}
+                                      className="rounded-md p-1 text-[var(--color-mid-gray)] transition-colors duration-200 hover:bg-[var(--color-light-green)]/30 hover:text-[var(--color-deep-green)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-medium-green)]"
+                                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                    >
+                                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                  )}
                                   className="!bg-[var(--color-off-white)] !border-[var(--color-border-gray)] !focus:border-[var(--color-medium-green)]"
                                 />
-                                <button
-                                  type="button"
-                                  onClick={() => setShowPassword((v) => !v)}
-                                  className="absolute right-3 top-10 text-[var(--color-mid-gray)] hover:text-[var(--color-deep-green)] transition-colors duration-200"
-                                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                >
-                                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                </button>
                               </div>
                             </div>
 
@@ -443,89 +400,6 @@ export default function Login() {
                           </div>
                         </form>
                       </motion.div>
-                    ) : (
-                      <motion.div
-                        key="2fa-form"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="flex min-h-[320px] items-center justify-center"
-                      >
-                        <form onSubmit={(e) => { e.preventDefault(); handleVerify2FA(); }} className="w-full max-w-sm mx-auto">
-                          <div className="text-center mb-6">
-                            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[var(--color-light-green-100)] mb-4">
-                              <Smartphone className="w-7 h-7 text-[var(--color-medium-green)]" aria-hidden="true" />
-                            </div>
-                            <h2 className="font-display text-2xl font-bold text-[var(--color-dark-gray)] mb-2">Two-Factor Authentication</h2>
-                            <p className="text-sm text-[var(--color-mid-gray)]">Verification code sent to {DEMO_2FA_EMAIL}</p>
-                          </div>
-
-                          <div className="space-y-5">
-                            <div className="rounded-xl border border-[var(--color-border-gray)] bg-[var(--color-light-green-100)] p-3 text-center">
-                              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--color-mid-gray)]">Email Verification Code</p>
-                              <div className="mt-2 text-3xl font-black tracking-[0.35em] text-[var(--color-deep-green)]">{twoFAEmailCode || '••••••'}</div>
-                            </div>
-                            {twoFAError && (
-                              <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                role="alert"
-                                className="flex items-start gap-3 rounded-xl border border-[var(--color-status-red)]/40 bg-gradient-to-r from-[var(--color-status-red)]/5 to-[var(--color-status-red)]/10 p-4 text-sm text-[var(--color-status-red)]"
-                              >
-                                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                                <span className="font-medium">{twoFAError}</span>
-                              </motion.div>
-                            )}
-
-                            <div>
-                              <label className="block text-xs font-bold text-[var(--color-dark-gray)] uppercase tracking-wider mb-2.5 text-center">
-                                Verification Code
-                              </label>
-                              <input
-                                type="text"
-                                maxLength="6"
-                                inputMode="numeric"
-                                value={twoFACode}
-                                onChange={(e) => {
-                                  const next = e.target.value.replace(/\D/g, '').slice(0, 6);
-                                  setTwoFACode(next);
-                                  if (next.length === 6) {
-                                    setTimeout(() => handleVerify2FA(), 120);
-                                  }
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    handleVerify2FA();
-                                  }
-                                }}
-                                placeholder="000000"
-                                className="w-full px-4 py-3 text-center text-2xl font-bold tracking-[0.5em] rounded-lg border-2 border-[var(--color-border-gray)] bg-[var(--color-off-white)] text-[var(--color-dark-gray)] placeholder-[var(--color-mid-gray)] focus:outline-none focus:border-[var(--color-medium-green)] focus:ring-2 focus:ring-[var(--color-medium-green)]/20 transition-all"
-                              />
-                            </div>
-
-                            <Button
-                              type="submit"
-                              variant="primary"
-                              size="lg"
-                              className="w-full !bg-gradient-to-r !from-[var(--color-deep-green)] !via-[var(--color-medium-green)] !to-[var(--color-deep-green-600)] shadow-lg hover:shadow-xl !border-0 !text-white font-bold uppercase tracking-wide transition-all duration-200"
-                              loading={loading}
-                              icon={CheckCircle2}
-                            >
-                              {loading ? 'Verifying...' : 'Verify & Sign In'}
-                            </Button>
-
-                            <button
-                              type="button"
-                              onClick={() => setTwoFAEnabled(false)}
-                              className="w-full py-2.5 text-sm font-semibold text-[var(--color-medium-green)] hover:text-[var(--color-deep-green)] transition-colors"
-                            >
-                              Back to Sign In
-                            </button>
-                          </div>
-                        </form>
-                      </motion.div>
-                    )}
                   </AnimatePresence>
                 </div>
 
@@ -558,7 +432,7 @@ export default function Login() {
                         onClick={() => fillDemoAccount(account)}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="px-4 py-3 rounded-lg text-xs font-bold text-white uppercase tracking-wide bg-gradient-to-br from-[var(--color-mid-gray)] to-[var(--color-dark-gray)] hover:from-[var(--color-deep-green)] hover:to-[var(--color-medium-green)] transition-all duration-200 border border-white/10 shadow-md hover:shadow-lg"
+                        className="px-4 py-3 rounded-lg text-xs font-bold text-white uppercase tracking-wide bg-gradient-to-br from-[var(--color-navy-800)] to-[var(--color-navy-900)] hover:from-[var(--color-deep-green)] hover:to-[var(--color-medium-green)] transition-all duration-200 border border-white/10 shadow-md hover:shadow-lg"
                       >
                         {account.role.split(' ')[0]}
                       </motion.button>
@@ -597,7 +471,7 @@ export default function Login() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
             >
-              <div className="pointer-events-auto w-full max-w-2xl max-h-[80vh] overflow-y-auto bg-[var(--color-white)] rounded-2xl shadow-xl border border-[var(--color-border-gray)]">
+              <div className="pointer-events-auto w-full max-w-2xl max-h-[80vh] overflow-y-auto bg-[var(--surface)] rounded-2xl shadow-xl border border-[var(--color-border-gray)]">
                 {/* Header */}
                 <div className="sticky top-0 flex items-center justify-between px-6 py-5 border-b border-[var(--color-border-gray)] bg-gradient-to-r from-[var(--color-light-green-100)] to-[var(--color-off-white)]">
                   <div className="flex items-center gap-3">
@@ -614,83 +488,27 @@ export default function Login() {
                   </button>
                 </div>
 
-                {/* Content */}
-                <div className="p-6 space-y-6">
-                  {/* Getting Started */}
-                  <div>
-                    <h3 className="font-semibold text-[var(--color-dark-gray)] mb-3 flex items-center gap-2">
-                      <span className="text-lg">🚀</span> Getting Started
-                    </h3>
-                    <div className="space-y-2 text-sm text-[var(--color-mid-gray)] ml-7">
-                      <p>
-                        <strong>Demo Accounts:</strong> You can quickly test the system using the demo account buttons below the login form. No password needed — just click the role.
-                      </p>
-                      <p>
-                        <strong>Admin Access:</strong> Use "Administrator Access" button to log in as the admin user (admin / Admin@123).
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Credentials */}
-                  <div className="border-t border-[var(--color-border-gray)] pt-6">
-                    <h3 className="font-semibold text-[var(--color-dark-gray)] mb-3 flex items-center gap-2">
-                      <span className="text-lg">👤</span> Login Credentials
-                    </h3>
-                    <div className="space-y-2 text-sm text-[var(--color-mid-gray)] ml-7">
-                      <p>
-                        <strong>Username/Email:</strong> Enter your username or email address associated with your account.
-                      </p>
-                      <p>
-                        <strong>Password:</strong> Your secure password. Use "Forgot password?" if you need to reset it.
-                      </p>
-                      <p>
-                        <strong>Remember Me:</strong> Keep you signed in on this device (secure browsers only).
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 2FA */}
-                  <div className="border-t border-[var(--color-border-gray)] pt-6">
-                    <h3 className="font-semibold text-[var(--color-dark-gray)] mb-3 flex items-center gap-2">
-                      <Smartphone className="w-4 h-4 text-[var(--color-medium-green)]" /> Two-Factor Authentication
-                    </h3>
-                    <div className="space-y-2 text-sm text-[var(--color-mid-gray)] ml-7">
-                      <p>
-                        <strong>What is 2FA?</strong> An extra security layer that requires a 6-digit code from your authenticator app or SMS.
-                      </p>
-                      <p>
-                        <strong>How it works:</strong> After entering your password, you'll see a screen asking for your 2FA code. Enter the code from your authenticator app.
-                      </p>
-                      <p>
-                        <strong>For testing:</strong> Use any 6-digit number (e.g., 000000) in demo mode.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Security */}
-                  <div className="border-t border-[var(--color-border-gray)] pt-6">
-                    <h3 className="font-semibold text-[var(--color-dark-gray)] mb-3 flex items-center gap-2">
-                      <span className="text-lg">🔒</span> Security Tips
-                    </h3>
-                    <ul className="space-y-2 text-sm text-[var(--color-mid-gray)] ml-7">
-                      <li>• Never share your password or 2FA codes with anyone</li>
-                      <li>• Use a strong, unique password for your account</li>
-                      <li>• Log out when using shared computers</li>
-                      <li>• Report suspicious activity immediately</li>
-                    </ul>
-                  </div>
-
-                  {/* Support */}
-                  <div className="border-t border-[var(--color-border-gray)] pt-6 bg-[var(--color-light-green-100)] rounded-lg p-4">
-                    <h3 className="font-semibold text-[var(--color-dark-gray)] mb-2 flex items-center gap-2">
-                      <span className="text-lg">💬</span> Still Need Help?
-                    </h3>
-                    <p className="text-sm text-[var(--color-mid-gray)]">
-                      Contact your system administrator or email{' '}
-                      <a href="mailto:support@school.edu" className="font-semibold text-[var(--color-medium-green)] hover:text-[var(--color-deep-green)]">
-                        support@school.edu
-                      </a>
-                    </p>
+                <div className="space-y-3 p-5 sm:p-6">
+                  {[
+                    { id: 'getting-started', Icon: BookOpen, title: 'Getting started', content: <><p>Use the role buttons below the form to explore a demo account, or enter your school username and password.</p><p className="mt-2">For administrator access, use the Administrator Access option.</p></> },
+                    { id: 'credentials', Icon: KeyRound, title: 'Login credentials', content: <><p>Enter the username or email address associated with your account, followed by your secure password.</p><p className="mt-2">Use <strong className="text-[var(--color-dark-gray)]">Forgot password?</strong> if you need to recover access.</p></> },
+                    { id: 'security', Icon: ShieldCheck, title: 'Security tips', content: <ul className="space-y-2"><li>Never share your password or verification codes.</li><li>Use a strong, unique password.</li><li>Log out when using a shared computer.</li></ul> },
+                  ].map(({ id, Icon, title, content }) => {
+                    const expanded = openFaq === id;
+                    return (
+                      <div key={id} className="overflow-hidden rounded-xl border border-[var(--color-border-gray)] bg-[var(--surface-hover)] transition-colors">
+                        <button type="button" onClick={() => setOpenFaq(expanded ? '' : id)} aria-expanded={expanded} aria-controls={`faq-${id}`} className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm font-semibold text-[var(--color-dark-gray)] hover:bg-[var(--color-light-green-100)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--gold)]">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-light-green-100)] text-[var(--color-medium-green)]"><Icon className="h-4 w-4" aria-hidden="true" /></span>
+                          <span className="flex-1">{title}</span>
+                          <ChevronDown className={`h-4 w-4 text-[var(--color-mid-gray)] transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
+                        </button>
+                        {expanded && <div id={`faq-${id}`} className="border-t border-[var(--color-border-gray)] px-4 pb-4 pt-3 text-sm leading-relaxed text-[var(--color-mid-gray)]">{content}</div>}
+                      </div>
+                    );
+                  })}
+                  <div className="mt-4 flex items-start gap-3 rounded-xl border border-[var(--gold)]/20 bg-[var(--color-light-green-100)] p-4">
+                    <MessageCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-[var(--color-medium-green)]" aria-hidden="true" />
+                    <div><h3 className="font-semibold text-[var(--color-dark-gray)]">Still need help?</h3><p className="mt-1 text-sm text-[var(--color-mid-gray)]">Contact your system administrator or email <a href="mailto:info@ramburagarcons.rw" className="font-semibold text-[var(--color-medium-green)] hover:text-[var(--color-deep-green)]">info@ramburagarcons.rw</a>.</p></div>
                   </div>
                 </div>
               </div>

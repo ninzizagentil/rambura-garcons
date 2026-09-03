@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, ArrowRight } from 'lucide-react';
+import { Download, Printer, ArrowRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import PageHeader from '../../components/layout/PageHeader';
 import { ChartCard } from '../../components/cards/InsightChartCards';
@@ -9,6 +9,7 @@ import Button from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
 import { getBooks, getLoans, daysOverdue } from '../../services/bookService';
 import { exportToCSV } from '../../utils/export';
+import { printReport } from '../../utils/print';
 
 export default function ManagementLibraryReports() {
   const navigate = useNavigate();
@@ -34,13 +35,32 @@ export default function ManagementLibraryReports() {
     showToast('Library report downloaded as CSV.', 'success');
   };
 
+  const handlePrint = () => {
+    const ok = printReport(
+      'Management Library Report',
+      [
+        { key: 'title', header: 'Title' },
+        { key: 'category', header: 'Category' },
+        { key: 'totalCopies', header: 'Total Copies' },
+        { key: 'borrowedCopies', header: 'Borrowed' },
+      ],
+      books
+    );
+    if (!ok) showToast('Enable pop-ups to print this report.', 'error');
+  };
+
   return (
     <div>
       <PageHeader
         title="Library Reports"
         description="Circulation summary for school management."
         breadcrumb={[{ label: 'Management', to: '/management' }, { label: 'Library Reports' }]}
-        actions={<Button variant="secondary" icon={Download} onClick={handleExport}>Export</Button>}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" icon={Printer} onClick={handlePrint}>Print</Button>
+            <Button variant="secondary" icon={Download} onClick={handleExport}>Export</Button>
+          </div>
+        }
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">

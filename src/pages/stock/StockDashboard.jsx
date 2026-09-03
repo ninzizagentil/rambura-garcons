@@ -95,7 +95,7 @@ export default function StockDashboard() {
   ].slice(0, 8);
 
   return (
-    <div>
+    <div className="stock-dashboard">
       <PageHeader
         title="Stock Management"
         description="Overview of inventory, stock availability and stock activities."
@@ -111,18 +111,18 @@ export default function StockDashboard() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Total Items" value={totalItems} icon={Boxes} onClick={() => navigate('/stock/items')} />
-        <StatCard label="Items In Stock" value={inStock} icon={PackageCheck} onClick={() => navigate('/stock/items')} />
-        <StatCard label="Low Stock" value={lowStock.length} icon={TrendingDown} tone="amber" onClick={() => navigate('/stock/low-stock')} />
-        <StatCard label="Out of Stock" value={outOfStock.length} icon={PackageX} tone="red" onClick={() => navigate('/stock/out-of-stock')} />
-        <StatCard label="Total Stock Value" value={formatRWF(totalValue)} icon={Wallet} tone="gold" onClick={() => navigate('/stock/reports')} />
-        <StatCard label="Stock In (all time)" value={stockInTotal} icon={PackagePlus} tone="blue" onClick={() => navigate('/stock/transactions')} />
-        <StatCard label="Stock Out (all time)" value={stockOutTotal} icon={PackageMinus} onClick={() => navigate('/stock/transactions')} />
-        <StatCard label="Removed / Disposed" value={removed.length} icon={Archive} onClick={() => navigate('/stock/removed')} />
+        <StatCard className="stock-metric-card" label="Total Items" value={totalItems} icon={Boxes} onClick={() => navigate('/stock/items')} />
+        <StatCard className="stock-metric-card" label="Items In Stock" value={inStock} icon={PackageCheck} onClick={() => navigate('/stock/items')} />
+        <StatCard className="stock-metric-card" label="Low Stock" value={lowStock.length} icon={TrendingDown} tone="amber" onClick={() => navigate('/stock/low-stock')} />
+        <StatCard className="stock-metric-card" label="Out of Stock" value={outOfStock.length} icon={PackageX} tone="red" onClick={() => navigate('/stock/out-of-stock')} />
+        <StatCard className="stock-metric-card" label="Total Stock Value" value={formatRWF(totalValue)} icon={Wallet} tone="gold" onClick={() => navigate('/stock/reports')} />
+        <StatCard className="stock-metric-card" label="Stock In (all time)" value={stockInTotal} icon={PackagePlus} tone="blue" onClick={() => navigate('/stock/transactions')} />
+        <StatCard className="stock-metric-card" label="Stock Out (all time)" value={stockOutTotal} icon={PackageMinus} onClick={() => navigate('/stock/transactions')} />
+        <StatCard className="stock-metric-card" label="Removed / Disposed" value={removed.length} icon={Archive} onClick={() => navigate('/stock/removed')} />
       </div>
 
       <div className="grid lg:grid-cols-5 gap-5 mb-8">
-        <div className="lg:col-span-3 bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
+        <div className="stock-panel lg:col-span-3">
           <div className="flex items-center justify-between mb-3">
             <h2 className="flex items-center gap-2 font-display text-sm font-semibold text-[var(--color-dark-gray)]">
               <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[var(--color-status-red-bg)] text-[var(--color-status-red)]">
@@ -134,9 +134,9 @@ export default function StockDashboard() {
           {attention.length === 0 ? (
             <p className="text-sm text-[var(--color-mid-gray)]">Nothing needs attention right now — inventory is healthy.</p>
           ) : (
-            <ul className="divide-y divide-[var(--color-border-gray)]">
+            <ul className="stock-list">
               {attention.map((a) => (
-                <li key={a.key} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                <li key={a.key} className="stock-list-item">
                   <div className="min-w-0">
                     <p className="font-medium text-[var(--color-dark-gray)] truncate">{a.name}</p>
                     <p className="text-xs text-[var(--color-mid-gray)]">{a.sub}</p>
@@ -176,7 +176,7 @@ export default function StockDashboard() {
         </div>
       </div>
 
-      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
+      <div className="stock-panel">
         <div className="flex items-center justify-between mb-3">
           <h2 className="flex items-center gap-2 font-display text-sm font-semibold text-[var(--color-dark-gray)]">
             <FileBarChart className="w-4 h-4 text-[var(--color-heading)]" aria-hidden="true" />
@@ -187,31 +187,31 @@ export default function StockDashboard() {
         {recentTx.length === 0 ? (
           <p className="text-sm text-[var(--color-mid-gray)]">No stock movements recorded yet.</p>
         ) : (
-          <div className="table-scroll">
-            <table className="w-full text-sm">
+          <div className="stock-table-wrap">
+            <table className="stock-table">
               <thead>
-                <tr className="border-b border-[var(--color-border-gray)] text-xs uppercase text-[var(--color-mid-gray)]">
-                  <th className="text-left py-2 pr-4">Item</th>
-                  <th className="text-left py-2 pr-4">Type</th>
-                  <th className="text-left py-2 pr-4">Quantity</th>
-                  <th className="text-left py-2 pr-4">Prev → New</th>
-                  <th className="text-left py-2 pr-4">User</th>
-                  <th className="text-left py-2">Date</th>
+                <tr>
+                  <th>Item</th>
+                  <th>Type</th>
+                  <th>Quantity</th>
+                  <th>Prev → New</th>
+                  <th>User</th>
+                  <th>Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--color-border-gray)]">
+              <tbody>
                 {recentTx.map((t) => {
                   const badge = TX_BADGE[t.type] || { tone: 'neutral', label: t.type };
                   return (
                     <tr key={t.id}>
-                      <td className="py-2.5 pr-4 font-medium text-[var(--color-dark-gray)]">{t.itemName}</td>
-                      <td className="py-2.5 pr-4"><Badge tone={badge.tone}>{badge.label}</Badge></td>
-                      <td className="py-2.5 pr-4">{t.quantity}</td>
-                      <td className="py-2.5 pr-4 text-[var(--color-mid-gray)]">
+                      <td className="font-medium text-[var(--color-dark-gray)]">{t.itemName}</td>
+                      <td><Badge tone={badge.tone}>{badge.label}</Badge></td>
+                      <td>{t.quantity}</td>
+                      <td className="text-[var(--color-mid-gray)]">
                         {t.previousQuantity != null ? `${t.previousQuantity} → ${t.newQuantity}` : '—'}
                       </td>
-                      <td className="py-2.5 pr-4">{t.responsibleUser}</td>
-                      <td className="py-2.5">{t.date}</td>
+                      <td>{t.responsibleUser}</td>
+                      <td>{t.date}</td>
                     </tr>
                   );
                 })}

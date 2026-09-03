@@ -5,6 +5,7 @@ import Button from '../../components/common/Button';
 import Alert from '../../components/feedback/Alert';
 import { borrowBook } from '../../services/bookService';
 import { useToast } from '../../context/ToastContext';
+import { useNotifications } from '../../context/NotificationContext';
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -22,6 +23,7 @@ function emptyForm() {
 
 export default function BorrowModal({ open, onClose, book, onBorrowed }) {
   const { showToast } = useToast();
+  const { addNotification } = useNotifications();
   const [step, setStep] = useState('form'); // form | confirm
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
@@ -72,6 +74,11 @@ export default function BorrowModal({ open, onClose, book, onBorrowed }) {
       return;
     }
     showToast(`"${book.title}" borrowed by ${form.borrower}.`, 'success');
+    addNotification({
+      type: 'borrow',
+      message: `"${book.title}" was borrowed by ${form.borrower}. Due back ${form.dueDate}.`,
+      to: '/library/borrowed',
+    });
     onBorrowed();
     reset();
   };

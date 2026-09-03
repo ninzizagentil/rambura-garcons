@@ -2,10 +2,11 @@ import { useId, useRef, useState } from 'react';
 import { Upload, X } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
-// Keeps the demo's localStorage-backed persistence happy — large uploaded
-// photos are downscaled and re-encoded as JPEG before being stored.
-const MAX_DIMENSION = 1280;
-const JPEG_QUALITY = 0.82;
+// Keep uploaded branding sharp without flattening transparent logos into a
+// lossy JPEG. PNG is the safest format for badges and crests because it keeps
+// the transparent background and crisp edges that schools expect.
+const MAX_DIMENSION = 1800;
+const JPEG_QUALITY = 0.9;
 const MAX_SOURCE_BYTES = 15 * 1024 * 1024; // 15MB — sanity cap before we even try to read it
 
 function readAndCompressImage(file) {
@@ -18,6 +19,7 @@ function readAndCompressImage(file) {
       reject(new Error('That image is too large — please pick one under 15MB.'));
       return;
     }
+
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('Could not read that file.'));
     reader.onload = () => {
@@ -30,12 +32,22 @@ function readAndCompressImage(file) {
           width = Math.round(width * scale);
           height = Math.round(height * scale);
         }
+
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
+
         const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
+
+        const isTransparentLogo = file.type === 'image/png' || file.type === 'image/webp';
+        const format = isTransparentLogo ? 'image/png' : 'image/jpeg';
+        const output = format === 'image/jpeg'
+          ? canvas.toDataURL(format, JPEG_QUALITY)
+          : canvas.toDataURL(format);
+
+        resolve(output);
       };
       img.src = reader.result;
     };
@@ -81,12 +93,13 @@ export default function ImageField({ label, required, hint, value, onChange, cla
         </span>
       )}
       <div className="flex items-center gap-3">
-        <div className="w-16 h-16 rounded-md overflow-hidden shrink-0 bg-[var(--color-soft-gray)] border border-[var(--color-border-gray)]">
+        <div className="w-20 h-20 shrink-0 overflow-hidden rounded-lg bg-[var(--color-white)]">
           {value ? (
-            <img src={value} alt="" className="w-full h-full object-cover" />
+            <img src={value} alt="School logo preview" className="h-full w-full object-contain p-0" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-[var(--color-mid-gray)] text-[10px]">
-              No photo
+            <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-[var(--color-soft-gray)] text-[var(--color-mid-gray)]">
+              <Upload className="w-4 h-4" aria-hidden="true" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em]">Logo</span>
             </div>
           )}
         </div>
@@ -96,10 +109,10 @@ export default function ImageField({ label, required, hint, value, onChange, cla
             type="button"
             onClick={handlePick}
             disabled={busy}
-            className="inline-flex items-center gap-1.5 self-start rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-deep-green-600)] px-3 py-1.5 text-xs font-semibold text-[var(--color-light-green)] hover:bg-[var(--color-deep-green)] transition-colors disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 self-start rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[linear-gradient(135deg,var(--color-deep-green-600),var(--color-deep-green))] px-3 py-1.5 text-xs font-semibold text-[var(--color-light-green)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
           >
             <Upload className="w-3.5 h-3.5" aria-hidden="true" />
-            {busy ? 'Reading photo…' : value ? 'Change photo…' : 'Browse…'}
+            {busy ? 'Reading logo…' : value ? 'Change logo…' : 'Upload logo…'}
           </button>
           {value && !busy && (
             <button
@@ -107,7 +120,7 @@ export default function ImageField({ label, required, hint, value, onChange, cla
               onClick={() => onChange('')}
               className="inline-flex items-center gap-1 self-start text-xs text-[var(--color-mid-gray)] hover:text-[var(--color-status-red)] transition-colors"
             >
-              <X className="w-3 h-3" aria-hidden="true" /> Remove photo
+              <X className="w-3 h-3" aria-hidden="true" /> Remove logo
             </button>
           )}
         </div>

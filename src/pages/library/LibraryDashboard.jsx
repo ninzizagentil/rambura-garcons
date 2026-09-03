@@ -7,16 +7,17 @@ import { InsightCard } from '../../components/cards/InsightChartCards';
 import ActivityFeedCard from '../../components/cards/ActivityFeedCard';
 import { useAuth } from '../../context/AuthContext';
 import { getBooks, getLoans, refreshLibrary, daysOverdue } from '../../services/bookService';
-import { getActivity } from '../../services/activityService';
+import { getActivity, useActivityVersion } from '../../services/activityService';
 
 export default function LibraryDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const activityVersion = useActivityVersion();
 
   const [libraryVersion, setLibraryVersion] = useState(0);
   const books = useMemo(() => getBooks(), [libraryVersion]);
   const loans = useMemo(() => getLoans(), [libraryVersion]);
-  const activity = useMemo(() => getActivity().filter((a) => a.module === 'Library').slice(0, 5), []);
+  const activity = useMemo(() => getActivity().filter((a) => a.module === 'Library').slice(0, 5), [activityVersion]);
 
   useEffect(() => {
     const handleUpdate = () => setLibraryVersion((version) => version + 1);

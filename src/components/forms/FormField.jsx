@@ -42,7 +42,7 @@ function FieldWrapper({ id, label, required, error, hint, dark, children }) {
  * `dark`: switches to the navy-panel field styling (used on dark-background forms).
  */
 export const Input = forwardRef(function Input(
-  { label, error, hint, required, id, icon: Icon, dark = false, className = '', ...props },
+  { label, error, hint, required, id, icon: Icon, trailing, dark = false, className = '', ...props },
   ref
 ) {
   const autoId = useId();
@@ -62,9 +62,10 @@ export const Input = forwardRef(function Input(
           required={required}
           aria-invalid={!!error}
           aria-describedby={error ? `${inputId}-error` : undefined}
-          className={cn(fieldClasses(!!error, dark), Icon && 'pl-10', className)}
+          className={cn(fieldClasses(!!error, dark), Icon && 'pl-10', trailing && 'pr-10', className)}
           {...props}
         />
+        {trailing && <span className="absolute right-3 top-1/2 -translate-y-1/2">{trailing}</span>}
       </div>
     </FieldWrapper>
   );

@@ -14,7 +14,7 @@ export function NotificationItem({ notification, onClick }) {
       onClick={() => onClick(notification)}
       className="w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-[var(--color-off-white)]"
     >
-      <span className="mt-0.5 w-7 h-7 rounded-full bg-[var(--color-light-green-100)] text-[var(--color-medium-green)] flex items-center justify-center flex-shrink-0">
+      <span className="mt-0.5 w-7 h-7 rounded-full bg-[rgba(15,108,255,0.08)] text-[#0F6CFF] flex items-center justify-center flex-shrink-0">
         <Icon className="w-3.5 h-3.5" aria-hidden="true" />
       </span>
       <span className="flex-1">
@@ -25,7 +25,7 @@ export function NotificationItem({ notification, onClick }) {
           {new Date(notification.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
         </span>
       </span>
-      {!notification.read && <span className="w-2 h-2 rounded-full bg-[var(--color-medium-green)] mt-1.5 flex-shrink-0" aria-hidden="true" />}
+      {!notification.read && <span className="w-2 h-2 rounded-full bg-[#0F6CFF] mt-1.5 flex-shrink-0" aria-hidden="true" />}
     </button>
   );
 }
@@ -77,7 +77,7 @@ export default function NotificationBell() {
                 {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
               </button>
               {unreadCount > 0 && (
-                <button type="button" onClick={markAllAsRead} className="text-xs font-medium text-[var(--color-medium-green)] hover:underline">
+                <button type="button" onClick={markAllAsRead} className="text-xs font-medium text-[#0F6CFF] hover:underline">
                   Mark all as read
                 </button>
               )}

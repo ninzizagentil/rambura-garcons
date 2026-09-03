@@ -51,35 +51,48 @@ export default function ProfileMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-56 bg-[var(--sidebar-bg)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card-hover py-1.5 z-30"
+          className="absolute right-0 mt-3 w-[min(19rem,calc(100vw-2rem))] overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--sidebar-bg)] shadow-[0_20px_48px_rgba(15,108,255,0.16)] z-30"
         >
-          {PROFILE_NAV.map((item) =>
-            item.action === 'logout' ? (
-              <button
-                key={item.label}
-                role="menuitem"
-                onClick={() => {
-                  setOpen(false);
-                  setConfirmLogout(true);
-                }}
-                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--color-status-red)] hover:bg-[var(--color-status-red-bg)] text-left"
-              >
-                <item.icon className="w-4 h-4" aria-hidden="true" />
-                {item.label}
-              </button>
-            ) : (
-              <Link
-                key={item.label}
-                to={item.to}
-                role="menuitem"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[var(--color-dark-gray)] hover:bg-[var(--color-off-white)]"
-              >
-                <item.icon className="w-4 h-4" aria-hidden="true" />
-                {item.label}
-              </Link>
-            )
-          )}
+          <div className="flex items-center gap-3 border-b border-[var(--color-border-gray)] bg-[var(--surface-hover)] px-4 py-4">
+            <Avatar name={user?.fullName} src={user?.avatar} size="md" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-[var(--color-dark-gray)]">{user?.fullName || 'Account user'}</p>
+              <p className="mt-0.5 truncate text-xs text-[var(--color-mid-gray)]">{user?.role || 'School account'}</p>
+            </div>
+          </div>
+
+          <div className="space-y-1 p-2">
+            {PROFILE_NAV.map((item) =>
+              item.action === 'logout' ? (
+                <button
+                  key={item.label}
+                  role="menuitem"
+                  onClick={() => {
+                    setOpen(false);
+                    setConfirmLogout(true);
+                  }}
+                  className="group mt-2 flex w-full items-center gap-3 rounded-xl border border-[var(--color-status-red)]/20 bg-[var(--color-status-red-bg)] px-3 py-3 text-left text-sm font-semibold text-[var(--color-status-red)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--color-status-red)]/40 hover:bg-[var(--color-status-red-bg)] hover:shadow-[0_8px_18px_rgba(220,38,38,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-status-red)]/40"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--surface)] shadow-sm transition-transform duration-200 group-hover:translate-x-0.5">
+                    <item.icon className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="flex-1">{item.label}</span>
+                  <span className="text-xs opacity-60">&#8594;</span>
+                </button>
+              ) : (
+                <Link
+                  key={item.label}
+                  to={item.to}
+                  role="menuitem"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-[var(--color-dark-gray)] transition-colors hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
+                >
+                  <item.icon className="h-4 w-4 text-[var(--color-mid-gray)]" aria-hidden="true" />
+                  {item.label}
+                </Link>
+              )
+            )}
+          </div>
         </div>
       )}
 

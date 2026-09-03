@@ -21,6 +21,7 @@ import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 import { getActivity, logActivity, useActivityVersion } from '../../services/activityService';
 import { getSiteImageSlots, updateSiteImage, resetSiteImage, useSiteImageVersion } from '../../services/imageService';
+import { getActivityStatus, timeAgo } from '../../utils/activityStatus';
 import { cn } from '../../utils/cn';
 import {
   getHero, updateHero,
@@ -131,7 +132,7 @@ function SectionSidebar({ active, onChange, counts }) {
           'focus-visible:outline-2 focus-visible:outline-[var(--color-gold)] focus-visible:outline-offset-2',
           isActive
             ? 'bg-[var(--sidebar-bg)] border-[var(--sidebar-border)] shadow-[0_8px_20px_rgba(17,24,39,0.08)] translate-x-0.5'
-            : 'bg-white border-[var(--sidebar-border)] hover:bg-[var(--sidebar-nav-hover-bg)]'
+            : 'bg-[var(--surface)] border-[var(--sidebar-border)] hover:bg-[var(--sidebar-nav-hover-bg)]'
         )}
       >
         <span
@@ -1047,9 +1048,9 @@ export default function WebsiteManagement() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <Badge tone={a.status === 'warning' ? 'amber' : 'green'}>{a.status}</Badge>
-                  <span className="text-[11px] font-medium text-[var(--text-secondary)] whitespace-nowrap">
-                    {new Date(a.date).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  <Badge tone={getActivityStatus(a.status).tone}>{getActivityStatus(a.status).label}</Badge>
+                  <span className="text-[11px] font-medium text-[var(--text-secondary)] whitespace-nowrap" title={new Date(a.date).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}>
+                    {timeAgo(a.date)}
                   </span>
                 </div>
               </li>

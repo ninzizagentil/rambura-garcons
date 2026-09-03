@@ -5,6 +5,7 @@ import ImageField from '../../components/forms/ImageField';
 import Button from '../../components/common/Button';
 import Alert from '../../components/feedback/Alert';
 import { useToast } from '../../context/ToastContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { BOOK_CATEGORIES } from '../../data/library';
 import { createBook, updateBook } from '../../services/bookService';
 
@@ -12,6 +13,7 @@ const EMPTY_FORM = { title: '', author: '', category: '', bookCode: '', descript
 
 export default function BookFormModal({ open, onClose, book, onSaved }) {
   const { showToast } = useToast();
+  const { addNotification } = useNotifications();
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
@@ -55,6 +57,11 @@ export default function BookFormModal({ open, onClose, book, onSaved }) {
       return;
     }
     showToast(isEdit ? 'Book updated successfully.' : 'Book added to catalogue.', 'success');
+    addNotification({
+      type: 'library',
+      message: isEdit ? `"${form.title}" was updated in the catalogue.` : `"${form.title}" was added to the catalogue.`,
+      to: '/library/books',
+    });
     onSaved(result.book);
   };
 

@@ -63,7 +63,10 @@ export function getUsageByItem() { return items.map((item) => ({ ...item, used: 
 
 async function mutate(method, path, data, key) {
   try { const result = await api[method](path, data); await refreshStock(); return { success: true, [key]: result.data, ...(result.data && typeof result.data === 'object' ? result.data : {}) }; }
-  catch (error) { return { success: false, error: error.message }; }
+  catch (error) {
+    const detail = error.errors?.length ? error.errors.map((e) => e.message).join(' ') : '';
+    return { success: false, error: detail ? `${error.message}: ${detail}` : error.message };
+  }
 }
 export function createItem(data) { if (!STOCK_CATEGORIES.includes(data.category)) return Promise.resolve({ success: false, error: 'Category must be Foods or Electronic Devices.' }); return mutate('post', '/stock/items', data, 'item'); }
 export function updateItem(id, data) { return mutate('put', `/stock/items/${id}`, data, 'item'); }

@@ -4,9 +4,11 @@ import { Input, Textarea } from '../../components/forms/FormField';
 import Button from '../../components/common/Button';
 import PageHero from '../../components/common/PageHero';
 import { getContactInfo, useContentVersion } from '../../services/contentService';
+import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 
 export default function Contact() {
   useContentVersion();
+  useSiteImageVersion();
   const info = getContactInfo();
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [errors, setErrors] = useState({});
@@ -31,7 +33,7 @@ export default function Contact() {
 
   return (
     <div>
-      <PageHero title="Contact Us">
+      <PageHero title="Contact Us" image={getSiteImage('pageHeroes.contact')}>
         <p className="text-[var(--text-secondary)] mt-3">We'd love to hear from you.</p>
       </PageHero>
 
@@ -55,7 +57,7 @@ export default function Contact() {
 
             <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.1)]">
               <div className="flex items-start gap-4">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(201,140,46,0.12)] flex-shrink-0 mt-1">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(15,108,255,0.10)] flex-shrink-0 mt-1">
                   <MapPin className="w-5 h-5 text-[var(--gold)]" aria-hidden="true" />
                 </div>
                 <div>
@@ -67,7 +69,7 @@ export default function Contact() {
 
             <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.1)]">
               <div className="flex items-center gap-4">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(201,140,46,0.12)] flex-shrink-0">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(15,108,255,0.10)] flex-shrink-0">
                   <Phone className="w-5 h-5 text-[var(--gold)]" aria-hidden="true" />
                 </div>
                 <div>
@@ -81,7 +83,7 @@ export default function Contact() {
 
             <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.1)]">
               <div className="flex items-center gap-4">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(201,140,46,0.12)] flex-shrink-0">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(15,108,255,0.10)] flex-shrink-0">
                   <Mail className="w-5 h-5 text-[var(--gold)]" aria-hidden="true" />
                 </div>
                 <div>
@@ -107,7 +109,7 @@ export default function Contact() {
           <div className="border border-[var(--border)] shadow-[0_20px_45px_rgba(0,0,0,0.12)] rounded-[28px] p-6 sm:p-8 bg-[var(--surface)] backdrop-blur-sm sticky top-20">
             {submitted ? (
               <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[rgba(46,154,102,0.12)] mb-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[rgba(15,108,255,0.10)] mb-4">
                   <CheckCircle2 className="w-7 h-7 text-[var(--success)]" aria-hidden="true" />
                 </div>
                 <p className="font-display font-semibold text-lg text-[var(--text-primary)]">Message Sent Successfully!</p>

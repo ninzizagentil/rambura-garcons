@@ -50,21 +50,21 @@ export function printReport(title, columns, rows) {
             font-size: 11px;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            color: #2C6754;
+            color: #0F6CFF;
             margin-bottom: 6px;
             font-weight: 700;
           }
           h1 {
             font-size: 24px;
             margin: 0 0 6px;
-            color: #0E2B27;
+            color: #10213F;
           }
           .meta {
             font-size: 12px;
             color: #52656d;
             margin: 0 0 20px;
             padding-bottom: 12px;
-            border-bottom: 2px solid #dfe8e2;
+            border-bottom: 2px solid #D7E4F6;
           }
           table {
             width: 100%;
@@ -81,7 +81,7 @@ export function printReport(title, columns, rows) {
           }
           th {
             background: #edf4f0;
-            color: #153A2F;
+            color: #10213F;
             text-transform: uppercase;
             letter-spacing: 0.06em;
             font-size: 9px;

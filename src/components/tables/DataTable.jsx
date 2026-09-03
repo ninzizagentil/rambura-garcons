@@ -36,9 +36,9 @@ export default function DataTable({
     <div className="table-scroll">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-[var(--color-border-gray)]">
+          <tr className="border-b border-[var(--color-border-gray)] bg-gradient-to-r from-[rgba(217,164,65,0.01)] to-transparent">
             {selectable && (
-              <th scope="col" className="px-4 py-3 w-10">
+              <th scope="col" className="px-5 py-4 w-10">
                 <input
                   type="checkbox"
                   checked={allSelected}
@@ -53,13 +53,13 @@ export default function DataTable({
               <th
                 key={col.key}
                 scope="col"
-                className="text-left font-bold text-[var(--color-dark-gray)] uppercase tracking-[0.12em] text-[11px] px-4 py-3 whitespace-nowrap"
+                className="text-left font-bold text-[var(--color-dark-gray)] uppercase tracking-[0.14em] text-[10px] px-5 py-4 whitespace-nowrap"
               >
                 {col.sortable && onSort ? (
                   <button
                     type="button"
                     onClick={() => onSort(col.key)}
-                    className="inline-flex items-center gap-1 hover:text-[var(--color-heading)] transition-colors"
+                    className="inline-flex items-center gap-1 hover:text-[var(--color-medium-green)] transition-colors"
                   >
                     {col.header}
                     {sortKey === col.key ? (
@@ -87,13 +87,13 @@ export default function DataTable({
                 key={row[rowKey]}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
                 className={cn(
-                  'transition-colors',
-                  onRowClick && 'cursor-pointer hover:bg-[var(--color-light-green-100)]',
+                  'transition-all duration-200',
+                  onRowClick && 'cursor-pointer hover:bg-[var(--color-soft-gray)]',
                   checked && 'bg-[var(--color-light-green-100)]'
                 )}
               >
                 {selectable && (
-                  <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={checked}
@@ -104,7 +104,7 @@ export default function DataTable({
                   </td>
                 )}
                 {columns.map((col) => (
-                  <td key={col.key} className="px-4 py-3.5 text-[var(--color-dark-gray)] font-medium whitespace-nowrap">
+                  <td key={col.key} className="px-5 py-4 text-[var(--color-dark-gray)] font-medium">
                     {col.render ? col.render(row) : row[col.key]}
                   </td>
                 ))}
@@ -147,11 +147,11 @@ export function TablePagination({ page, totalPages, totalItems, pageSize, onPage
 
   return (
     <nav
-      className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 py-3.5 border-t border-[var(--color-border-gray)]"
+      className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 py-4 border-t border-[var(--color-border-gray)] bg-gradient-to-r from-[rgba(217,164,65,0.01)] to-transparent"
       aria-label="Pagination"
     >
-      <p className="text-xs text-[var(--color-mid-gray)] order-2 sm:order-1">
-        Showing {from} to {to} of {totalItems} items
+      <p className="text-xs font-medium text-[var(--color-mid-gray)] order-2 sm:order-1">
+        Showing <span className="font-bold text-[var(--color-dark-gray)]">{from}</span> to <span className="font-bold text-[var(--color-dark-gray)]">{to}</span> of <span className="font-bold text-[var(--color-dark-gray)]">{totalItems}</span> items
       </p>
 
       <div className="flex items-center gap-1.5 flex-wrap order-1 sm:order-2">

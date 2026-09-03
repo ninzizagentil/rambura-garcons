@@ -1,12 +1,14 @@
 import { getStaff, useContentVersion } from '../../services/contentService';
+import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 import PageHero from '../../components/common/PageHero';
 
 export default function Staff() {
   useContentVersion();
+  useSiteImageVersion();
   const staff = getStaff();
   return (
     <div>
-      <PageHero title="Our Staff">
+      <PageHero title="Our Staff" image={getSiteImage('pageHeroes.staff')}>
         <p className="text-[var(--text-secondary)] mt-3">The instructors and leaders behind Rambura Garçons.</p>
       </PageHero>
 
@@ -17,7 +19,7 @@ export default function Staff() {
               <img
                 src={s.photo}
                 alt={s.name}
-                className="w-16 h-16 rounded-full object-cover mb-4 ring-4 ring-[rgba(217,164,65,0.18)]"
+                className="w-16 h-16 rounded-full object-cover mb-4 ring-4 ring-[rgba(15,108,255,0.18)]"
                 loading="lazy"
               />
               <h2 className="font-display font-semibold text-[var(--text-primary)]">{s.name}</h2>

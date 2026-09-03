@@ -58,12 +58,12 @@ export default function Admissions() {
 
   return (
     <div>
-      <PageHero title="Admissions">
+      <PageHero title="Admissions" image={getSiteImage('admissions.hero')}>
         <p className="text-[var(--text-secondary)] mt-3">{info.intro}</p>
       </PageHero>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 -mt-8">
-        <div className="overflow-hidden rounded-[28px] aspect-[21/9] shadow-[0_28px_60px_rgba(15,61,46,0.12)] ring-1 ring-[rgba(15,61,46,0.06)]">
+        <div className="overflow-hidden rounded-[28px] aspect-[21/9] shadow-[0_28px_60px_rgba(31,41,55,0.12)] ring-1 ring-[rgba(31,41,55,0.06)]">
           <img src={getSiteImage('admissions.hero')} alt="Students at Rambura Garçons" className="w-full h-full object-cover" loading="lazy" />
         </div>
       </div>
@@ -88,7 +88,7 @@ export default function Admissions() {
             
             <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.1)]">
               <div className="flex items-center gap-3 mb-5">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(201,140,46,0.12)]">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(15,108,255,0.10)]">
                   <ListChecks className="w-5 h-5 text-[var(--gold)]" />
                 </div>
                 <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">
@@ -114,7 +114,7 @@ export default function Admissions() {
 
             <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.1)]">
               <div className="flex items-center gap-3 mb-5">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(201,140,46,0.12)]">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(15,108,255,0.10)]">
                   <CalendarDays className="w-5 h-5 text-[var(--gold)]" />
                 </div>
                 <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">
@@ -140,7 +140,7 @@ export default function Admissions() {
 
             <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.1)]">
               <div className="flex items-center gap-3 mb-5">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(201,140,46,0.12)]">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(15,108,255,0.10)]">
                   <FileText className="w-5 h-5 text-[var(--gold)]" />
                 </div>
                 <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">
@@ -159,9 +159,9 @@ export default function Admissions() {
               <p className="text-sm text-[var(--text-secondary)] mt-1">Questions? We're here to help</p>
             </div>
 
-            <div className="rounded-[24px] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(201,140,46,0.06),rgba(44,103,84,0.04))] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.08)]">
+            <div className="rounded-[24px] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(15,108,255,0.08),rgba(11,19,39,0.02))] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.08)]">
               <div className="flex items-center gap-3 mb-5">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(201,140,46,0.15)]">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(15,108,255,0.12)]">
                   <Phone className="w-5 h-5 text-[var(--gold)]" />
                 </div>
                 <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">Get in Touch</h3>
@@ -185,7 +185,7 @@ export default function Admissions() {
           <div className="border border-[var(--border)] shadow-[0_20px_45px_rgba(0,0,0,0.12)] rounded-[28px] p-6 sm:p-8 bg-[var(--surface)] backdrop-blur-sm sticky top-20">
             {submitted ? (
             <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[rgba(46,154,102,0.12)] mb-4">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[rgba(15,108,255,0.10)] mb-4">
                 <CheckCircle2 className="w-7 h-7 text-[var(--success)]" aria-hidden="true" />
               </div>
               <p className="font-display font-semibold text-lg text-[var(--text-primary)]">Application Submitted Successfully!</p>
@@ -196,7 +196,7 @@ export default function Admissions() {
           ) : (
             <form onSubmit={handleSubmit} noValidate className="space-y-6">
               {serverError && (
-                <div className="p-4 rounded-lg bg-[rgba(201,140,46,0.1)] border border-[var(--gold)] text-[var(--gold)] text-sm font-medium">
+                <div className="p-4 rounded-lg bg-[rgba(15,108,255,0.08)] border border-[var(--gold)] text-[var(--gold)] text-sm font-medium">
                   {serverError}
                 </div>
               )}

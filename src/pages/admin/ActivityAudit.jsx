@@ -1,16 +1,17 @@
 import { useState, useMemo } from 'react';
-import { Search, Filter, Calendar, User, CheckCircle2, AlertCircle, Clock, Activity as ActivityIcon } from 'lucide-react';
+import { Search, Filter, Calendar, User, CheckCircle2, AlertCircle, AlertTriangle, Info, Activity as ActivityIcon, RefreshCw } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
-import DataTable from '../../components/tables/DataTable';
+import DataTable, { TablePagination } from '../../components/tables/DataTable';
 import { Badge } from '../../components/common/Badge';
 import { EmptyState } from '../../components/feedback/States';
-import { getActivity } from '../../services/activityService';
+import { getActivity, refreshActivity, useActivityVersion } from '../../services/activityService';
+import { getActivityStatus, timeAgo } from '../../utils/activityStatus';
 
-const STATUS_CONFIG = {
-  success: { tone: 'green', icon: CheckCircle2, label: 'Success' },
-  warning: { tone: 'amber', icon: AlertCircle, label: 'Warning' },
-  error: { tone: 'red', icon: AlertCircle, label: 'Error' },
-  info: { tone: 'blue', icon: Clock, label: 'Info' },
+const STATUS_ICONS = {
+  success: CheckCircle2,
+  warning: AlertTriangle,
+  error: AlertCircle,
+  info: Info,
 };
 
 const MODULE_ICONS = {
@@ -22,12 +23,17 @@ const MODULE_ICONS = {
   Admissions: '📝',
 };
 
+const PAGE_SIZE_OPTIONS = [10, 25, 50];
+
 export default function ActivityAudit() {
-  const [activity] = useState(getActivity());
+  const activityVersion = useActivityVersion();
+  const activity = useMemo(() => getActivity(), [activityVersion]);
   const [search, setSearch] = useState('');
   const [moduleFilter, setModuleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [viewMode, setViewMode] = useState('table'); // 'table' or 'timeline'
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const modules = useMemo(() => [...new Set(activity.map((a) => a.module))], [activity]);
   const statuses = useMemo(() => [...new Set(activity.map((a) => a.status))], [activity]);
@@ -40,6 +46,21 @@ export default function ActivityAudit() {
       return matchesSearch && matchesModule && matchesStatus;
     });
   }, [activity, search, moduleFilter, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pageStart = (page - 1) * pageSize;
+  const paginated = useMemo(() => filtered.slice(pageStart, pageStart + pageSize), [filtered, pageStart, pageSize]);
+
+  const updateFilter = (setter) => (value) => {
+    setter(value);
+    setPage(1);
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshActivity().catch(() => {});
+    setRefreshing(false);
+  };
 
   const stats = useMemo(
     () => ({
@@ -81,11 +102,14 @@ export default function ActivityAudit() {
       key: 'date',
       header: 'Timestamp',
       render: (a) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" title={new Date(a.date).toLocaleString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}>
           <Calendar className="w-4 h-4 text-[var(--color-mid-gray)]" />
-          <span className="text-sm text-[var(--color-mid-gray)]">
-            {new Date(a.date).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-          </span>
+          <div className="leading-tight">
+            <div className="text-sm text-[var(--color-dark-gray)] font-medium">{timeAgo(a.date)}</div>
+            <div className="text-xs text-[var(--color-mid-gray)]">
+              {new Date(a.date).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            </div>
+          </div>
         </div>
       ),
     },
@@ -93,12 +117,20 @@ export default function ActivityAudit() {
       key: 'status',
       header: 'Status',
       render: (a) => {
-        const config = STATUS_CONFIG[a.status] || STATUS_CONFIG.info;
-        const StatusIcon = config.icon;
+        const status = getActivityStatus(a.status);
+        const StatusIcon = STATUS_ICONS[a.status] || Info;
         return (
           <div className="flex items-center gap-2">
-            <StatusIcon className="w-4 h-4" />
-            <Badge tone={config.tone}>{config.label}</Badge>
+            <StatusIcon
+              className={
+                status.tone === 'green' ? 'w-4 h-4 text-[var(--color-status-green)]' :
+                status.tone === 'red' ? 'w-4 h-4 text-[var(--color-status-red)]' :
+                status.tone === 'amber' ? 'w-4 h-4 text-[var(--color-status-amber)]' :
+                status.tone === 'blue' ? 'w-4 h-4 text-[var(--color-status-blue)]' :
+                'w-4 h-4 text-[var(--color-mid-gray)]'
+              }
+            />
+            <Badge tone={status.tone}>{status.label}</Badge>
           </div>
         );
       },
@@ -111,43 +143,79 @@ export default function ActivityAudit() {
         title="Activity & Audit Log"
         description="Complete system-wide activity log with filtering and search capabilities."
         breadcrumb={[{ label: 'Admin', to: '/admin' }, { label: 'Activity & Audit' }]}
+        actions={
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[var(--color-border-gray)] bg-[var(--color-white)] text-sm font-semibold text-[var(--color-dark-gray)] hover:bg-[var(--color-off-white)] disabled:opacity-60 transition-colors"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+        }
       />
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <div className="bg-[var(--color-white)] rounded-lg border border-[var(--color-border-gray)] p-4">
-          <div className="text-xs font-semibold text-[var(--color-mid-gray)] uppercase tracking-wide mb-1">Total Events</div>
-          <div className="text-2xl font-bold text-[var(--color-dark-gray)]">{stats.total}</div>
-        </div>
-        <div className="bg-[var(--color-white)] rounded-lg border border-[var(--color-border-gray)] p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <CheckCircle2 className="w-4 h-4 text-[var(--color-medium-green)]" />
-            <span className="text-xs font-semibold text-[var(--color-mid-gray)] uppercase tracking-wide">Successful</span>
+      {/* Summary Stats — premium design with elevation and hover effects */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div className="relative overflow-hidden rounded-[20px] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5 shadow-[0_12px_30px_rgba(15,108,255,0.08)] transition-all duration-300 hover:shadow-[0_18px_42px_rgba(15,108,255,0.12)] hover:-translate-y-1 ring-1 ring-[rgba(15,108,255,0.04)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-[rgba(217,164,65,0.02)] via-transparent to-transparent" />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[linear-gradient(135deg,rgba(15,108,255,0.12),rgba(15,108,255,0.06))] text-[var(--color-medium-green)] ring-1 ring-[rgba(15,108,255,0.1)]">
+                <ActivityIcon className="w-4 h-4" aria-hidden="true" />
+              </span>
+            </div>
+            <span className="text-xs font-bold text-[var(--color-mid-gray)] uppercase tracking-widest">Total Events</span>
+            <div className="text-3xl font-bold text-[var(--color-dark-gray)] mt-1.5">{stats.total}</div>
           </div>
-          <div className="text-2xl font-bold text-[var(--color-medium-green)]">{stats.success}</div>
         </div>
-        <div className="bg-[var(--color-white)] rounded-lg border border-[var(--color-border-gray)] p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertCircle className="w-4 h-4 text-amber-500" />
-            <span className="text-xs font-semibold text-[var(--color-mid-gray)] uppercase tracking-wide">Warnings</span>
+        <div className="relative overflow-hidden rounded-[20px] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5 shadow-[0_12px_30px_rgba(15,108,255,0.08)] transition-all duration-300 hover:shadow-[0_18px_42px_rgba(15,108,255,0.12)] hover:-translate-y-1 ring-1 ring-[rgba(15,108,255,0.04)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-[rgba(15,200,100,0.02)] via-transparent to-transparent" />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--color-status-green-bg)] text-[var(--color-status-green)] ring-1 ring-[rgba(15,200,100,0.2)]">
+                <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
+              </span>
+            </div>
+            <span className="text-xs font-bold text-[var(--color-mid-gray)] uppercase tracking-widest">Successful</span>
+            <div className="text-3xl font-bold text-[var(--color-status-green)] mt-1.5">{stats.success}</div>
           </div>
-          <div className="text-2xl font-bold text-amber-600">{stats.warnings}</div>
         </div>
-        <div className="bg-[var(--color-white)] rounded-lg border border-[var(--color-border-gray)] p-4">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertCircle className="w-4 h-4 text-[var(--color-status-red)]" />
-            <span className="text-xs font-semibold text-[var(--color-mid-gray)] uppercase tracking-wide">Errors</span>
+        <div className="relative overflow-hidden rounded-[20px] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5 shadow-[0_12px_30px_rgba(15,108,255,0.08)] transition-all duration-300 hover:shadow-[0_18px_42px_rgba(15,108,255,0.12)] hover:-translate-y-1 ring-1 ring-[rgba(15,108,255,0.04)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-[rgba(217,119,6,0.02)] via-transparent to-transparent" />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--color-status-amber-bg)] text-[var(--color-status-amber)] ring-1 ring-[rgba(217,119,6,0.2)]">
+                <AlertTriangle className="w-4 h-4" aria-hidden="true" />
+              </span>
+            </div>
+            <span className="text-xs font-bold text-[var(--color-mid-gray)] uppercase tracking-widest">Warnings</span>
+            <div className="text-3xl font-bold text-[var(--color-status-amber)] mt-1.5">{stats.warnings}</div>
           </div>
-          <div className="text-2xl font-bold text-[var(--color-status-red)]">{stats.errors}</div>
+        </div>
+        <div className="relative overflow-hidden rounded-[20px] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5 shadow-[0_12px_30px_rgba(15,108,255,0.08)] transition-all duration-300 hover:shadow-[0_18px_42px_rgba(15,108,255,0.12)] hover:-translate-y-1 ring-1 ring-[rgba(15,108,255,0.04)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-[rgba(220,38,38,0.02)] via-transparent to-transparent" />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--color-status-red-bg)] text-[var(--color-status-red)] ring-1 ring-[rgba(220,38,38,0.2)]">
+                <AlertCircle className="w-4 h-4" aria-hidden="true" />
+              </span>
+            </div>
+            <span className="text-xs font-bold text-[var(--color-mid-gray)] uppercase tracking-widest">Errors</span>
+            <div className="text-3xl font-bold text-[var(--color-status-red)] mt-1.5">{stats.errors}</div>
+          </div>
         </div>
       </div>
 
       {/* Filters Section */}
-      <div className="bg-[var(--color-white)] rounded-lg border border-[var(--color-border-gray)] p-4 mb-6">
-        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-[var(--color-border-gray)]">
-          <Filter className="w-5 h-5 text-[var(--color-mid-gray)]" />
-          <h3 className="font-semibold text-[var(--color-dark-gray)]">Filters & Search</h3>
-        </div>
+      <div className="relative overflow-hidden rounded-[20px] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-6 mb-6 shadow-[0_12px_30px_rgba(15,108,255,0.06)] ring-1 ring-[rgba(15,108,255,0.04)]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[rgba(217,164,65,0.02)] via-transparent to-transparent" />
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-4 pb-4 border-b border-[var(--color-border-gray)]">
+            <Filter className="w-5 h-5 text-[var(--color-medium-green)]" />
+            <h3 className="font-semibold text-[var(--color-dark-gray)]">Filters & Search</h3>
+          </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Search */}
@@ -157,7 +225,7 @@ export default function ActivityAudit() {
               type="text"
               placeholder="Search by user or action…"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => updateFilter(setSearch)(e.target.value)}
               className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-[var(--color-border-gray)] text-sm text-[var(--color-dark-gray)] placeholder-[var(--color-mid-gray)] focus:outline-none focus:border-[var(--color-medium-green)] focus:ring-1 focus:ring-[var(--color-medium-green)]"
             />
           </div>
@@ -166,7 +234,7 @@ export default function ActivityAudit() {
           <div>
             <select
               value={moduleFilter}
-              onChange={(e) => setModuleFilter(e.target.value)}
+              onChange={(e) => updateFilter(setModuleFilter)(e.target.value)}
               className="w-full px-3 py-2.5 rounded-lg border border-[var(--color-border-gray)] text-sm text-[var(--color-dark-gray)] bg-[var(--color-white)] focus:outline-none focus:border-[var(--color-medium-green)] focus:ring-1 focus:ring-[var(--color-medium-green)] appearance-none"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23555' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")`,
@@ -189,7 +257,7 @@ export default function ActivityAudit() {
           <div>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => updateFilter(setStatusFilter)(e.target.value)}
               className="w-full px-3 py-2.5 rounded-lg border border-[var(--color-border-gray)] text-sm text-[var(--color-dark-gray)] bg-[var(--color-white)] focus:outline-none focus:border-[var(--color-medium-green)] focus:ring-1 focus:ring-[var(--color-medium-green)] appearance-none"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23555' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")`,
@@ -201,10 +269,10 @@ export default function ActivityAudit() {
             >
               <option value="">All Statuses</option>
               {statuses.map((s) => {
-                const config = STATUS_CONFIG[s] || STATUS_CONFIG.info;
+                const status = getActivityStatus(s);
                 return (
                   <option key={s} value={s}>
-                    {config.label}
+                    {status.label}
                   </option>
                 );
               })}
@@ -214,31 +282,46 @@ export default function ActivityAudit() {
           {/* Clear Filters */}
           {(search || moduleFilter || statusFilter) && (
             <button
+              type="button"
               onClick={() => {
                 setSearch('');
                 setModuleFilter('');
                 setStatusFilter('');
+                setPage(1);
               }}
-              className="px-4 py-2.5 rounded-lg bg-[var(--color-off-white)] text-sm font-medium text-[var(--color-dark-gray)] hover:bg-[var(--color-light-gray)] transition-colors"
+              className="px-4 py-2.5 rounded-lg bg-[var(--color-off-white)] text-sm font-medium text-[var(--color-dark-gray)] hover:bg-[var(--color-soft-gray)] transition-colors"
             >
               Clear All Filters
             </button>
           )}
         </div>
+        </div>
       </div>
 
       {/* Activity Table */}
-      <div className="bg-[var(--color-white)] rounded-lg border border-[var(--color-border-gray)] overflow-hidden">
-        <div className="px-4 py-3 border-b border-[var(--color-border-gray)] flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-[var(--color-mid-gray)]">
-            <ActivityIcon className="w-4 h-4" />
-            <span>
-              Showing <span className="font-semibold text-[var(--color-dark-gray)]">{filtered.length}</span> of{' '}
-              <span className="font-semibold text-[var(--color-dark-gray)]">{activity.length}</span> events
-            </span>
+      <div className="relative overflow-hidden rounded-[20px] border border-[var(--color-border-gray)] bg-[var(--color-white)] shadow-[0_12px_30px_rgba(15,108,255,0.06)] ring-1 ring-[rgba(15,108,255,0.04)]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[rgba(217,164,65,0.01)] via-transparent to-transparent" />
+        <div className="relative">
+          <div className="px-6 py-4 border-b border-[var(--color-border-gray)] flex items-center justify-between bg-gradient-to-r from-[rgba(217,164,65,0.02)] to-transparent">
+            <div className="flex items-center gap-2 text-sm text-[var(--color-mid-gray)]">
+              <ActivityIcon className="w-4 h-4 text-[var(--color-medium-green)]" />
+              <span>
+                Showing <span className="font-semibold text-[var(--color-dark-gray)]">{filtered.length}</span> of{' '}
+                <span className="font-semibold text-[var(--color-dark-gray)]">{activity.length}</span> events
+              </span>
+            </div>
           </div>
+          <DataTable columns={columns} data={paginated} emptyState={<EmptyState title="No activity found" message="Try adjusting your filters or search terms." />} />
+          <TablePagination
+            page={page}
+            totalPages={totalPages}
+            totalItems={filtered.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+          />
         </div>
-        <DataTable columns={columns} data={filtered} emptyState={<EmptyState title="No activity found" message="Try adjusting your filters or search terms." />} />
       </div>
     </div>
   );

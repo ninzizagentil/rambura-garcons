@@ -92,12 +92,15 @@ export default function MobileMenu() {
     <div className="fixed inset-0 z-40 md:hidden">
       <div className="absolute inset-0 bg-[rgba(0,0,0,0.4)]" onClick={closeMobileMenu} aria-hidden="true" />
       <div className="absolute inset-y-0 left-0 w-[280px] bg-[var(--sidebar-bg)] text-[var(--sidebar-text)] flex flex-col">
-        <div className="flex items-center justify-between px-4 h-16 border-b border-[var(--sidebar-border)]">
+        <div className="flex items-center justify-between px-4 h-20 border-b border-[var(--sidebar-border)]">
           <div className="flex items-center gap-2.5">
-            <BrandMark containerClassName="w-9 h-9 rounded-lg bg-[var(--color-gold)]" />
-            <div className="leading-tight">
-              <p className="font-display font-semibold text-sm text-[var(--sidebar-text)]">Rambura Garçons</p>
-              <p className="text-[11px] text-[var(--sidebar-text-secondary)]">{ROLE_LABELS[role]}</p>
+            <div className="rounded-full border border-[var(--border)] bg-white p-1.5 shadow-[0_12px_26px_rgba(15,108,255,0.08)]">
+              <BrandMark containerClassName="w-11 h-11 rounded-full bg-white" imgClassName="p-1.5" />
+            </div>
+            <div className="leading-[1.05]">
+              <p className="font-display text-[12.5px] font-black tracking-[0.12em] text-[var(--sidebar-text)] uppercase">Rambura Garçons</p>
+              <p className="mt-1 text-[8.5px] font-semibold uppercase tracking-[0.18em] text-[var(--sidebar-text-secondary)]">TVET Secondary School</p>
+              <p className="mt-1 text-[8.5px] font-bold uppercase tracking-[0.16em] text-[var(--color-gold)]">{ROLE_LABELS[role]}</p>
             </div>
           </div>
           <button type="button" onClick={closeMobileMenu} aria-label="Close menu" className="p-1.5 text-[rgba(255,255,255,0.8)] hover:text-white">

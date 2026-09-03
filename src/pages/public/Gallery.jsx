@@ -1,10 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getGallery, useContentVersion } from '../../services/contentService';
+import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 import PageHero from '../../components/common/PageHero';
 
 export default function Gallery() {
   useContentVersion();
+  useSiteImageVersion();
   const [index, setIndex] = useState(null);
   const gallery = getGallery();
   const open = index !== null;
@@ -26,8 +28,8 @@ export default function Gallery() {
 
   return (
     <div>
-      <PageHero title="Gallery">
-        <p className="text-white/80 mt-3">Life at Rambura Garçons, in and out of the workshop.</p>
+      <PageHero title="Gallery" image={getSiteImage('pageHeroes.gallery')}>
+        <p className="text-[var(--text-secondary)] mt-3">Life at Rambura Garçons, in and out of the workshop.</p>
       </PageHero>
 
       <section className="max-w-6xl mx-auto px-4 md:px-6 py-14">
@@ -37,7 +39,7 @@ export default function Gallery() {
               key={img.id}
               type="button"
               onClick={() => setIndex(i)}
-              className="group relative aspect-square overflow-hidden rounded-[24px] border border-[var(--color-border-gray)] bg-white shadow-[0_18px_35px_rgba(15,61,46,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(15,61,46,0.12)]"
+              className="group relative aspect-square overflow-hidden rounded-[24px] border border-[var(--color-border-gray)] bg-[var(--surface)] shadow-[0_18px_35px_rgba(15,108,255,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(15,108,255,0.12)]"
               aria-label={`View photo: ${img.caption}`}
             >
               <img

@@ -7,11 +7,13 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import { env } from './config/env.js';
 import { databaseStatus } from './config/database.js';
+import { UPLOADS_ROOT } from './config/localStorage.js';
 import authRoutes from './routes/authRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import libraryRoutes from './routes/libraryRoutes.js';
 import stockRoutes from './routes/stockRoutes.js';
+import reconciliationRoutes from './routes/reconciliationRoutes.js';
 import supplierRoutes from './routes/supplierRoutes.js';
 import activityRoutes from './routes/activityRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
@@ -37,6 +39,13 @@ app.use(cors({
 	credentials: true,
 }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draft-8' }));
+// Locally-stored images (replaces Cloudinary). Served before the JSON body
+// parser since these are plain static files. The CORP header is relaxed so
+// the Vite dev server (a different origin/port) can load these <img> URLs.
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(UPLOADS_ROOT));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
@@ -51,6 +60,7 @@ app.use('/api/audit-logs', auditRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/library', libraryRoutes);
 app.use('/api/stock', stockRoutes);
+app.use('/api/stock/reconciliations', reconciliationRoutes);
 app.use('/api/stock/suppliers', supplierRoutes);
 app.use('/api/activity', activityRoutes);
 app.use('/api/reports', reportRoutes);

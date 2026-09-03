@@ -1,14 +1,16 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Calendar } from 'lucide-react';
 import { getNews, useContentVersion } from '../../services/contentService';
+import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 import PageHero from '../../components/common/PageHero';
 
 export default function News() {
   useContentVersion();
+  useSiteImageVersion();
   const news = getNews();
   return (
     <div>
-      <PageHero title="News">
+      <PageHero title="News" image={getSiteImage('pageHeroes.news')}>
         <p className="text-[var(--text-secondary)] mt-3">Updates from around the Rambura Garçons campus.</p>
       </PageHero>
 

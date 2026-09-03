@@ -158,7 +158,7 @@ export default function AdminDashboard() {
       />
 
       <section className="relative overflow-hidden rounded-[28px] border border-[var(--color-border-gray)] bg-gradient-to-br from-[var(--color-white)] via-[var(--color-light-green-100)] to-[var(--color-soft-gray)] p-5 shadow-card md:p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(44,103,84,0.12),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(217,164,65,0.14),_transparent_32%)]" aria-hidden="true" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(15,108,255,0.12),_transparent_35%),radial-gradient(circle_at_bottom_left,_rgba(217,164,65,0.14),_transparent_32%)]" aria-hidden="true" />
         <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <span className="inline-flex items-center rounded-full border border-[var(--color-border-gray)] bg-[var(--color-white)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-mid-gray)]">

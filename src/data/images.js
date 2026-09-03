@@ -24,13 +24,30 @@ const photo = (seed, w = 900, h = 600) => `https://picsum.photos/seed/${seed}/${
 export const IMAGES = {
   // ---- Home page ---------------------------------------------------------
   home: {
-    hero: photo('rambura-hero-campus', 1200, 900),
+    // Rotating hero slideshow — add/remove entries here to change how many
+    // photos cross-fade through the homepage hero banner.
+    heroSlides: [
+      photo('rambura-hero-campus', 1200, 900),
+      photo('rambura-hero-workshop', 1200, 900),
+      photo('rambura-hero-graduation', 1200, 900),
+    ],
     gallery: [
       photo('rambura-preview-1', 500, 500),
       photo('rambura-preview-2', 500, 500),
       photo('rambura-preview-3', 500, 500),
       photo('rambura-preview-4', 500, 500),
     ],
+  },
+
+  // ---- Banner photo shown at the top of each public page, so every menu
+  //      page gets its own picture instead of reusing the homepage hero ----
+  pageHeroes: {
+    academics: photo('rambura-hero-academics', 1400, 500),
+    departments: photo('rambura-hero-departments', 1400, 500),
+    staff: photo('rambura-hero-staff', 1400, 500),
+    news: photo('rambura-hero-news', 1400, 500),
+    gallery: photo('rambura-hero-gallery', 1400, 500),
+    contact: photo('rambura-hero-contact', 1400, 500),
   },
 
   // ---- About page ---------------------------------------------------------

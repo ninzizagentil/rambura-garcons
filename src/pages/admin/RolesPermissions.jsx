@@ -131,7 +131,7 @@ export default function RolesPermissions() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${isActive ? 'bg-[var(--color-medium-green)] text-white' : 'bg-white text-[var(--color-mid-gray)]'}`}>
+                    <span className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${isActive ? 'bg-[var(--color-medium-green)] text-white' : 'bg-[var(--surface)] text-[var(--color-mid-gray)]'}`}>
                       <ShieldCheck className="w-4 h-4" aria-hidden="true" />
                     </span>
                     <div className="min-w-0">
@@ -221,8 +221,8 @@ export default function RolesPermissions() {
                           key={permission._id}
                           className={`flex items-center justify-between rounded-xl border px-3 py-2.5 ${
                             checked
-                              ? 'border-[var(--color-medium-green)] bg-white text-[var(--color-heading)]'
-                              : 'border-[var(--color-border-gray)] bg-white/60 text-[var(--color-mid-gray)]'
+                              ? 'border-[var(--color-medium-green)] bg-[var(--surface)] text-[var(--color-heading)]'
+                              : 'border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] text-[var(--color-mid-gray)]'
                           }`}
                         >
                           <span className="text-sm font-medium">{label}</span>

@@ -10,7 +10,7 @@ import { STOCK_CATEGORIES, STOCK_UNITS } from '../../data/stock';
 import { createItem, updateItem } from '../../services/stockService';
 import { logActivity } from '../../services/activityService';
 
-const EMPTY_FORM = { name: '', category: '', unit: '', quantity: '', minLevel: '', unitPrice: '', description: '' };
+const EMPTY_FORM = { name: '', category: '', unit: '', quantity: '', minLevel: '', unitPrice: '', description: '', batchNumber: '', serialNumber: '', expiryDate: '' };
 
 export default function StockItemFormModal({ open, onClose, item, onSaved }) {
   const { showToast } = useToast();
@@ -26,7 +26,7 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
     if (open) {
       setForm(
         item
-          ? { ...item, quantity: String(item.quantity), minLevel: String(item.minLevel), unitPrice: String(item.unitPrice ?? '') }
+          ? { ...item, quantity: String(item.quantity), minLevel: String(item.minLevel), unitPrice: String(item.unitPrice ?? ''), expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString().split('T')[0] : '' }
           : EMPTY_FORM
       );
       setErrors({});
@@ -47,6 +47,14 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
     if (form.minLevel === '' || Number.isNaN(min) || min < 0) next.minLevel = 'Enter a valid minimum stock level.';
     const price = Number(form.unitPrice);
     if (form.unitPrice === '' || Number.isNaN(price) || price < 0) next.unitPrice = 'Enter a valid unit value (RWF).';
+    // NEW: Validate batch number for Foods
+    if (form.category === 'Foods' && !form.batchNumber?.trim()) {
+      next.batchNumber = 'Batch number is required for Food items.';
+    }
+    // NEW: Validate serial number for Electronics
+    if (form.category === 'Electronic Devices' && !form.serialNumber?.trim()) {
+      next.serialNumber = 'Serial number is required for Electronic Devices.';
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -57,7 +65,15 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
     if (!validate()) return;
     setSaving(true);
 
-    const payload = { ...form, quantity: Number(form.quantity), minLevel: Number(form.minLevel), unitPrice: Number(form.unitPrice) };
+    const payload = { 
+      ...form, 
+      quantity: Number(form.quantity), 
+      minLevel: Number(form.minLevel), 
+      unitPrice: Number(form.unitPrice),
+      expiryDate: form.expiryDate ? new Date(form.expiryDate) : null,
+      batchNumber: form.batchNumber?.trim() || null,
+      serialNumber: form.serialNumber?.trim() || null
+    };
     const result = isEdit ? await updateItem(item.id, payload) : await createItem(payload);
     setSaving(false);
     if (!result.success) {
@@ -147,6 +163,40 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
               : 'The value (in RWF) of one unit of this item — used to calculate total inventory value.'
           }
         />
+        {/* NEW: Batch Number (Required for Foods) */}
+        {form.category === 'Foods' && (
+          <Input
+            label="Batch Number"
+            required={form.category === 'Foods'}
+            value={form.batchNumber}
+            onChange={update('batchNumber')}
+            error={errors.batchNumber}
+            placeholder="e.g., LOT-2024-001"
+            hint="Unique batch/lot number for traceability"
+          />
+        )}
+        {/* NEW: Serial Number (Required for Electronics) */}
+        {form.category === 'Electronic Devices' && (
+          <Input
+            label="Serial Number"
+            required={form.category === 'Electronic Devices'}
+            value={form.serialNumber}
+            onChange={update('serialNumber')}
+            error={errors.serialNumber}
+            placeholder="e.g., SN-12345678"
+            hint="Unique serial number for inventory tracking"
+          />
+        )}
+        {/* NEW: Expiry Date (Optional, useful for Foods) */}
+        {form.category === 'Foods' && (
+          <Input
+            label="Expiry Date"
+            type="date"
+            value={form.expiryDate}
+            onChange={update('expiryDate')}
+            hint="Date when this item expires or should no longer be used"
+          />
+        )}
         <Textarea label="Description / Notes" value={form.description} onChange={update('description')} rows={3} />
       </form>
     </Modal>

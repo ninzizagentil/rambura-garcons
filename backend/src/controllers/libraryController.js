@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import Book from '../models/Book.js';
 import Loan from '../models/Loan.js';
 import { fail, list, ok } from '../utils/api.js';
@@ -31,19 +30,27 @@ export async function createBook(req, res) { const book = await Book.create({ ..
 export async function updateBook(req, res) { const allowed = ['title', 'author', 'category', 'bookCode', 'description', 'coverImage', 'totalCopies', 'active']; const updates = normalizeCover(Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)))); const book = await Book.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true }); return book ? ok(res, book, 'Book updated') : fail(res, 'Book not found', 404); }
 export async function deleteBook(req, res) { const book = await Book.findByIdAndUpdate(req.params.id, { active: false }, { new: true }); return book ? ok(res, book, 'Book archived') : fail(res, 'Book not found', 404); }
 
+// This deployment does not support multi-document transactions (it rejects
+// retryable writes, which transaction commits require regardless of the
+// retryWrites URI flag). Borrow/return are done as atomic single-document
+// updates instead, with a compensating rollback if the second step fails.
 export async function borrowBook(req, res) {
-  const session = await mongoose.startSession();
+  const book = await Book.findOneAndUpdate(
+    { _id: req.body.bookId, active: true, $expr: { $gt: ['$totalCopies', '$borrowedCopies'] } },
+    { $inc: { borrowedCopies: 1 } },
+    { new: true },
+  );
+  if (!book) return fail(res, 'Book not found or no copies are available', 409);
+
   try {
-    let loan;
-    await session.withTransaction(async () => {
-      const book = await Book.findOneAndUpdate({ _id: req.body.bookId, active: true, $expr: { $gt: ['$totalCopies', '$borrowedCopies'] } }, { $inc: { borrowedCopies: 1 } }, { new: true, session });
-      if (!book) { const error = new Error('Book not found or no copies are available'); error.statusCode = 409; throw error; }
-      loan = await Loan.create([{ ...req.body, issuedBy: req.user._id, status: 'borrowed' }], { session });
-      await recordAudit(req, { action: 'Book borrowed', module: 'Library', resourceType: 'Loan', resourceId: loan[0]._id, description: `Borrowed ${book.title}` });
-      loan = loan[0];
-    });
+    const loan = await Loan.create({ ...req.body, issuedBy: req.user._id, status: 'borrowed' });
+    await recordAudit(req, { action: 'Book borrowed', module: 'Library', resourceType: 'Loan', resourceId: loan._id, description: `Borrowed ${book.title}` });
     return ok(res, loan, 'Book borrowed', 201);
-  } finally { await session.endSession(); }
+  } catch (err) {
+    // Compensate: the copy was reserved above but the loan record failed, so give it back.
+    await Book.findOneAndUpdate({ _id: book._id }, { $inc: { borrowedCopies: -1 } });
+    throw err;
+  }
 }
 
 export async function getLoans(req, res) {
@@ -53,16 +60,21 @@ export async function getLoans(req, res) {
   return list(res, data.map((loan) => { const value = loan.toObject(); if (value.status !== 'returned' && value.dueDate < new Date()) value.status = 'overdue'; return value; }), { page, limit, total, totalPages: Math.ceil(total / limit) });
 }
 export async function returnBook(req, res) {
-  const session = await mongoose.startSession();
+  const loan = await Loan.findOneAndUpdate(
+    { _id: req.params.id, returnDate: null, status: { $ne: 'returned' } },
+    { returnDate: new Date(), status: 'returned', returnedBy: req.user._id },
+    { new: true },
+  );
+  if (!loan) return fail(res, 'Loan not found or already returned', 409);
+
   try {
-    let loan;
-    await session.withTransaction(async () => {
-      loan = await Loan.findOneAndUpdate({ _id: req.params.id, returnDate: null, status: { $ne: 'returned' } }, { returnDate: new Date(), status: 'returned', returnedBy: req.user._id }, { new: true, session });
-      if (!loan) { const error = new Error('Loan not found or already returned'); error.statusCode = 409; throw error; }
-      await Book.findOneAndUpdate({ _id: loan.bookId, borrowedCopies: { $gt: 0 } }, { $inc: { borrowedCopies: -1 } }, { session });
-      await recordAudit(req, { action: 'Book returned', module: 'Library', resourceType: 'Loan', resourceId: loan._id, description: 'Book returned to library' });
-    });
+    await Book.findOneAndUpdate({ _id: loan.bookId, borrowedCopies: { $gt: 0 } }, { $inc: { borrowedCopies: -1 } });
+    await recordAudit(req, { action: 'Book returned', module: 'Library', resourceType: 'Loan', resourceId: loan._id, description: 'Book returned to library' });
     return ok(res, loan, 'Book returned');
-  } finally { await session.endSession(); }
+  } catch (err) {
+    // Compensate: the loan was marked returned above but the copy count update failed, so revert it.
+    await Loan.findOneAndUpdate({ _id: loan._id }, { returnDate: null, status: 'borrowed', $unset: { returnedBy: '' } });
+    throw err;
+  }
 }
 export async function overdueLoans(req, res) { const data = await Loan.find({ returnDate: null, dueDate: { $lt: new Date() } }).populate('bookId', 'title bookCode').sort('dueDate'); return ok(res, data); }

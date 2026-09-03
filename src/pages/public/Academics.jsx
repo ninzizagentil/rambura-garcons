@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Clock, GraduationCap, ArrowRight, X } from 'lucide-react';
 import { getPrograms, useContentVersion } from '../../services/contentService';
+import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 import Modal from '../../components/modals/Modal';
 import Button from '../../components/common/Button';
 import PageHero from '../../components/common/PageHero';
 
 export default function Academics() {
   useContentVersion();
+  useSiteImageVersion();
   const [selected, setSelected] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const programs = getPrograms();
@@ -32,7 +34,7 @@ export default function Academics() {
 
   return (
     <div>
-      <PageHero title="Academics">
+      <PageHero title="Academics" image={getSiteImage('pageHeroes.academics')}>
         <p className="text-[var(--text-secondary)] mt-3">Four trade programs, each built for real workplace readiness.</p>
       </PageHero>
 

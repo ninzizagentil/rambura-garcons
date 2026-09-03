@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Users, ArrowRight } from 'lucide-react';
 import { getDepartments, getStaff, useContentVersion } from '../../services/contentService';
+import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 import Modal from '../../components/modals/Modal';
 import PageHero from '../../components/common/PageHero';
 
 export default function Departments() {
   useContentVersion();
+  useSiteImageVersion();
   const [selected, setSelected] = useState(null);
   const departments = getDepartments();
   const staff = getStaff();
@@ -13,7 +15,7 @@ export default function Departments() {
 
   return (
     <div>
-      <PageHero title="Departments">
+      <PageHero title="Departments" image={getSiteImage('pageHeroes.departments')}>
         <p className="text-[var(--text-secondary)] mt-3">Four departments, each led by an experienced trade professional.</p>
       </PageHero>
 

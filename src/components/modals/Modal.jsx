@@ -7,9 +7,23 @@ import { cn } from '../../utils/cn';
 export default function Modal({ open, onClose, title, children, footer, size = 'md' }) {
   const dialogRef = useRef(null);
 
+  // Callers pass onClose as an inline arrow function (`onClose={() => setX(false)}`),
+  // so a new function identity is created on every parent re-render — including
+  // every re-render caused by typing into a field inside the modal. Keeping the
+  // latest onClose in a ref (instead of the effect's dependency array) means the
+  // open/focus/scroll-lock effect below only runs when `open` actually changes,
+  // not on every keystroke. Without this, each keystroke re-ran the effect and
+  // called dialogRef.current?.focus(), yanking focus off the input back onto the
+  // dialog container after every character — making text fields inside modals
+  // effectively unusable.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (!open) return;
-    const handleKey = (e) => e.key === 'Escape' && onClose?.();
+    const handleKey = (e) => e.key === 'Escape' && onCloseRef.current?.();
     document.addEventListener('keydown', handleKey);
     dialogRef.current?.focus();
     document.body.style.overflow = 'hidden';
@@ -17,7 +31,7 @@ export default function Modal({ open, onClose, title, children, footer, size = '
       document.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 

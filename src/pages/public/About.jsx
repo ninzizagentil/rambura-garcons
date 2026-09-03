@@ -18,8 +18,8 @@ export default function About() {
   useSiteImageVersion();
   return (
     <div>
-      <PageHero title="About Rambura Garçons" withDivider>
-        <p className="text-white/80 mt-3 max-w-2xl mx-auto">
+      <PageHero title="About Rambura Garçons" image={getSiteImage('about.campus')}>
+        <p className="text-[var(--text-secondary)] mt-3 max-w-2xl">
           A technical and vocational education and training school formed to serve Nyabihu District and beyond.
         </p>
       </PageHero>
@@ -46,7 +46,7 @@ export default function About() {
       <section className="bg-[var(--dark-bg)] py-14">
         <div className="max-w-5xl mx-auto px-4 md:px-6 grid sm:grid-cols-2 gap-6">
           <div id="mission" className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_18px_35px_rgba(0,0,0,0.14)]">
-            <Target className="w-7 h-7 text-[var(--gold)] mb-3" aria-hidden="true" />
+            <Target className="w-7 h-7 text-[var(--text-primary)] mb-3" aria-hidden="true" />
             <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">Mission</h3>
             <p className="text-sm text-[var(--text-secondary)] mt-2">
               To equip young Rwandans with practical trade skills, professional discipline, and the confidence to
@@ -54,7 +54,7 @@ export default function About() {
             </p>
           </div>
           <div id="vision" className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_18px_35px_rgba(0,0,0,0.14)]">
-            <Eye className="w-7 h-7 text-[var(--gold)] mb-3" aria-hidden="true" />
+            <Eye className="w-7 h-7 text-[var(--text-primary)] mb-3" aria-hidden="true" />
             <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">Vision</h3>
             <p className="text-sm text-[var(--text-secondary)] mt-2">
               To be the leading TVET institution in Western Province, known for graduates who set the standard in
@@ -66,7 +66,7 @@ export default function About() {
 
       <section id="values" className="max-w-5xl mx-auto px-4 md:px-6 py-14">
         <div className="flex items-center gap-2 mb-6">
-          <HeartHandshake className="w-6 h-6 text-[var(--gold)]" aria-hidden="true" />
+          <HeartHandshake className="w-6 h-6 text-[var(--text-primary)]" aria-hidden="true" />
           <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)]">Core Values</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -80,7 +80,7 @@ export default function About() {
 
       <section id="leadership" className="bg-[var(--color-off-white)] py-14">
         <div className="max-w-5xl mx-auto px-4 md:px-6 grid sm:grid-cols-2 gap-8 items-center">
-          <div className="overflow-hidden rounded-[32px] aspect-square shadow-[0_22px_50px_rgba(15,61,46,0.10)] ring-1 ring-[rgba(15,61,46,0.06)]">
+          <div className="overflow-hidden rounded-[32px] aspect-square shadow-[0_22px_50px_rgba(31,41,55,0.10)] ring-1 ring-[rgba(31,41,55,0.06)]">
             <img src={getSiteImage('about.leadership')} alt="Rambura Garçons school leadership" className="w-full h-full object-cover" loading="lazy" />
           </div>
           <div className="rounded-[30px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_18px_35px_rgba(0,0,0,0.14)]">
@@ -88,7 +88,7 @@ export default function About() {
             <p className="text-[var(--text-secondary)] mb-6">Meet the people guiding Rambura Garçons.</p>
             <Link
               to="/staff"
-              className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--gold)] hover:underline"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--text-primary)] hover:underline"
             >
               Meet Staff <ArrowRight className="w-4 h-4" />
             </Link>
@@ -98,7 +98,7 @@ export default function About() {
 
       <section id="facilities" className="max-w-5xl mx-auto px-4 md:px-6 py-14">
         <div className="flex items-center gap-2 mb-6">
-          <Building2 className="w-6 h-6 text-[var(--gold)]" aria-hidden="true" />
+          <Building2 className="w-6 h-6 text-[var(--text-primary)]" aria-hidden="true" />
           <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)]">Facilities</h2>
         </div>
         <ul className="grid sm:grid-cols-2 gap-4 text-sm text-[var(--text-secondary)]">
@@ -112,7 +112,7 @@ export default function About() {
           ))}
         </ul>
         <div className="flex flex-wrap gap-3 mt-8">
-          <Link to="/contact" className="text-sm font-semibold text-[var(--gold)] hover:underline flex items-center gap-1">
+          <Link to="/contact" className="text-sm font-semibold text-[var(--text-primary)] hover:underline flex items-center gap-1">
             Contact School <ArrowRight className="w-4 h-4" />
           </Link>
           <Link to="/" className="text-sm font-semibold text-[var(--text-secondary)] hover:underline">

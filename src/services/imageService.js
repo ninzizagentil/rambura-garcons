@@ -4,11 +4,17 @@ import { IMAGES } from '../data/images';
 import { logActivity } from './activityService';
 
 export const IMAGE_SLOTS = [
-  { path: 'home.hero', label: 'Hero Photo', group: 'Home Page', default: IMAGES.home.hero },
+  ...IMAGES.home.heroSlides.map((url, index) => ({ path: `home.heroSlides.${index}`, label: `Hero Photo ${index + 1}`, group: 'Home Page', default: url })),
   ...IMAGES.home.gallery.map((url, index) => ({ path: `home.gallery.${index}`, label: `Preview Photo ${index + 1}`, group: 'Home Page', default: url })),
   { path: 'about.campus', label: 'Campus Photo', group: 'About Page', default: IMAGES.about.campus },
   { path: 'about.leadership', label: 'Leadership Photo', group: 'About Page', default: IMAGES.about.leadership },
   ...Object.entries(IMAGES.about.facilities).map(([key, url]) => ({ path: `about.facilities.${key}`, label: `${key} facility`, group: 'About Page - Facilities', default: url })),
+  { path: 'pageHeroes.academics', label: 'Academics Banner Photo', group: 'Page Banners', default: IMAGES.pageHeroes.academics },
+  { path: 'pageHeroes.departments', label: 'Departments Banner Photo', group: 'Page Banners', default: IMAGES.pageHeroes.departments },
+  { path: 'pageHeroes.staff', label: 'Staff Banner Photo', group: 'Page Banners', default: IMAGES.pageHeroes.staff },
+  { path: 'pageHeroes.news', label: 'News Banner Photo', group: 'Page Banners', default: IMAGES.pageHeroes.news },
+  { path: 'pageHeroes.gallery', label: 'Gallery Banner Photo', group: 'Page Banners', default: IMAGES.pageHeroes.gallery },
+  { path: 'pageHeroes.contact', label: 'Contact Banner Photo', group: 'Page Banners', default: IMAGES.pageHeroes.contact },
   { path: 'admissions.hero', label: 'Admissions Banner Photo', group: 'Admissions Page', default: IMAGES.admissions.hero },
 ];
 let overrides = {};

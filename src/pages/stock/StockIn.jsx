@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { CheckCircle2, PackagePlus } from 'lucide-react';
+import { CheckCircle2, PackagePlus, ClipboardList } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import { Input, Select, Textarea } from '../../components/forms/FormField';
 import Button from '../../components/common/Button';
@@ -119,14 +119,32 @@ export default function StockIn() {
     return (
       <div>
         <PageHeader title="Stock In" breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock In' }]} />
-        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
-          <CheckCircle2 className="w-12 h-12 text-[var(--color-status-green)] mb-4" aria-hidden="true" />
-          <p className="font-display text-lg font-semibold text-[var(--color-dark-gray)]">Stock In Successful</p>
-          <p className="text-sm text-[var(--color-mid-gray)] mt-1">
-            +{form.quantity} {selectedItem?.unit} added to "{selectedItem?.name}". New quantity: {result?.newQuantity} {selectedItem?.unit}.
+        <div className="stock-success-state">
+          <CheckCircle2 className="stock-success-icon" aria-hidden="true" />
+          <h3 className="stock-success-title">✨ Stock In Successful!</h3>
+          <p className="stock-success-message">
+            Successfully recorded +{form.quantity} {selectedItem?.unit} of {selectedItem?.name}
           </p>
-          <div className="flex gap-3 mt-6">
-            <Button variant="secondary" onClick={() => navigate(`/stock/items/${form.itemId}`)}>View Item Details</Button>
+          <div className="stock-success-details">
+            <div className="stock-success-detail-row">
+              <span className="stock-success-detail-label">Item</span>
+              <span className="stock-success-detail-value">{selectedItem?.name}</span>
+            </div>
+            <div className="stock-success-detail-row">
+              <span className="stock-success-detail-label">Quantity Added</span>
+              <span className="stock-success-detail-value">+{form.quantity} {selectedItem?.unit}</span>
+            </div>
+            <div className="stock-success-detail-row">
+              <span className="stock-success-detail-label">New Total</span>
+              <span className="stock-success-detail-value">{result?.newQuantity} {selectedItem?.unit}</span>
+            </div>
+            <div className="stock-success-detail-row">
+              <span className="stock-success-detail-label">Date</span>
+              <span className="stock-success-detail-value">{new Date(form.date).toLocaleDateString()}</span>
+            </div>
+          </div>
+          <div className="flex gap-3 flex-wrap justify-center">
+            <Button variant="secondary" onClick={() => navigate(`/stock/items/${form.itemId}`)}>View Item</Button>
             <Button variant="outline" onClick={() => navigate('/stock/transactions')}>View Transactions</Button>
             <Button variant="primary" onClick={startAnother}>Record Another</Button>
           </div>
@@ -139,25 +157,43 @@ export default function StockIn() {
     <div>
       <PageHeader title="Stock In" description="Record incoming stock for an item." breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock In' }]} />
 
-      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-2xl">
+      <div className="stock-form-container">
         {step === 'form' ? (
           <form onSubmit={handleContinue} noValidate className="space-y-4">
+            <h3 className="stock-form-title">📥 Record Stock In</h3>
             {serverError && <Alert type="error">{serverError}</Alert>}
-            <Select
-              label="Item"
-              required
-              value={form.itemId}
-              onChange={update('itemId')}
-              error={errors.itemId}
-              options={items.map((i) => ({ value: i.id, label: `${i.name} (${i.quantity} ${i.unit} in stock)` }))}
-            />
-            <div className="grid sm:grid-cols-2 gap-4">
-              <Input label="Quantity" type="number" min="1" required value={form.quantity} onChange={update('quantity')} error={errors.quantity} />
-              <Input label="Date" type="date" required value={form.date} onChange={update('date')} error={errors.date} />
+            
+            <div className="stock-form-section">
+              <label className="stock-form-section-title">Item & Quantity</label>
+              <div className="stock-form-grid full">
+                <Select
+                  label="Item"
+                  required
+                  value={form.itemId}
+                  onChange={update('itemId')}
+                  error={errors.itemId}
+                  options={items.map((i) => ({ value: i.id, label: `${i.name} (${i.quantity} ${i.unit} in stock)` }))}
+                />
+              </div>
             </div>
-            <Input label="Source / Supplier" required value={form.party} onChange={update('party')} error={errors.party} placeholder="e.g. Kigali Grain Suppliers Ltd" />
-            <Input label="Responsible User" required value={form.responsibleUser} onChange={update('responsibleUser')} error={errors.responsibleUser} />
-            <Textarea label="Notes" value={form.notes} onChange={update('notes')} rows={3} />
+
+            <div className="stock-form-section">
+              <label className="stock-form-section-title">Transaction Details</label>
+              <div className="stock-form-grid">
+                <Input label="Quantity" type="number" min="1" required value={form.quantity} onChange={update('quantity')} error={errors.quantity} />
+                <Input label="Date" type="date" required value={form.date} onChange={update('date')} error={errors.date} />
+              </div>
+              <div className="stock-form-grid full">
+                <Input label="Source / Supplier" required value={form.party} onChange={update('party')} error={errors.party} placeholder="e.g. Kigali Grain Suppliers Ltd" />
+              </div>
+              <div className="stock-form-grid full">
+                <Input label="Responsible User" required value={form.responsibleUser} onChange={update('responsibleUser')} error={errors.responsibleUser} />
+              </div>
+              <div className="stock-form-grid full">
+                <Textarea label="Notes" value={form.notes} onChange={update('notes')} rows={3} />
+              </div>
+            </div>
+
             <div className="flex justify-end gap-3 pt-2">
               <Button type="button" variant="ghost" onClick={() => navigate('/stock')}>Cancel</Button>
               <Button type="submit" variant="primary" icon={PackagePlus}>Continue</Button>
@@ -166,7 +202,8 @@ export default function StockIn() {
         ) : (
           <div className="space-y-4">
             {serverError && <Alert type="error">{serverError}</Alert>}
-            <p className="text-sm text-[var(--color-dark-gray)]">Please confirm the details below:</p>
+            <h3 className="stock-form-title flex items-center gap-2"><ClipboardList className="w-5 h-5" /> Confirm Stock In</h3>
+            <p className="text-sm text-[var(--color-dark-gray)]">Please review and confirm the details below:</p>
             <dl className="text-sm bg-[var(--color-off-white)] rounded-[var(--radius-control)] p-4 space-y-1.5">
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Item</dt><dd className="font-medium">{selectedItem?.name}</dd></div>
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Quantity</dt><dd className="font-medium">+{form.quantity} {selectedItem?.unit}</dd></div>

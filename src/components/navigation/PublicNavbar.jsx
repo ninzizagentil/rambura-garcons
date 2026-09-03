@@ -189,17 +189,18 @@ export default function PublicNavbar() {
 
       <div className="bg-transparent">
         <div className="max-w-7xl mx-auto px-4 md:px-6 h-[76px] flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3 shrink-0 rounded-full transition-transform duration-200 hover:scale-[1.01]" onClick={() => setOpen(false)}>
+          <Link to="/" className="flex items-center gap-3 shrink-0 rounded-full px-2 py-1.5 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[rgba(255,255,255,0.03)]" onClick={() => setOpen(false)}>
             <BrandMark
-              containerClassName="w-11 h-11 rounded-full bg-[linear-gradient(135deg,#0A3028,#103D33)] text-[var(--gold)] font-display font-bold text-lg shadow-[0_10px_25px_rgba(0,0,0,0.25)]"
+              containerClassName="w-14 h-14 rounded-full border border-[var(--border)] bg-white shadow-[0_12px_26px_rgba(15,108,255,0.08)]"
+              imgClassName="p-1.5"
               fallback="RG"
             />
-            <span className="leading-tight">
-              <span className="block font-display font-bold text-[15px] tracking-[0.12em] text-[var(--text-primary)] uppercase">
+            <span className="leading-[1.05]">
+              <span className="block font-display font-black text-[15px] tracking-[0.12em] text-[var(--text-primary)] uppercase">
                 Rambura Garçons
               </span>
-              <span className="block text-[10px] font-semibold tracking-[0.28em] text-[var(--text-secondary)] uppercase">
-                TVET School
+              <span className="mt-0.5 block text-[9.5px] font-semibold tracking-[0.28em] text-[var(--text-secondary)] uppercase">
+                TVET Secondary School
               </span>
             </span>
           </Link>
@@ -215,7 +216,7 @@ export default function PublicNavbar() {
               type="button"
               onClick={toggleTheme}
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--gold)] shadow-[0_8px_18px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--gold)]"
+              className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--gold)] shadow-[0_8px_18px_rgba(0,0,0,0.12)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--gold)]"
             >
               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
@@ -260,7 +261,7 @@ export default function PublicNavbar() {
           <Link
             to="/login"
             onClick={() => setOpen(false)}
-            className="block mt-2 text-center px-4 py-2.5 rounded-full border border-[var(--color-border-gray)] bg-[rgba(255,255,255,0.8)] text-[var(--color-deep-green)] text-sm font-semibold shadow-[0_10px_20px_rgba(15,61,46,0.08)] backdrop-blur-xl"
+            className="block mt-2 text-center px-4 py-2.5 rounded-full border border-[var(--color-border-gray)] bg-[rgba(255,255,255,0.8)] text-[var(--color-dark-gray)] text-sm font-semibold shadow-[0_10px_20px_rgba(31,41,55,0.08)] backdrop-blur-xl"
           >
             Login
           </Link>

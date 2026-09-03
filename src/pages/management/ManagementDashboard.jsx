@@ -8,13 +8,14 @@ import ActivityFeedCard from '../../components/cards/ActivityFeedCard';
 import { useAuth } from '../../context/AuthContext';
 import { getBooks, getLoans, daysOverdue } from '../../services/bookService';
 import { getItems, getLowStockItems, getUsageByItem } from '../../services/stockService';
-import { getActivity } from '../../services/activityService';
+import { getActivity, useActivityVersion } from '../../services/activityService';
 import { getApplications } from '../../services/applicationService';
 
 export default function ManagementDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [applications, setApplications] = useState([]);
+  const activityVersion = useActivityVersion();
 
   const books = useMemo(() => getBooks(), []);
   const loans = useMemo(() => getLoans(), []);
@@ -34,7 +35,7 @@ export default function ManagementDashboard() {
   }, []);
   const activity = useMemo(
     () => getActivity().filter((a) => ['Library', 'Stock', 'Management', 'Admissions'].includes(a.module)).slice(0, 5),
-    []
+    [activityVersion]
   );
 
   const activeLoans = loans.filter((l) => l.status !== 'returned');

@@ -17,4 +17,6 @@ export const env = {
   accessExpires: process.env.JWT_ACCESS_EXPIRES || '15m',
   refreshExpires: process.env.JWT_REFRESH_EXPIRES || '7d',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  // Used to build absolute /uploads URLs for locally-stored images.
+  serverUrl: process.env.SERVER_URL || `http://localhost:${Number(process.env.PORT || 5000)}`,
 };
