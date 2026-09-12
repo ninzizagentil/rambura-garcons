@@ -52,7 +52,27 @@ await User.deleteMany({});
 await User.insertMany(await Promise.all(users.map(async ([fullName, username, email, password, role]) => ({
   fullName, username, email, role, passwordHash: await bcrypt.hash(password, 12), status: 'active', lastActivity: new Date(),
 }))));
-await Promise.all([Book.deleteMany({}), StockItem.deleteMany({}), Supplier.deleteMany({}), Program.deleteMany({}), Department.deleteMany({}), Staff.deleteMany({}), News.deleteMany({}), Gallery.deleteMany({}), WebsiteSetting.deleteMany({})]);
+await Promise.all([
+  Book.deleteMany({}),
+  StockItem.deleteMany({}),
+  Supplier.deleteMany({}),
+  StockTransaction.deleteMany({}),
+  DamagedStock.deleteMany({}),
+  DisposedStock.deleteMany({}),
+  Program.deleteMany({}),
+  Department.deleteMany({}),
+  Staff.deleteMany({}),
+  News.deleteMany({}),
+  Gallery.deleteMany({}),
+  WebsiteSetting.deleteMany({}),
+  Role.deleteMany({}),
+  Permission.deleteMany({}),
+  AuditLog.deleteMany({}),
+  Notification.deleteMany({}),
+  Loan.deleteMany({}),
+  Report.deleteMany({}),
+  SystemSetting.deleteMany({}),
+]);
 await Book.insertMany(SEED_BOOKS.map(({ id: _id, seedImage: img, ...book }) => ({ ...book, coverImage: seedImage(img) })));
 const suppliers = await Supplier.insertMany(SEED_SUPPLIERS.map(({ id: _id, ...supplier }) => supplier));
 const supplierByName = Object.fromEntries(suppliers.map((supplier) => [supplier.name, supplier._id]));
@@ -68,6 +88,134 @@ await WebsiteSetting.create({
   logo: seedImage('website/logo.svg'),
   favicon: seedImage('website/logo.svg'),
   siteImages: { 'home.hero': seedImage('website/hero.svg').imageUrl },
+  hero: {
+    eyebrow: 'Welcome to Rambura Garçons TVET School',
+    title: 'Building Skills. Shaping Futures.',
+    subtitle: 'Practical technical education that prepares young people for meaningful careers.',
+    stats: [
+      { value: '500+', label: 'Students' },
+      { value: '4', label: 'Programs' },
+      { value: '30+', label: 'Staff' },
+      { value: '95%', label: 'Success Rate' },
+    ],
+    studentVoices: { eyebrow: 'Student voices', title: 'Built for confidence beyond the classroom' },
+    testimonials: [
+      { quote: 'The workshop training gave me confidence to solve real electrical problems from my first day on placement.', name: 'Aline Mukamana', detail: 'Electrical Technology graduate' },
+      { quote: 'Rambura Garçons helped me turn an interest in welding into a practical career and a small fabrication business.', name: 'Jean Claude Habimana', detail: 'Welding & Fabrication graduate' },
+      { quote: 'The teachers know every learner and push us to build skills we can use beyond the classroom.', name: 'Diane Uwimana', detail: 'Construction student' },
+    ],
+    progress: { eyebrow: 'Achievements', title: 'Progress you can measure' },
+    achievements: [
+      { value: '1st', label: 'Nyabihu District Skills Competition', year: '2026' },
+      { value: '4', label: 'Industry-focused trade programmes', year: 'Active today' },
+      { value: '20+', label: 'Years serving practical education', year: 'Since 2005' },
+    ],
+    homeContent: {
+      heroButtons: { primary: 'Discover More', secondary: 'Learn About Us' },
+      highlights: [
+        { title: 'Practical', subtitle: 'Training' },
+        { title: 'Skilled', subtitle: 'Instructors' },
+        { title: 'Modern', subtitle: 'Facilities' },
+        { title: 'Career', subtitle: 'Focused' },
+      ],
+      aboutPreview: {
+        eyebrow: 'About Us', title: 'Empowering Youth Through', titleAccent: 'Quality Technical Education',
+        description: 'We are committed to providing industry-relevant training, modern facilities and a supportive learning environment that prepares students for successful careers and lifelong impact.',
+        imageLabel: 'Hands-on learning', imageTitle: 'Industry-ready practical training',
+      },
+      programs: { eyebrow: 'Our Programs', title: 'Programs We Offer', button: 'View All Programs', cardAction: 'Learn More' },
+      admissionsCta: { eyebrow: 'Admissions open', title: 'Ready to Start Your Journey?', description: 'Join Rambura Garçons TVET School and build the skills for a better future.', button: 'Apply Now' },
+    },
+  },
+  about: {
+    heroTitle: 'About Rambura Garçons',
+    heroIntro: 'A technical and vocational education and training school formed to serve Nyabihu District and beyond.',
+    historyTitle: 'School History',
+    history: "Rambura Garçons was founded to answer a clear need in Nyabihu District: skilled tradespeople trained to a professional standard, close to home. Since opening, the school has grown from a single workshop to four full trade departments, graduating classes of electricians, welders, builders, and mechanics who now work across Rwanda's growing construction and industrial sectors.",
+    missionTitle: 'Mission',
+    mission: 'To equip young Rwandans with practical trade skills, professional discipline, and the confidence to build sustainable livelihoods.',
+    visionTitle: 'Vision',
+    vision: 'To be the leading TVET institution in Western Province, known for graduates who set the standard in their trades.',
+    valuesTitle: 'Core Values',
+    values: ['Discipline', 'Craftsmanship', 'Integrity', 'Service to Community'],
+    leadershipTitle: 'Leadership',
+    leadershipIntro: 'Meet the people guiding Rambura Garçons.',
+    facilitiesTitle: 'Facilities',
+    facilities: [
+      { key: 'electrical', label: 'Electrical wiring workshop' },
+      { key: 'welding', label: 'Welding & fabrication bay' },
+      { key: 'construction', label: 'Construction training yard' },
+      { key: 'automobile', label: 'Automobile mechanics garage' },
+      { key: 'library', label: 'School library and reading hall' },
+      { key: 'dormitories', label: 'Boarding dormitories' },
+    ],
+  },
+  staffPage: {
+    title: 'Our Staff',
+    intro: 'The instructors and leaders behind Rambura Garçons.',
+  },
+  academicsPage: {
+    title: 'Academics',
+    intro: 'Four trade programs, each built for real workplace readiness.',
+  },
+  departmentsPage: {
+    title: 'Departments',
+    intro: 'Four departments, each led by an experienced trade professional.',
+  },
+  homepageSettings: {
+    title: 'Admissions',
+    intro: 'Start your journey toward practical skills and a meaningful career.',
+    informationTitle: 'Admission Information',
+    informationIntro: 'Everything you need to know before applying',
+    requirementsTitle: 'Requirements',
+    requirementsIntro: 'What you need to qualify for admission',
+    requirementsCardTitle: 'Admission Requirements',
+    datesTitle: 'Important Dates',
+    datesIntro: 'Key dates for the admission cycle',
+    datesCardTitle: 'Important Dates',
+    processTitle: 'Admission Process',
+    processIntro: 'How our admission process works',
+    processCardTitle: 'Step-by-Step Process',
+    supportTitle: 'Contact & Support',
+    supportIntro: "Questions? We're here to help",
+    supportCardTitle: 'Get in Touch',
+    applicationTitle: 'Admission Application',
+    applicationIntro: 'Complete the form below to apply for any of our programs.',
+    requirements: [], dates: [], process: '', contactLine: '',
+  },
+  newsPage: {
+    title: 'News',
+    intro: 'Updates from around the Rambura Garçons campus.',
+  },
+  galleryPage: {
+    title: 'Gallery',
+    intro: 'Life at Rambura Garçons, in and out of the workshop.',
+  },
+  contactPage: {
+    title: 'Contact Us',
+    intro: "We'd love to hear from you.",
+    informationTitle: 'Get in Touch',
+    informationIntro: "We're here to answer any questions you may have",
+    developerName: 'Ninziza Aime Gentil, Byiringiro Dady Roger, Niyonsaba Emery',
+    developerUrl: '/developers',
+  },
+  developersPage: {
+    title: 'Website Developers',
+    intro: 'The people behind the digital experience, content tools, and management system built for Rambura Garçons.',
+    teamLabel: 'The team',
+    heading: 'Built with purpose.',
+    description: "This system brings the school's public story and day-to-day operations into one dependable digital home.",
+    developers: [
+      { name: 'Ninziza Aime Gentil', role: 'Product & Interface Development' },
+      { name: 'Byiringiro Dady Roger', role: 'Platform & Systems Development' },
+      { name: 'Niyonsaba Emery', role: 'Data & Experience Development' },
+    ],
+    capabilities: [
+      { label: 'Public website', detail: 'A clear digital front door for students, families, and partners.' },
+      { label: 'Content management', detail: 'Tools that keep school information current without code changes.' },
+      { label: 'Management system', detail: 'Connected workflows for the people running the school every day.' },
+    ],
+  },
 });
 await Promise.all([Role, Permission, AuditLog, Notification, Loan, StockTransaction, DamagedStock, DisposedStock, Report, SystemSetting].map((model) => model.createCollection().catch(() => {})));
 const permissionKeys = ['users.view', 'users.create', 'users.update', 'users.delete', 'website.view', 'website.create', 'website.update', 'website.delete', 'library.view', 'library.books.create', 'library.books.update', 'library.books.delete', 'library.borrow', 'library.return', 'library.reports', 'stock.view', 'stock.create', 'stock.update', 'stock.delete', 'stock.in', 'stock.out', 'stock.adjust', 'stock.transfer', 'stock.damage', 'stock.dispose', 'stock.suppliers', 'stock.reports', 'applications.view', 'applications.update', 'reports.view', 'audit.view', 'settings.view', 'settings.update'];

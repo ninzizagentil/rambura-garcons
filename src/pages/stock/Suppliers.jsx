@@ -17,11 +17,13 @@ import { getSuppliers, refreshStock, deleteSupplier, getSupplyHistoryForSupplier
 import { logActivity } from '../../services/activityService';
 import { useAuth } from '../../context/AuthContext';
 import SupplierFormModal from './SupplierFormModal';
+import { useApp } from '../../context/AppContext';
 
 export default function Suppliers() {
   const { showToast } = useToast();
   const { user } = useAuth();
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
+  const { t } = useApp();
 
   const [suppliers, setSuppliers] = useState([]);
   const [search, setSearch] = useState('');
@@ -99,29 +101,29 @@ export default function Suppliers() {
   return (
     <div>
       <PageHeader
-        title="Suppliers"
-        description="Vendors and cooperatives that supply stock to the school."
-        breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Suppliers' }]}
-        actions={!viewOnly && <Button icon={Plus} onClick={() => { setEditTarget(null); setFormOpen(true); }}>Add Supplier</Button>}
+        title={t('suppliers')}
+        description={t('suppliersDescription')}
+        breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('suppliers') }]}
+        actions={!viewOnly && <Button icon={Plus} onClick={() => { setEditTarget(null); setFormOpen(true); }}>{t('addSupplier')}</Button>}
       />
 
       {viewOnly && <ViewOnlyBanner module="Stock MIS" />}
 
       <div className="grid sm:grid-cols-3 gap-4 mb-6">
-        <StatCard label="Total Suppliers" value={stats.total} icon={Truck} />
-        <StatCard label="Active Suppliers" value={stats.active} icon={CalendarClock} tone="default" />
-        <StatCard label="Items Currently Supplied" value={stats.itemsSupplied} icon={Boxes} />
+        <StatCard label={t('totalSuppliers')} value={stats.total} icon={Truck} />
+        <StatCard label={t('activeSuppliers')} value={stats.active} icon={CalendarClock} tone="default" />
+        <StatCard label={t('itemsCurrentlySupplied')} value={stats.itemsSupplied} icon={Boxes} />
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4">
-        <SearchBar value={search} onChange={setSearch} placeholder="Search by supplier or contact person…" className="flex-1 min-w-[220px]" />
+        <SearchBar value={search} onChange={setSearch} placeholder={t('searchSupplierContact')} className="flex-1 min-w-[220px]" />
       </div>
 
       <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
         <DataTable
           columns={columns}
           data={paged}
-          emptyState={<EmptyState title="No suppliers found" message="Try a different search, or add a new supplier." actionLabel={!viewOnly ? 'Add Supplier' : undefined} onAction={!viewOnly ? () => { setEditTarget(null); setFormOpen(true); } : undefined} />}
+          emptyState={<EmptyState title={t('noSuppliersFound')} message={t('tryAddSupplier')} actionLabel={!viewOnly ? t('addSupplier') : undefined} onAction={!viewOnly ? () => { setEditTarget(null); setFormOpen(true); } : undefined} />}
         />
         <TablePagination page={page} totalPages={totalPages} totalItems={filtered.length} pageSize={pageSize} onPageChange={setPage} />
       </div>
@@ -134,9 +136,9 @@ export default function Suppliers() {
         onConfirm={handleDelete}
         loading={deleting}
         variant="danger"
-        title="Remove Supplier"
-        confirmLabel="Remove Supplier"
-        message={`Remove "${deleteTarget?.name}" from suppliers? Past Stock In records referencing this supplier are kept for history.`}
+        title={t('removeSupplier')}
+        confirmLabel={t('removeSupplier')}
+        message={t('removeSupplierConfirm', { name: deleteTarget?.name || '' })}
       />
 
       <Modal open={!!historyTarget} onClose={() => setHistoryTarget(null)} title={`Supply History — ${historyTarget?.name || ''}`} size="lg">

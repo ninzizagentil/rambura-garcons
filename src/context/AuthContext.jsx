@@ -10,6 +10,25 @@ export function AuthProvider({ children }) {
   const [initializing, setInitializing] = useState(true);
 
   useEffect(() => {
+    if (!user) return undefined;
+    let timer;
+    const idleLimit = Number(import.meta.env.VITE_SESSION_IDLE_MINUTES || 30) * 60 * 1000;
+    const resetIdleTimer = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        window.dispatchEvent(new Event('rg:session-expired'));
+      }, idleLimit);
+    };
+    const events = ['click', 'keydown', 'mousemove', 'touchstart'];
+    events.forEach((event) => window.addEventListener(event, resetIdleTimer, { passive: true }));
+    resetIdleTimer();
+    return () => {
+      window.clearTimeout(timer);
+      events.forEach((event) => window.removeEventListener(event, resetIdleTimer));
+    };
+  }, [user]);
+
+  useEffect(() => {
     getSession().then(setUser).finally(() => setInitializing(false));
     const handleExpired = () => { setUser(null); clearTokens(); localStorage.removeItem(STORAGE_KEY); };
     window.addEventListener('rg:session-expired', handleExpired);
@@ -19,8 +38,11 @@ export function AuthProvider({ children }) {
   const login = useCallback(async ({ identifier, password }) => {
     const result = await authenticate({ identifier, password });
     if (result.success) {
-      setUser(result.user);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(result.user));
+      const session = await getSession();
+      const authenticatedUser = session || result.user;
+      setUser(authenticatedUser);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(authenticatedUser));
+      return { ...result, user: authenticatedUser };
     }
     return result;
   }, []);

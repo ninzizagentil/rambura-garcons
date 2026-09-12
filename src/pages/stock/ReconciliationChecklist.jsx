@@ -35,7 +35,7 @@ export default function ReconciliationChecklist() {
     setLoading(true);
     try {
       const response = await fetch('/api/stock/reconciliations', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('rg_access_token')}` }
       });
       if (response.ok) {
         const json = await response.json();
@@ -61,7 +61,7 @@ export default function ReconciliationChecklist() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          Authorization: `Bearer ${localStorage.getItem('rg_access_token')}`
         },
         body: JSON.stringify({
           ...newReconciliation,
@@ -128,7 +128,7 @@ export default function ReconciliationChecklist() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          Authorization: `Bearer ${localStorage.getItem('rg_access_token')}`
         },
         body: JSON.stringify({
           items: itemsData,

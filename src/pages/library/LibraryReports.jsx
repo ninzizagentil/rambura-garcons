@@ -6,6 +6,8 @@ import { ChartCard } from '../../components/cards/InsightChartCards';
 import { FilterDropdown } from '../../components/common/SearchBar';
 import Button from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
+import { useNotifications } from '../../context/NotificationContext';
+import { useApp } from '../../context/AppContext';
 import { getBooks, getLoans, refreshLibrary } from '../../services/bookService';
 import { exportToCSV } from '../../utils/export';
 import { printReport } from '../../utils/print';
@@ -39,8 +41,13 @@ function buildCirculation(loans) {
 }
 
 export default function LibraryReports() {
+  const { t } = useApp();
   const { showToast } = useToast();
+  const { addNotification } = useNotifications();
   const [range, setRange] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [classYear, setClassYear] = useState('');
   const [books, setBooks] = useState(() => getBooks());
   const [loans, setLoans] = useState(() => getLoans());
 
@@ -54,7 +61,34 @@ export default function LibraryReports() {
     return () => window.removeEventListener('rg:library-updated', refresh);
   }, []);
 
-  const circulation = useMemo(() => buildCirculation(loans), [loans]);
+  const filteredLoans = useMemo(() => {
+    return loans.filter((loan) => {
+      const passesClass = !classYear || loan.studentClassYear === classYear;
+      const loanDate = loan.borrowDate ? new Date(loan.borrowDate).toISOString().slice(0, 10) : '';
+      const passesStart = !startDate || loanDate >= startDate;
+      const passesEnd = !endDate || loanDate <= endDate;
+      return passesClass && passesStart && passesEnd;
+    });
+  }, [loans, classYear, startDate, endDate]);
+
+  const rosterRows = useMemo(() => {
+    return filteredLoans
+      .filter((loan) => loan.borrowerType === 'Student')
+      .map((loan) => {
+        const book = typeof loan.bookId === 'object' ? loan.bookId : books.find((b) => b.id === loan.bookId || b._id === loan.bookId) || null;
+        return {
+          borrower: loan.borrower,
+          borrowerType: loan.borrowerType,
+          studentClassYear: loan.studentClassYear || classYear || 'Unassigned',
+          bookTitle: loan.bookTitle || book?.title || 'Unknown book',
+          borrowDate: loan.borrowDate ? new Date(loan.borrowDate).toLocaleDateString('en-GB') : '',
+          dueDate: loan.dueDate ? new Date(loan.dueDate).toLocaleDateString('en-GB') : '',
+          status: loan.status || 'borrowed',
+        };
+      });
+  }, [books, classYear, filteredLoans]);
+
+  const circulation = useMemo(() => buildCirculation(filteredLoans), [filteredLoans]);
 
   const byCategory = books.reduce((acc, b) => {
     acc[b.category] = (acc[b.category] || 0) + b.totalCopies;
@@ -65,52 +99,84 @@ export default function LibraryReports() {
   const mostBorrowed = [...books].sort((a, b) => b.borrowedCopies - a.borrowedCopies).slice(0, 5);
 
   const handleExport = () => {
-    exportToCSV(
-      'library-reports',
-      [
-        { key: 'title', header: 'Title' },
-        { key: 'category', header: 'Category' },
-        { key: 'totalCopies', header: 'Total Copies' },
-        { key: 'availableCopies', header: 'Available' },
-        { key: 'borrowedCopies', header: 'Borrowed' },
-      ],
-      books
-    );
-    showToast('Library report downloaded as CSV.', 'success');
+    const classLabel = classYear || t('allClasses');
+    const columns = [
+      { key: 'borrower', header: t('student') },
+      { key: 'borrowerType', header: t('borrowerType') },
+      { key: 'studentClassYear', header: t('classLevel') },
+      { key: 'bookTitle', header: t('bookTitle') },
+      { key: 'borrowDate', header: t('borrowDate') },
+      { key: 'dueDate', header: t('dueDate') },
+      { key: 'status', header: t('status') },
+    ];
+
+    exportToCSV(`library-${classLabel}-student-report`, columns, rosterRows);
+    addNotification({
+      type: 'library',
+      message: classYear ? t('libraryExportedForClass', { classYear }) : t('libraryExportedForAllClasses'),
+      to: '/library/reports',
+    });
+    showToast(classYear ? t('studentReportExportedForClass', { classYear }) : t('libraryReportExported'), 'success');
   };
 
   const handlePrint = () => {
     const columns = [
-      { key: 'title', header: 'Title' },
-      { key: 'category', header: 'Category' },
-      { key: 'totalCopies', header: 'Total Copies' },
-      { key: 'availableCopies', header: 'Available' },
-      { key: 'borrowedCopies', header: 'Borrowed' },
+      { key: 'borrower', header: t('student') },
+      { key: 'borrowerType', header: t('borrowerType') },
+      { key: 'studentClassYear', header: t('classLevel') },
+      { key: 'bookTitle', header: t('bookTitle') },
+      { key: 'borrowDate', header: t('borrowDate') },
+      { key: 'dueDate', header: t('dueDate') },
+      { key: 'status', header: t('status') },
     ];
-    const ok = printReport('Library Reports', columns, books);
-    if (!ok) showToast('Enable pop-ups to print this report.', 'error');
+    const title = classYear ? `${t('libraryStudentReport')} - ${classYear}` : t('libraryStudentReport');
+    const ok = printReport(title, columns, rosterRows);
+    addNotification({
+      type: 'library',
+      message: classYear ? t('libraryPrintedForClass', { classYear }) : t('libraryPrintedForAllClasses'),
+      to: '/library/reports',
+    });
+    if (!ok) showToast(t('enablePopupsToPrint'), 'error');
   };
 
   return (
     <div>
       <PageHeader
-        title="Library Reports"
-        description="Circulation, trends, and availability."
-        breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Reports' }]}
+        title={t('libraryReports')}
+        description={t('libraryReportPageDescription')}
+        breadcrumb={[{ label: t('library'), to: '/library' }, { label: t('reports') }]}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="secondary" icon={Printer} onClick={handlePrint}>Print</Button>
-            <Button variant="secondary" icon={Download} onClick={handleExport}>Export</Button>
+            <Button variant="secondary" icon={Printer} onClick={handlePrint}>{t('print')}</Button>
+            <Button variant="secondary" icon={Download} onClick={handleExport}>{t('export')}</Button>
           </div>
         }
       />
 
-      <div className="flex flex-wrap gap-3 mb-5">
-        <FilterDropdown label="Date Range" value={range} onChange={setRange} options={[{ value: 'month', label: 'This Month' }, { value: 'term', label: 'This Term' }, { value: 'year', label: 'This Year' }]} />
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <FilterDropdown label={t('dateRange')} value={range} onChange={setRange} options={[
+          { value: 'month', label: t('thisMonth') },
+          { value: 'term', label: t('thisTerm') },
+          { value: 'year', label: t('thisYear') },
+        ]} />
+        <label className="flex items-center gap-2 text-sm">
+          <span className="sr-only">{t('startDate')}</span>
+          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] px-3 py-2.5 text-sm text-[var(--color-dark-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)]" />
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <span className="sr-only">{t('endDate')}</span>
+          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] px-3 py-2.5 text-sm text-[var(--color-dark-gray)] focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)]" />
+        </label>
+        <FilterDropdown
+          label={t('classLevel')}
+          value={classYear}
+          onChange={setClassYear}
+          options={['S1', 'S2', 'S3', 'L3', 'L4', 'L5'].map((v) => ({ value: v, label: v }))}
+        />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-5 mb-5">
-        <ChartCard title="Circulation" description="Loans vs. returns per month">
+        <ChartCard title={t('circulation')} description={t('circulationDescription')}>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={circulation}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-gray)" />
@@ -124,7 +190,7 @@ export default function LibraryReports() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Availability by Category" description="Total copies per category">
+        <ChartCard title={t('availabilityByCategory')} description={t('availabilityByCategoryDescription')}>
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie data={categoryData} dataKey="value" nameKey="name" outerRadius={90} label>
@@ -136,12 +202,12 @@ export default function LibraryReports() {
         </ChartCard>
       </div>
 
-      <ChartCard title="Most Borrowed Books" description="Top 5 by copies currently borrowed">
+      <ChartCard title={t('mostBorrowedBooks')} description={t('mostBorrowedBooksDescription')}>
         <ul className="divide-y divide-[var(--color-border-gray)]">
           {mostBorrowed.map((b) => (
             <li key={b.id} className="flex items-center justify-between py-2.5 text-sm">
               <span className="text-[var(--color-dark-gray)]">{b.title}</span>
-              <span className="font-semibold text-[var(--color-medium-green)]">{b.borrowedCopies} borrowed</span>
+              <span className="font-semibold text-[var(--color-medium-green)]">{b.borrowedCopies} {t('borrowed')}</span>
             </li>
           ))}
         </ul>

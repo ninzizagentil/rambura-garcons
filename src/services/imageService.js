@@ -4,6 +4,8 @@ import { IMAGES } from '../data/images';
 import { logActivity } from './activityService';
 
 export const IMAGE_SLOTS = [
+  { path: 'login.background', label: 'Login Background Photo', group: 'Login Page', default: IMAGES.home.heroSlides[0] },
+  { path: 'login.form', label: 'Login Form Photo', group: 'Login Page', default: IMAGES.about.campus },
   ...IMAGES.home.heroSlides.map((url, index) => ({ path: `home.heroSlides.${index}`, label: `Hero Photo ${index + 1}`, group: 'Home Page', default: url })),
   ...IMAGES.home.gallery.map((url, index) => ({ path: `home.gallery.${index}`, label: `Preview Photo ${index + 1}`, group: 'Home Page', default: url })),
   { path: 'about.campus', label: 'Campus Photo', group: 'About Page', default: IMAGES.about.campus },

@@ -12,6 +12,10 @@ const userSchema = new mongoose.Schema({
   lastActivity: Date,
   lastLogin: Date,
   refreshTokenHash: { type: String, select: false },
+  passwordResetTokenHash: { type: String, select: false },
+  passwordResetExpires: { type: Date, select: false },
+  twoFactorSecret: { type: String, select: false },
+  twoFactorEnabled: { type: Boolean, default: false },
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

@@ -5,16 +5,29 @@ import { Input } from '../../components/forms/FormField';
 import Button from '../../components/common/Button';
 import BrandMark from '../../components/common/BrandMark';
 import { useTheme } from '../../context/ThemeContext';
+import { requestPasswordReset } from '../../services/authService';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const { isDark, toggleTheme } = useTheme();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email) return;
-    setSent(true);
+    if (!email.trim()) {
+      setError('Enter your email address.');
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setError('Enter a valid email address.');
+      return;
+    }
+    setLoading(true); setError('');
+    try { await requestPasswordReset(email); setSent(true); }
+    catch (requestError) { setError(requestError.message || 'Unable to send reset instructions.'); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -55,6 +68,7 @@ export default function ForgotPassword() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5 p-7" noValidate>
+              {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
               <div className="flex items-start gap-3 rounded-xl border border-[var(--gold)]/20 bg-[var(--surface-hover)] p-3.5">
                 <ShieldCheck className="mt-0.5 h-5 w-5 flex-shrink-0 text-[var(--gold)]" aria-hidden="true" />
                 <p className="text-xs leading-relaxed text-[var(--color-mid-gray)]">We will send a secure reset link to the email registered with your school account.</p>
@@ -71,8 +85,8 @@ export default function ForgotPassword() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@ramburagarcons.rw"
               />
-              <Button type="submit" variant="primary" size="lg" className="group w-full" icon={ArrowRight} iconPosition="right">
-                Send Reset Link
+              <Button type="submit" variant="primary" size="lg" className="group w-full" icon={ArrowRight} iconPosition="right" loading={loading}>
+                {loading ? 'Sending...' : 'Send Reset Link'}
               </Button>
               <p className="text-center text-sm">
                 <Link to="/login" className="inline-flex items-center gap-1.5 font-semibold text-[var(--color-medium-green)] transition-colors hover:text-[var(--color-deep-green)]"><ArrowLeft className="h-3.5 w-3.5" /> Back to login</Link>

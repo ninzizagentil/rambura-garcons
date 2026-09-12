@@ -11,10 +11,12 @@ import Alert from '../../components/feedback/Alert';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import { useToast } from '../../context/ToastContext';
+import { useApp } from '../../context/AppContext';
 import { getLoans, refreshLibrary, returnBook, daysOverdue, getLibraryError } from '../../services/bookService';
 
 export default function OverdueBooks() {
   const { showToast } = useToast();
+  const { t } = useApp();
   const { viewOnly } = useModuleAccess(ROLES.LIBRARIAN);
   const [loans, setLoans] = useState(() => getLoans().filter((l) => l.status !== 'returned' && daysOverdue(l.dueDate) > 0));
   const [confirmLoan, setConfirmLoan] = useState(null);
@@ -40,31 +42,31 @@ export default function OverdueBooks() {
       const result = await returnBook(confirmLoan.id);
       setProcessing(false);
       if (!result.success) { showToast(result.error, 'error'); return; }
-      showToast(`"${confirmLoan.bookTitle}" returned successfully.`, 'success');
+      showToast(t('bookReturnedSuccess', { bookTitle: confirmLoan.bookTitle }), 'success');
       refresh();
       setConfirmLoan(null);
     }, 400);
   };
 
-  const handleNotify = (loan) => showToast(`Overdue reminder sent to ${loan.borrower}.`, 'info');
+  const handleNotify = (loan) => showToast(t('overdueReminderSent', { borrower: loan.borrower }), 'info');
 
   const rows = useMemo(() => loans.map((l) => ({ ...l, overdueDays: daysOverdue(l.dueDate) })), [loans]);
 
   const columns = [
-    { key: 'borrower', header: 'Borrower' },
-    { key: 'bookTitle', header: 'Book' },
-    { key: 'dueDate', header: 'Due Date' },
-    { key: 'overdueDays', header: 'Days Overdue', render: (l) => <Badge tone="red">{l.overdueDays} days</Badge> },
-    { key: 'status', header: 'Status', render: () => <Badge tone="red">Overdue</Badge> },
+    { key: 'borrower', header: t('borrowedBy') },
+    { key: 'bookTitle', header: t('bookTitle') },
+    { key: 'dueDate', header: t('dueDate') },
+    { key: 'overdueDays', header: t('daysOverdue'), render: (l) => <Badge tone="red">{l.overdueDays} {t('days')}</Badge> },
+    { key: 'status', header: t('status'), render: () => <Badge tone="red">{t('overdue')}</Badge> },
   ];
   if (!viewOnly) {
     columns.push({
       key: 'actions',
-      header: 'Actions',
+      header: t('actions'),
       render: (l) => (
         <div className="flex items-center gap-1">
-          <IconButton icon={RotateCcw} label={`Return ${l.bookTitle}`} onClick={() => setConfirmLoan(l)} />
-          <IconButton icon={Bell} label={`Notify ${l.borrower}`} onClick={() => handleNotify(l)} />
+          <IconButton icon={RotateCcw} label={`${t('returnButton')} ${l.bookTitle}`} onClick={() => setConfirmLoan(l)} />
+          <IconButton icon={Bell} label={`${t('sendReminder')} ${l.borrower}`} onClick={() => handleNotify(l)} />
         </div>
       ),
     });
@@ -73,14 +75,14 @@ export default function OverdueBooks() {
   return (
     <div>
       <PageHeader
-        title="Overdue Books"
-        description="Loans past their due date."
-        breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Overdue Books' }]}
+        title={t('overdueBooks')}
+        description={t('loansPastDueDate')}
+        breadcrumb={[{ label: t('library'), to: '/library' }, { label: t('overdueBooks') }]}
       />
       {viewOnly && <ViewOnlyBanner module="Library MIS" />}
-      {loadError && <Alert type="error" title="Couldn't load overdue books" className="mb-4">{loadError}</Alert>}
+      {loadError && <Alert type="error" title={t('couldNotLoadOverdueBooks')} className="mb-4">{loadError}</Alert>}
       <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
-        <DataTable columns={columns} data={rows} emptyState={<EmptyState title="No overdue books" message="Nice — every loan is within its due date." />} />
+        <DataTable columns={columns} data={rows} emptyState={<EmptyState title={t('noOverdueBooks')} message={t('allCopiesAvailableOverdue')} />} />
       </div>
 
       <ConfirmModal
@@ -88,9 +90,9 @@ export default function OverdueBooks() {
         onClose={() => setConfirmLoan(null)}
         onConfirm={handleReturn}
         loading={processing}
-        title="Return book"
-        message={confirmLoan ? `Confirm that "${confirmLoan.bookTitle}" has been returned by ${confirmLoan.borrower}.` : ''}
-        confirmLabel="Confirm Return"
+        title={t('returnBook')}
+        message={confirmLoan ? t('confirmReturnBook', { bookTitle: confirmLoan.bookTitle, borrower: confirmLoan.borrower }) : ''}
+        confirmLabel={t('confirmReturn')}
       />
     </div>
   );

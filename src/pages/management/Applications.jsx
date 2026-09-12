@@ -12,12 +12,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { getApplications, updateApplicationStatus } from '../../services/applicationService';
 import { exportToCSV } from '../../utils/export';
+import { useApp } from '../../context/AppContext';
 
 const STATUS_OPTIONS = ['new', 'reviewed', 'accepted', 'declined'];
 
 export default function ManagementApplications() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { showToast } = useToast();
+  const { t, language } = useApp();
 
   const [applications, setApplications] = useState([]);
   const [search, setSearch] = useState('');
@@ -64,66 +66,62 @@ export default function ManagementApplications() {
     }
     await refresh();
     setSelected((s) => (s && s.id === app.id ? { ...s, status } : s));
-    showToast(`"${app.fullName}" marked as ${status}.`, 'success');
+    showToast(t('applicationStatusUpdated', { name: app.fullName, status: t(`applicationStatus.${status}`) }), 'success');
   };
 
   const handleExport = () => {
     exportToCSV(
       'admissions-applications',
       [
-        { key: 'fullName', header: 'Full Name' },
-        { key: 'email', header: 'Email' },
-        { key: 'phone', header: 'Phone' },
-        { key: 'programLabel', header: 'Program' },
-        { key: 'status', header: 'Status' },
-        { key: 'submittedAt', header: 'Submitted' },
+        { key: 'referenceNumber', header: t('reference') }, { key: 'fullName', header: t('fullName') },
+        { key: 'email', header: t('email') }, { key: 'phone', header: t('phone') }, { key: 'programLabel', header: t('program') },
+        { key: 'status', header: t('status') }, { key: 'submittedAt', header: t('submitted') },
       ],
       applications
     );
-    showToast('Applications exported as CSV.', 'success');
+    showToast(t('applicationsExported'), 'success');
   };
 
   const columns = [
-    { key: 'fullName', header: 'Applicant' },
-    { key: 'programLabel', header: 'Program' },
-    { key: 'email', header: 'Email' },
-    { key: 'phone', header: 'Phone' },
+    { key: 'referenceNumber', header: t('reference'), render: (a) => a.referenceNumber || a.id || '—' },
+    { key: 'fullName', header: t('applicant') }, { key: 'programLabel', header: t('program') },
+    { key: 'email', header: t('email') }, { key: 'phone', header: t('phone') },
     {
       key: 'submittedAt',
-      header: 'Submitted',
-      render: (a) => new Date(a.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+      header: t('submitted'),
+      render: (a) => new Date(a.submittedAt).toLocaleDateString(language === 'fr' ? 'fr-FR' : language === 'rw' ? 'rw-RW' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
     },
-    { key: 'status', header: 'Status', render: (a) => <StatusBadge status={a.status} /> },
+    { key: 'status', header: t('status'), render: (a) => <StatusBadge status={a.status} label={t(`applicationStatus.${a.status}`)} /> },
   ];
 
   return (
     <div>
       <PageHeader
-        title="Applications"
-        description="Admissions form submissions from the public website."
-        breadcrumb={[{ label: 'Management', to: '/management' }, { label: 'Applications' }]}
+        title={t('applications')}
+        description={t('applicationsDescription')}
+        breadcrumb={[{ label: t('schoolManagement'), to: '/management' }, { label: t('applications') }]}
         actions={
           <Button variant="secondary" icon={Download} onClick={handleExport} disabled={applications.length === 0}>
-            Export
+            {t('export')}
           </Button>
         }
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
-        <StatCard label="Total Applications" value={stats.total} icon={GraduationCap} />
-        <StatCard label="New" value={stats.new} icon={Mail} tone="amber" />
-        <StatCard label="Accepted" value={stats.accepted} icon={GraduationCap} tone="green" />
+        <StatCard label={t('totalApplications')} value={stats.total} icon={GraduationCap} />
+        <StatCard label={t('new')} value={stats.new} icon={Mail} tone="amber" />
+        <StatCard label={t('accepted')} value={stats.accepted} icon={GraduationCap} tone="green" />
       </div>
 
       <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] overflow-hidden">
         <div className="p-4 border-b border-[var(--color-border-gray)]">
-          <SearchBar value={search} onChange={setSearch} placeholder="Search by name, email, or program…" />
+          <SearchBar value={search} onChange={setSearch} placeholder={t('searchApplications')} />
         </div>
-        {loading ? <p className="p-8 text-sm text-[var(--color-mid-gray)]">Loading applications...</p> : applications.length === 0 ? (
+        {loading ? <p className="p-8 text-sm text-[var(--color-mid-gray)]">{t('loadingApplications')}</p> : applications.length === 0 ? (
           <EmptyState
             icon={GraduationCap}
-            title="No applications yet"
-            message="Submissions from the Admissions page on the public website will appear here as soon as someone applies."
+            title={t('noApplicationsYet')}
+            message={t('applicationsEmptyMessage')}
           />
         ) : (
           <>
@@ -143,10 +141,13 @@ export default function ManagementApplications() {
         {selected && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <StatusBadge status={selected.status} />
+                <StatusBadge status={selected.status} label={t(`applicationStatus.${selected.status}`)} />
+              <span className="text-xs font-semibold tracking-wide text-[var(--color-medium-green)]">
+                {selected.referenceNumber || selected.id || 'No reference'}
+              </span>
               <span className="text-xs text-[var(--color-mid-gray)]">
-                Applied{' '}
-                {new Date(selected.submittedAt).toLocaleString('en-GB', {
+                {t('appliedOn')}{' '}
+                {new Date(selected.submittedAt).toLocaleString(language === 'fr' ? 'fr-FR' : language === 'rw' ? 'rw-RW' : 'en-GB', {
                   day: 'numeric',
                   month: 'short',
                   year: 'numeric',
@@ -177,8 +178,8 @@ export default function ManagementApplications() {
               )}
             </div>
 
-            <div className="mt-6">
-              <p className="text-xs font-semibold text-[var(--color-mid-gray)] uppercase tracking-wide mb-2">Update Status</p>
+            {hasPermission('applications.update') && <div className="mt-6">
+              <p className="text-xs font-semibold text-[var(--color-mid-gray)] uppercase tracking-wide mb-2">{t('updateStatus')}</p>
               <div className="flex flex-wrap gap-2">
                 {STATUS_OPTIONS.map((status) => (
                   <button
@@ -190,6 +191,7 @@ export default function ManagementApplications() {
                   >
                     <StatusBadge
                       status={status}
+                      label={t(`applicationStatus.${status}`)}
                       className={
                         selected.status === status
                           ? 'ring-2 ring-offset-1 ring-[var(--color-medium-green)]'
@@ -199,10 +201,10 @@ export default function ManagementApplications() {
                   </button>
                 ))}
               </div>
-            </div>
+            </div>}
 
             <div className="flex justify-end mt-6">
-              <Button variant="ghost" onClick={() => setSelected(null)} icon={X}>Close</Button>
+              <Button variant="ghost" onClick={() => setSelected(null)} icon={X}>{t('close')}</Button>
             </div>
           </div>
         )}

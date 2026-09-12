@@ -6,6 +6,7 @@ import Alert from '../../components/feedback/Alert';
 import { borrowBook } from '../../services/bookService';
 import { useToast } from '../../context/ToastContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useApp } from '../../context/AppContext';
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -16,14 +17,24 @@ function addDays(dateStr, days) {
   return d.toISOString().slice(0, 10);
 }
 
+const CLASS_YEAR_OPTIONS = [
+  { value: 'S1', label: 'S1' },
+  { value: 'S2', label: 'S2' },
+  { value: 'S3', label: 'S3' },
+  { value: 'L3', label: 'L3' },
+  { value: 'L4', label: 'L4' },
+  { value: 'L5', label: 'L5' },
+];
+
 function emptyForm() {
   const borrowDate = today();
-  return { borrower: '', borrowerType: 'Student', borrowDate, dueDate: addDays(borrowDate, 14) };
+  return { borrower: '', borrowerType: 'Student', studentClassYear: '', borrowDate, dueDate: addDays(borrowDate, 14) };
 }
 
 export default function BorrowModal({ open, onClose, book, onBorrowed }) {
   const { showToast } = useToast();
   const { addNotification } = useNotifications();
+  const { t } = useApp();
   const [step, setStep] = useState('form'); // form | confirm
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
@@ -51,9 +62,10 @@ export default function BorrowModal({ open, onClose, book, onBorrowed }) {
 
   const validate = () => {
     const next = {};
-    if (!form.borrower?.trim()) next.borrower = 'Borrower name is required.';
-    if (!form.dueDate) next.dueDate = 'Due date is required.';
-    if (form.borrowDate && form.dueDate && form.dueDate < form.borrowDate) next.dueDate = 'Due date cannot be before the borrowing date.';
+    if (!form.borrower?.trim()) next.borrower = t('borrowerNameRequired');
+    if (form.borrowerType === 'Student' && !form.studentClassYear?.trim()) next.studentClassYear = t('classYearRequired');
+    if (!form.dueDate) next.dueDate = t('dueDateRequired');
+    if (form.borrowDate && form.dueDate && form.dueDate < form.borrowDate) next.dueDate = t('dueDateBeforeBorrowDate');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -73,10 +85,10 @@ export default function BorrowModal({ open, onClose, book, onBorrowed }) {
       setStep('form');
       return;
     }
-    showToast(`"${book.title}" borrowed by ${form.borrower}.`, 'success');
+    showToast(t('bookBorrowedBy', { title: book.title, borrower: form.borrower }), 'success');
     addNotification({
       type: 'borrow',
-      message: `"${book.title}" was borrowed by ${form.borrower}. Due back ${form.dueDate}.`,
+      message: t('bookBorrowedNotification', { title: book.title, borrower: form.borrower, dueDate: form.dueDate }),
       to: '/library/borrowed',
     });
     onBorrowed();
@@ -86,51 +98,66 @@ export default function BorrowModal({ open, onClose, book, onBorrowed }) {
   if (!book) return null;
 
   return (
-    <Modal open={open} onClose={handleClose} title={`Borrow "${book.title}"`}>
+    <Modal open={open} onClose={handleClose} title={t('borrowBookNamed', { title: book.title })}>
       {book.availableCopies <= 0 ? (
-        <Alert type="error" title="Insufficient availability">
-          There are no available copies of this book to borrow right now.
+        <Alert type="error" title={t('insufficientAvailability')}>
+          {t('noAvailableCopies')}
         </Alert>
       ) : step === 'form' ? (
         <form onSubmit={handleContinue} noValidate className="space-y-4">
-          <p className="text-xs text-[var(--color-mid-gray)]">{book.availableCopies} of {book.totalCopies} copies available.</p>
+          <p className="text-xs text-[var(--color-mid-gray)]">{t('copiesAvailable', { available: book.availableCopies, total: book.totalCopies })}</p>
           <Input
-            label="Borrower Name"
+            label={t('borrowerName')}
             required
             value={form.borrower}
             onChange={update('borrower')}
             error={errors.borrower}
-            placeholder="Enter full borrower name"
+            placeholder={t('enterBorrowerName')}
             autoComplete="name"
-            hint="Write the full name of the person borrowing the book."
+            hint={t('borrowerNameHint')}
           />
           <Select
-            label="Borrower Type"
+            label={t('borrowerType')}
             value={form.borrowerType}
-            onChange={update('borrowerType')}
-            options={[{ value: 'Student', label: 'Student' }, { value: 'Staff', label: 'Staff' }]}
+            onChange={(e) => {
+              const nextType = e.target.value;
+              setForm((f) => ({ ...f, borrowerType: nextType, studentClassYear: nextType === 'Student' ? f.studentClassYear : '' }));
+            }}
+            options={[{ value: 'Student', label: t('student') }, { value: 'Staff', label: t('staff') }]}
           />
+          {form.borrowerType === 'Student' && (
+            <Select
+              label={t('classLevel')}
+              value={form.studentClassYear}
+              onChange={update('studentClassYear')}
+              options={CLASS_YEAR_OPTIONS}
+              error={errors.studentClassYear}
+            />
+          )}
           <div className="grid sm:grid-cols-2 gap-4">
-            <Input label="Borrowing Date" type="date" value={form.borrowDate} onChange={update('borrowDate')} />
-            <Input label="Due Date" type="date" required value={form.dueDate} onChange={update('dueDate')} error={errors.dueDate} />
+            <Input label={t('borrowDate')} type="date" value={form.borrowDate} onChange={update('borrowDate')} />
+            <Input label={t('dueDate')} type="date" required value={form.dueDate} onChange={update('dueDate')} error={errors.dueDate} />
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={handleClose}>Cancel</Button>
-            <Button type="submit" variant="primary">Continue</Button>
+            <Button type="button" variant="ghost" onClick={handleClose}>{t('cancel')}</Button>
+            <Button type="submit" variant="primary">{t('continue')}</Button>
           </div>
         </form>
       ) : (
         <div className="space-y-4">
           {serverError && <Alert type="error">{serverError}</Alert>}
-          <p className="text-sm text-[var(--color-dark-gray)]">Please confirm the details below:</p>
+          <p className="text-sm text-[var(--color-dark-gray)]">{t('confirmDetailsBelow')}</p>
           <dl className="text-sm bg-[var(--color-off-white)] rounded-[var(--radius-control)] p-4 space-y-1.5">
-            <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Book</dt><dd className="font-medium">{book.title}</dd></div>
-            <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Borrower</dt><dd className="font-medium">{form.borrower} ({form.borrowerType})</dd></div>
-            <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Due Date</dt><dd className="font-medium">{form.dueDate}</dd></div>
+            <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('bookTitle')}</dt><dd className="font-medium">{book.title}</dd></div>
+            <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('borrowedBy')}</dt><dd className="font-medium">{form.borrower} ({form.borrowerType === 'Student' ? t('student') : t('staff')})</dd></div>
+            {form.borrowerType === 'Student' && (
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('classLevel')}</dt><dd className="font-medium">{form.studentClassYear}</dd></div>
+            )}
+            <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('dueDate')}</dt><dd className="font-medium">{form.dueDate}</dd></div>
           </dl>
           <div className="flex justify-end gap-3">
-            <Button variant="ghost" onClick={() => setStep('form')} disabled={saving}>Back</Button>
-            <Button variant="primary" onClick={handleConfirm} loading={saving}>Confirm Borrow</Button>
+            <Button variant="ghost" onClick={() => setStep('form')} disabled={saving}>{t('back')}</Button>
+            <Button variant="primary" onClick={handleConfirm} loading={saving}>{t('confirmBorrow')}</Button>
           </div>
         </div>
       )}

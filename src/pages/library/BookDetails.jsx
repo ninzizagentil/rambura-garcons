@@ -7,6 +7,7 @@ import Button from '../../components/common/Button';
 import { EmptyState } from '../../components/feedback/States';
 import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
+import { useApp } from '../../context/AppContext';
 import { ROLES } from '../../data/roles';
 import { getBookById, getLoansForBook, refreshLibrary } from '../../services/bookService';
 import BorrowModal from './BorrowModal';
@@ -16,6 +17,7 @@ export default function BookDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { viewOnly } = useModuleAccess(ROLES.LIBRARIAN);
+  const { t } = useApp();
   const [searchParams, setSearchParams] = useSearchParams();
   const [book, setBook] = useState(() => getBookById(id));
   const [loans, setLoans] = useState(() => getLoansForBook(id));
@@ -50,13 +52,13 @@ export default function BookDetails() {
     <div>
       <PageHeader
         title={book.title}
-        description={`by ${book.author}`}
-        breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Books', to: '/library/books' }, { label: book.title }]}
+        description={t('bookByAuthor', { author: book.author })}
+        breadcrumb={[{ label: t('library'), to: '/library' }, { label: t('books'), to: '/library/books' }, { label: book.title }]}
         actions={
           !viewOnly && (
             <>
-              <Button variant="secondary" icon={Pencil} onClick={() => setEditOpen(true)}>Edit Book</Button>
-              <Button icon={BookMarked} onClick={() => { setSearchParams({}); setBorrowOpen(true); }}>Borrow Book</Button>
+              <Button variant="secondary" icon={Pencil} onClick={() => setEditOpen(true)}>{t('editBook')}</Button>
+              <Button icon={BookMarked} onClick={() => { setSearchParams({}); setBorrowOpen(true); }}>{t('borrowBook')}</Button>
             </>
           )
         }
@@ -69,7 +71,7 @@ export default function BookDetails() {
           <div className="flex gap-5">
             <div className="w-24 h-32 rounded-lg overflow-hidden shrink-0 bg-[var(--color-soft-gray)] border border-[var(--color-border-gray)]">
               {book.coverImage ? (
-                <img src={book.coverImage} alt={`Cover of ${book.title}`} className="w-full h-full object-cover" />
+                <img src={book.coverImage} alt={t('coverOfBook', { title: book.title })} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[var(--color-mid-gray)]">
                   <BookMarked className="w-6 h-6" aria-hidden="true" />
@@ -78,23 +80,23 @@ export default function BookDetails() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3 mb-4">
-                <StatusBadge status={book.availableCopies > 0 ? 'available' : 'borrowed'} label={book.availableCopies > 0 ? 'Available' : 'Fully Borrowed'} />
-                <span className="text-xs text-[var(--color-mid-gray)]">Book Code: {book.bookCode}</span>
+                <StatusBadge status={book.availableCopies > 0 ? 'available' : 'borrowed'} label={book.availableCopies > 0 ? t('available') : t('fullyBorrowed')} />
+                <span className="text-xs text-[var(--color-mid-gray)]">{t('bookCode')}: {book.bookCode}</span>
               </div>
-              <p className="text-sm text-[var(--color-dark-gray)] leading-relaxed">{book.description || 'No description provided.'}</p>
+              <p className="text-sm text-[var(--color-dark-gray)] leading-relaxed">{book.description || t('noDescriptionProvided')}</p>
             </div>
           </div>
           <dl className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-[var(--color-border-gray)]">
-            <div><dt className="text-xs text-[var(--color-mid-gray)]">Category</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{book.category}</dd></div>
-            <div><dt className="text-xs text-[var(--color-mid-gray)]">Total Copies</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{book.totalCopies}</dd></div>
-            <div><dt className="text-xs text-[var(--color-mid-gray)]">Available</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{book.availableCopies}</dd></div>
+            <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('category')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{t(`bookCategory.${book.category}`)}</dd></div>
+            <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('totalCopies')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{book.totalCopies}</dd></div>
+            <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('available')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{book.availableCopies}</dd></div>
           </dl>
         </div>
 
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
-          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Current Borrowers</p>
+          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">{t('currentBorrowers')}</p>
           {currentBorrowers.length === 0 ? (
-            <p className="text-sm text-[var(--color-mid-gray)]">No copies currently borrowed.</p>
+            <p className="text-sm text-[var(--color-mid-gray)]">{t('noCopiesBorrowed')}</p>
           ) : (
             <ul className="space-y-2.5">
               {currentBorrowers.map((l) => (
@@ -109,19 +111,19 @@ export default function BookDetails() {
       </div>
 
       <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
-        <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Borrowing History</p>
+        <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">{t('borrowingHistory')}</p>
         {loans.length === 0 ? (
-          <EmptyState title="No borrowing history" message="This book hasn't been borrowed yet." />
+          <EmptyState title={t('noBorrowingHistory')} message={t('bookNotBorrowed')} />
         ) : (
           <div className="table-scroll">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-border-gray)] text-xs uppercase text-[var(--color-mid-gray)]">
-                  <th className="text-left py-2 pr-4">Borrower</th>
-                  <th className="text-left py-2 pr-4">Borrowed</th>
-                  <th className="text-left py-2 pr-4">Due</th>
-                  <th className="text-left py-2 pr-4">Returned</th>
-                  <th className="text-left py-2">Status</th>
+                  <th className="text-left py-2 pr-4">{t('borrowedBy')}</th>
+                  <th className="text-left py-2 pr-4">{t('borrowDate')}</th>
+                  <th className="text-left py-2 pr-4">{t('due')}</th>
+                  <th className="text-left py-2 pr-4">{t('returnedOn')}</th>
+                  <th className="text-left py-2">{t('status')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-border-gray)]">
@@ -141,7 +143,7 @@ export default function BookDetails() {
       </div>
 
       <Button variant="ghost" icon={ArrowLeft} onClick={() => navigate('/library/books')} className="mt-5">
-        Back to Books
+        {t('backToBooks')}
       </Button>
 
       <BorrowModal open={borrowOpen && !viewOnly} onClose={() => setBorrowOpen(false)} book={book} onBorrowed={() => { refresh(); setBorrowOpen(false); }} />

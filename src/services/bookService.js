@@ -15,18 +15,33 @@ function normalizeBook(book) {
   return value;
 }
 
+function dateOnly(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
+}
+
 function normalizeLoan(loan) {
   const value = { ...loan, id: loan.id || loan._id, bookId: loan.bookId?.id || loan.bookId?._id || loan.bookId };
   value.bookTitle = value.bookTitle || loan.bookId?.title || '';
+  value.studentClassYear = value.studentClassYear || loan.studentClassYear || '';
+  value.borrowDate = dateOnly(value.borrowDate);
+  value.dueDate = dateOnly(value.dueDate);
+  value.returnDate = dateOnly(value.returnDate);
   return value;
+}
+
+function listItems(result) {
+  return Array.isArray(result?.data) ? result.data : result?.data?.items || [];
 }
 
 export async function refreshLibrary() {
   if (loading) return loading;
   loading = Promise.all([api.get('/library/books', { limit: 100 }), api.get('/library/loans', { limit: 100 })])
     .then(([bookResult, loanResult]) => {
-      books = bookResult.data.map(normalizeBook);
-      loans = loanResult.data.map(normalizeLoan);
+      books = listItems(bookResult).map(normalizeBook);
+      loans = listItems(loanResult).map(normalizeLoan);
       loaded = true;
       lastError = null;
       window.dispatchEvent(new Event('rg:library-updated'));

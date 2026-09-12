@@ -4,6 +4,7 @@ import MobileMenu from '../components/navigation/MobileMenu';
 import Topbar from '../components/navigation/Topbar';
 import { useTheme } from '../context/ThemeContext';
 import { cn } from '../utils/cn';
+import PageTransition from '../components/common/PageTransition';
 
 export default function DashboardLayout() {
   const { isDark } = useTheme();
@@ -23,7 +24,7 @@ export default function DashboardLayout() {
         <Topbar />
         <main className="flex-1 p-4 md:p-6 xl:p-7">
           <div className="mx-auto max-w-[1600px]">
-            <Outlet />
+            <PageTransition><Outlet /></PageTransition>
           </div>
         </main>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getGallery, useContentVersion } from '../../services/contentService';
+import { getGallery, getGalleryPage, useContentVersion } from '../../services/contentService';
 import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 import PageHero from '../../components/common/PageHero';
 
@@ -8,12 +8,16 @@ export default function Gallery() {
   useContentVersion();
   useSiteImageVersion();
   const [index, setIndex] = useState(null);
+  const [category, setCategory] = useState('All');
   const gallery = getGallery();
+  const page = getGalleryPage();
+  const categories = ['All', ...new Set(gallery.map((img) => img.category || 'General'))];
+  const visibleGallery = category === 'All' ? gallery : gallery.filter((img) => (img.category || 'General') === category);
   const open = index !== null;
 
   const close = useCallback(() => setIndex(null), []);
-  const prev = useCallback(() => setIndex((i) => (i - 1 + gallery.length) % gallery.length), [gallery.length]);
-  const next = useCallback(() => setIndex((i) => (i + 1) % gallery.length), [gallery.length]);
+  const prev = useCallback(() => setIndex((i) => (i - 1 + visibleGallery.length) % visibleGallery.length), [visibleGallery.length]);
+  const next = useCallback(() => setIndex((i) => (i + 1) % visibleGallery.length), [visibleGallery.length]);
 
   useEffect(() => {
     if (!open) return;
@@ -28,13 +32,29 @@ export default function Gallery() {
 
   return (
     <div>
-      <PageHero title="Gallery" image={getSiteImage('pageHeroes.gallery')}>
-        <p className="text-[var(--text-secondary)] mt-3">Life at Rambura Garçons, in and out of the workshop.</p>
+      <PageHero title={page.title} image={getSiteImage('pageHeroes.gallery')}>
+        <p className="text-[var(--text-secondary)] mt-3">{page.intro}</p>
       </PageHero>
 
       <section className="max-w-6xl mx-auto px-4 md:px-6 py-14">
+        <div className="mb-8" aria-label="Gallery categories">
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-[var(--text-secondary)]">Browse by category</p>
+          <div className="flex flex-wrap gap-2.5">
+          {categories.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => { setCategory(item); setIndex(null); }}
+              aria-pressed={category === item}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-200 ${category === item ? 'border-[var(--button-primary)] bg-[var(--button-primary)] text-white shadow-[0_8px_20px_rgba(15,108,255,0.2)] ring-2 ring-[var(--button-primary)]/15' : 'border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:-translate-y-0.5 hover:border-[var(--button-primary)] hover:text-[var(--button-primary)] hover:shadow-sm'}`}
+            >
+              {item}
+            </button>
+          ))}
+          </div>
+        </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {gallery.map((img, i) => (
+          {visibleGallery.map((img, i) => (
             <button
               key={img.id}
               type="button"
@@ -48,8 +68,14 @@ export default function Gallery() {
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
               />
-              <span className="absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.72))] text-white text-xs px-2 py-1.5 text-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                {img.caption}
+
+              <span className="absolute left-3 top-3 rounded-full border border-white/30 bg-black/45 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-sm">
+                {img.category || 'General'}
+              </span>
+
+              <span className="absolute inset-x-0 bottom-0 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.72))] text-white px-3 py-2.5 text-left opacity-90">
+                <span className="block text-[10px] uppercase tracking-[0.14em] text-white/70">{img.category || 'General'}</span>
+                <span className="mt-1 block text-xs sm:text-sm font-medium">{img.caption}</span>
               </span>
             </button>
           ))}
@@ -66,14 +92,15 @@ export default function Gallery() {
           </button>
 
           <img
-            src={gallery[index].image}
-            alt={gallery[index].caption}
+            src={visibleGallery[index].image}
+            alt={visibleGallery[index].caption}
             className="w-screen h-screen object-contain"
           />
 
-          {gallery[index].caption && (
+          {visibleGallery[index].caption && (
             <p className="absolute bottom-6 inset-x-0 text-center text-white/85 text-sm px-16">
-              {gallery[index].caption}
+              <span className="block text-[10px] uppercase tracking-[0.18em] text-white/60">{visibleGallery[index].category || 'General'}</span>
+              {visibleGallery[index].caption}
             </p>
           )}
 

@@ -5,11 +5,13 @@ import Button from '../../../components/common/Button';
 import IconButton from '../../../components/common/IconButton';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { useApp } from '../../../context/AppContext';
 import { getAdmissionsSettings, updateAdmissionsSettings } from '../../../services/contentService';
 
 export default function AdmissionsSettingsPanel() {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useApp();
   const [form, setForm] = useState(getAdmissionsSettings());
   const [saving, setSaving] = useState(false);
 
@@ -35,7 +37,7 @@ export default function AdmissionsSettingsPanel() {
       dates: form.dates.filter((d) => d.label.trim() && d.value.trim()),
     };
     const result = await updateAdmissionsSettings(cleaned, user?.fullName || 'System Administrator');
-    if (result.success) { setForm(cleaned); showToast('Admissions page content updated successfully.', 'success'); }
+    if (result.success) { setForm(cleaned); showToast(t('admissionsUpdated'), 'success'); }
     else showToast(result.error, 'error');
     setSaving(false);
   };
@@ -43,51 +45,51 @@ export default function AdmissionsSettingsPanel() {
   return (
     <div className="p-6 space-y-8">
       <p className="text-sm text-[var(--color-mid-gray)]">
-        This content is shown live on the public Admissions page.
+        {t('liveAdmissionsContent')}
       </p>
 
       <div>
-        <p className="text-sm font-semibold text-[var(--color-dark-gray)] mb-3">Requirements</p>
+        <p className="text-sm font-semibold text-[var(--color-dark-gray)] mb-3">{t('requirements')}</p>
         <div className="space-y-2">
           {form.requirements.map((r, i) => (
             <div key={i} className="flex items-center gap-2">
               <Input value={r} onChange={(e) => updateRequirement(i, e.target.value)} className="flex-1" />
-              <IconButton icon={Trash2} label="Remove requirement" variant="danger" onClick={() => removeRequirement(i)} />
+              <IconButton icon={Trash2} label={t('removeRequirement')} variant="danger" onClick={() => removeRequirement(i)} />
             </div>
           ))}
         </div>
-        <Button variant="ghost" icon={Plus} onClick={addRequirement} className="mt-2">Add Requirement</Button>
+        <Button variant="ghost" icon={Plus} onClick={addRequirement} className="mt-2">{t('addRequirement')}</Button>
       </div>
 
       <div>
-        <p className="text-sm font-semibold text-[var(--color-dark-gray)] mb-3">Important Dates</p>
+        <p className="text-sm font-semibold text-[var(--color-dark-gray)] mb-3">{t('importantDates')}</p>
         <div className="space-y-2">
           {form.dates.map((d, i) => (
             <div key={i} className="flex items-center gap-2">
-              <Input placeholder="Label (e.g. Applications open)" value={d.label} onChange={(e) => updateDate(i, 'label', e.target.value)} className="flex-1" />
-              <Input placeholder="Value (e.g. July 10)" value={d.value} onChange={(e) => updateDate(i, 'value', e.target.value)} className="flex-1" />
-              <IconButton icon={Trash2} label="Remove date" variant="danger" onClick={() => removeDate(i)} />
+              <Input placeholder={t('dateLabelPlaceholder')} value={d.label} onChange={(e) => updateDate(i, 'label', e.target.value)} className="flex-1" />
+              <Input placeholder={t('dateValuePlaceholder')} value={d.value} onChange={(e) => updateDate(i, 'value', e.target.value)} className="flex-1" />
+              <IconButton icon={Trash2} label={t('removeDate')} variant="danger" onClick={() => removeDate(i)} />
             </div>
           ))}
         </div>
-        <Button variant="ghost" icon={Plus} onClick={addDate} className="mt-2">Add Date</Button>
+        <Button variant="ghost" icon={Plus} onClick={addDate} className="mt-2">{t('addDate')}</Button>
       </div>
 
       <Textarea
-        label="Admission Process"
+        label={t('admissionProcess')}
         rows={3}
         value={form.process}
         onChange={(e) => setForm((f) => ({ ...f, process: e.target.value }))}
       />
       <Input
-        label="Contact Line"
+        label={t('contactLine')}
         value={form.contactLine}
         onChange={(e) => setForm((f) => ({ ...f, contactLine: e.target.value }))}
-        hint="Shown under the Contact heading on the Admissions page."
+        hint={t('admissionsContactHint')}
       />
 
       <div className="flex justify-end">
-        <Button variant="primary" onClick={handleSave} loading={saving}>Save Changes</Button>
+        <Button variant="primary" onClick={handleSave} loading={saving}>{t('saveChanges')}</Button>
       </div>
     </div>
   );

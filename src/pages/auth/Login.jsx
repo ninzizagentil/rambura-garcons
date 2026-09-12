@@ -12,6 +12,7 @@ import Button from '../../components/common/Button';
 import HillRidgeDivider from '../../components/common/HillRidgeDivider';
 import BrandMark from '../../components/common/BrandMark';
 import { useAuth } from '../../context/AuthContext';
+import { verifyLoginTwoFactor } from '../../services/authService';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import { ROLE_HOME, NAV_BY_ROLE } from '../../data/roles';
@@ -68,6 +69,9 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [adminLoading, setAdminLoading] = useState(false);
+  const [twoFactorRequired, setTwoFactorRequired] = useState(false);
+  const [challengeToken, setChallengeToken] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [isLeaving, setIsLeaving] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [openFaq, setOpenFaq] = useState('getting-started');
@@ -109,8 +113,23 @@ export default function Login() {
       return;
     }
     setLoading(true);
+    if (twoFactorRequired) {
+      setLoading(true);
+      const result = await verifyLoginTwoFactor(challengeToken, verificationCode);
+      setLoading(false);
+      if (!result.success) { setError(result.error); return; }
+      showToast('Welcome back, Administrator!', 'success');
+      redirectAfterLogin(result.user);
+      return;
+    }
     const result = await login({ identifier, password });
     setLoading(false);
+    if (result.requiresTwoFactor) {
+      setChallengeToken(result.challengeToken);
+      setTwoFactorRequired(true);
+      setError('Enter the 6-digit code from your authenticator app.');
+      return;
+    }
     if (!result.success) {
       setError(result.error);
       showToast(result.error || 'Sign in failed. Please try again.', 'error');
@@ -127,6 +146,12 @@ export default function Login() {
     setAdminLoading(true);
     const result = await login({ identifier: ADMIN_ACCOUNT.identifier, password: ADMIN_ACCOUNT.password });
     setAdminLoading(false);
+    if (result.requiresTwoFactor) {
+      setChallengeToken(result.challengeToken);
+      setTwoFactorRequired(true);
+      setError('Enter the 6-digit code from your authenticator app.');
+      return;
+    }
     if (!result.success) {
       setError(result.error);
       showToast(result.error || 'Administrator sign in failed.', 'error');
@@ -182,7 +207,7 @@ export default function Login() {
           <div className="relative w-full max-w-6xl max-h-[92vh] min-h-0 grid lg:grid-cols-2 bg-[var(--surface)] lg:rounded-[2rem] overflow-y-auto overflow-x-hidden lg:shadow-card-hover">
             <div className="relative hidden lg:block overflow-hidden order-1">
               <img
-                src={getSiteImage('home.heroSlides.0')}
+                src={getSiteImage('login.background')}
                 alt="Rambura Garçons campus, Nyabihu"
                 className="absolute inset-0 w-full h-full object-cover"
               />
@@ -198,36 +223,51 @@ export default function Login() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-white/30 bg-white/10 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.18)] backdrop-blur-md">
+                <motion.div
+                  className="rounded-2xl border border-[#D5A24A]/35 bg-[linear-gradient(135deg,rgba(12,44,37,0.92),rgba(15,65,56,0.82))] p-6 shadow-[0_18px_50px_rgba(0,0,0,0.18)] backdrop-blur-md motion-reduce:animate-none"
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 4.5, ease: 'easeInOut', repeat: Infinity }}
+                >
                   <div>
-                    <h2 className="font-display text-4xl xl:text-[2.75rem] font-bold leading-[1.05] max-w-md text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.75)]">
-                      Welcome <span className="text-[var(--color-light-green)] drop-shadow-[0_4px_18px_rgba(0,0,0,0.8)]">Back!</span>
+                    <h2 className="font-display text-4xl xl:text-[2.75rem] font-bold leading-[1.05] max-w-md text-[#F3F7F4] drop-shadow-[0_3px_12px_rgba(0,0,0,0.75)]">
+                      Welcome <span className="text-[var(--color-light-green)] drop-shadow-[0_3px_12px_rgba(0,0,0,0.8)]">Back!</span>
                     </h2>
-                    <p className="mt-3 text-sm font-bold uppercase tracking-[0.18em] text-[var(--color-light-green)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+                    <p className="mt-3 text-sm font-black uppercase tracking-[0.18em] text-[var(--color-light-green)] drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]">
                       Rambura Garçons Campus
                     </p>
-                    <p className="mt-1 text-xs font-semibold uppercase tracking-[0.16em] text-white/80 drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+                    <p className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-[#E9F7F2] drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
                       Nyabihu District, Rwanda
                     </p>
-                    <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/95 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                    <p className="mt-3 max-w-sm text-sm font-semibold leading-relaxed text-[#F3F7F4] drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
                       Sign in to access your School Management System
                     </p>
 
-                    <blockquote className="mt-6 pl-4 border-l-2 border-[var(--color-light-green)] text-white/95 font-display font-semibold italic text-lg max-w-xs leading-snug drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                    <blockquote className="mt-6 max-w-xs rounded-xl border border-[#D5A24A]/40 bg-[rgba(12,26,23,0.72)] px-4 py-3 font-display text-lg font-semibold italic leading-snug text-[#F9F6E8] shadow-[0_8px_24px_rgba(0,0,0,0.16)] drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
                       "Quality Education for a Brighter Tomorrow"
                     </blockquote>
                   </div>
-                </div>
+                </motion.div>
 
-                <div className="flex flex-wrap gap-x-7 gap-y-4 mt-9">
-                    {PANEL_HIGHLIGHTS.map(({ Icon, text }) => (
-                      <div key={text} className="flex flex-col items-center gap-2 w-16 text-center">
-                        <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-medium-green)] text-white shrink-0 shadow-md">
-                          <Icon className="w-5 h-5" aria-hidden="true" />
-                        </span>
-                        <span className="text-white text-xs font-semibold leading-tight">{text}</span>
-                      </div>
-                    ))}
+                <div className="mt-9 flex flex-wrap gap-3">
+                  {PANEL_HIGHLIGHTS.map(({ Icon, text }) => (
+                    <div
+                      key={text}
+                      className={`flex w-[calc(33.333%-0.5rem)] min-w-[110px] flex-col items-center gap-2 rounded-2xl border p-3 text-center transition-all duration-200 ${
+                        isDark
+                          ? 'border-[#D5A24A]/25 bg-[rgba(11,45,38,0.82)] text-[#F3F7F4] shadow-[0_12px_30px_rgba(0,0,0,0.20)]'
+                          : 'border-[rgba(15,108,255,0.12)] bg-white/90 text-[var(--color-deep-green)] shadow-[0_14px_30px_rgba(15,108,255,0.10)]'
+                      }`}
+                    >
+                      <span
+                        className={`inline-flex h-12 w-12 items-center justify-center rounded-full shadow-md ${
+                          isDark ? 'bg-[linear-gradient(135deg,#D5A24A,#F2C66D)] text-[#0B2D26]' : 'bg-[linear-gradient(135deg,#0f766e,#22c55e)] text-white'
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                      <span className="text-[11px] font-bold uppercase tracking-[0.12em] leading-tight">{text}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -247,15 +287,14 @@ export default function Login() {
             {/* Right — login form panel with the campus image visible behind it */}
             <div className="relative z-30 flex flex-col items-center justify-center px-5 py-8 sm:px-8 lg:px-10 lg:py-6 order-2">
               <img
-                src={getSiteImage('about.campus')}
-                alt=""
-                aria-hidden="true"
+                src={getSiteImage('login.form')}
+                alt="Rambura Garçons campus"
                 className="absolute inset-0 w-full h-full object-cover"
               />
               {/* Mobile-only compact hero strip */}
               <div className="relative z-10 lg:hidden w-full max-w-md mb-8 rounded-2xl overflow-hidden h-40 shrink-0">
                 <img
-                  src={getSiteImage('home.heroSlides.0')}
+                  src={getSiteImage('login.background')}
                   alt="Rambura Garçons campus, Nyabihu"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
@@ -296,7 +335,7 @@ export default function Login() {
                     <p className="text-xs font-bold text-[var(--color-medium-green)] uppercase tracking-[0.3em] mt-1">TVET School · Nyabihu</p>
                   </div>
                   <h1 className="font-display text-3xl font-bold text-[var(--color-dark-gray)] mb-2 dark:text-[#F3F7F4]">Welcome back</h1>
-                  <p className="text-sm text-[var(--color-mid-gray)] leading-relaxed">Sign in to your School Management System</p>
+                  <p className="text-sm text-[var(--color-mid-gray)] leading-relaxed dark:text-[#A9C0B9]">Sign in to your School Management System</p>
                 </div>
 
                 {/* Form panel */}
@@ -317,9 +356,10 @@ export default function Login() {
                               </motion.div>
                             )}
 
+                            {!twoFactorRequired && <>
                             {/* Username/Email Field */}
                             <div>
-                              <label className="block text-xs font-bold text-[var(--color-dark-gray)] uppercase tracking-wider mb-2.5">
+                              <label className="block text-xs font-bold text-[var(--color-dark-gray)] uppercase tracking-wider mb-2.5 dark:text-[#F3F7F4]">
                                 Username or Email
                               </label>
                               <div className="relative group">
@@ -339,7 +379,7 @@ export default function Login() {
 
                             {/* Password Field */}
                             <div>
-                              <label className="block text-xs font-bold text-[var(--color-dark-gray)] uppercase tracking-wider mb-2.5">
+                              <label className="block text-xs font-bold text-[var(--color-dark-gray)] uppercase tracking-wider mb-2.5 dark:text-[#F3F7F4]">
                                 Password
                               </label>
                               <div className="relative group">
@@ -369,7 +409,7 @@ export default function Login() {
 
                             {/* Remember & Forgot */}
                             <div className="flex items-center justify-between pt-2">
-                              <label className="inline-flex items-center gap-2.5 text-sm text-[var(--color-dark-gray)] cursor-pointer select-none group">
+                              <label className="inline-flex items-center gap-2.5 text-sm text-[var(--color-dark-gray)] cursor-pointer select-none group dark:text-[#F3F7F4]">
                                 <input
                                   type="checkbox"
                                   checked={rememberMe}
@@ -385,17 +425,37 @@ export default function Login() {
                                 Forgot password?
                               </Link>
                             </div>
+                            </>}
+
+                            {twoFactorRequired && (
+                              <div>
+                                <label className="block text-xs font-bold text-[var(--color-dark-gray)] uppercase tracking-wider mb-2.5 dark:text-[#F3F7F4]">Authenticator code</label>
+                                <Input
+                                  icon={ShieldCheck}
+                                  inputMode="numeric"
+                                  autoComplete="one-time-code"
+                                  maxLength={6}
+                                  required
+                                  autoFocus
+                                  value={verificationCode}
+                                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                  placeholder="123456"
+                                  className="!bg-[var(--color-off-white)] !border-[var(--color-border-gray)]"
+                                />
+                                <button type="button" onClick={() => { setTwoFactorRequired(false); setChallengeToken(''); setVerificationCode(''); setError(''); }} className="mt-2 text-xs font-semibold text-[var(--color-medium-green)] hover:underline">Back to password sign in</button>
+                              </div>
+                            )}
 
                             {/* Login Button */}
                             <Button
                               type="submit"
                               variant="primary"
                               size="lg"
-                              className="w-full !bg-gradient-to-r !from-[var(--color-deep-green)] !via-[var(--color-medium-green)] !to-[var(--color-deep-green-600)] shadow-lg hover:shadow-xl !border-0 !text-white font-bold uppercase tracking-wide transition-all duration-200 group"
+                              className="w-full !bg-gradient-to-r !from-[var(--button-primary)] !via-[var(--button-primary-hover)] !to-[var(--button-primary)] hover:!from-[var(--button-primary-hover)] hover:!via-[var(--button-primary)] hover:!to-[var(--button-primary-hover)] shadow-lg hover:shadow-xl !border-0 !text-white font-bold uppercase tracking-wide transition-all duration-200 group"
                               loading={loading}
                               icon={LogIn}
                             >
-                              {loading ? 'Signing in...' : 'Sign In'}
+                              {loading ? 'Signing in...' : twoFactorRequired ? 'Verify code' : 'Sign In'}
                             </Button>
                           </div>
                         </form>
@@ -439,13 +499,13 @@ export default function Login() {
                     ))}
                   </div>
 
-                  <p className="text-center text-xs text-[var(--color-mid-gray)] mt-4">
+                  <p className="text-center text-xs text-[var(--color-mid-gray)] mt-4 dark:text-[#A9C0B9]">
                     Demo accounts: use the role name as username
                   </p>
                 </div>
 
                 {/* Footer */}
-                <p className="text-center text-xs text-[var(--color-mid-gray)]">
+                <p className="text-center text-xs text-[var(--color-mid-gray)] dark:text-[#A9C0B9]">
                   © 2026 Rambura Garçons TVET Secondary School · Nyabihu, Rwanda
                 </p>
               </div>
@@ -476,7 +536,7 @@ export default function Login() {
                 <div className="sticky top-0 flex items-center justify-between px-6 py-5 border-b border-[var(--color-border-gray)] bg-gradient-to-r from-[var(--color-light-green-100)] to-[var(--color-off-white)]">
                   <div className="flex items-center gap-3">
                     <HelpCircle className="w-6 h-6 text-[var(--color-medium-green)]" aria-hidden="true" />
-                    <h2 className="font-display text-xl font-bold text-[var(--color-dark-gray)]">Help & FAQ</h2>
+                    <h2 className="font-display text-xl font-bold text-[var(--color-dark-gray)] dark:text-[#F3F7F4]">Help & FAQ</h2>
                   </div>
                   <button
                     type="button"
@@ -491,24 +551,24 @@ export default function Login() {
                 <div className="space-y-3 p-5 sm:p-6">
                   {[
                     { id: 'getting-started', Icon: BookOpen, title: 'Getting started', content: <><p>Use the role buttons below the form to explore a demo account, or enter your school username and password.</p><p className="mt-2">For administrator access, use the Administrator Access option.</p></> },
-                    { id: 'credentials', Icon: KeyRound, title: 'Login credentials', content: <><p>Enter the username or email address associated with your account, followed by your secure password.</p><p className="mt-2">Use <strong className="text-[var(--color-dark-gray)]">Forgot password?</strong> if you need to recover access.</p></> },
+                    { id: 'credentials', Icon: KeyRound, title: 'Login credentials', content: <><p>Enter the username or email address associated with your account, followed by your secure password.</p><p className="mt-2">Use <strong className="text-[var(--color-dark-gray)] dark:text-[#F3F7F4]">Forgot password?</strong> if you need to recover access.</p></> },
                     { id: 'security', Icon: ShieldCheck, title: 'Security tips', content: <ul className="space-y-2"><li>Never share your password or verification codes.</li><li>Use a strong, unique password.</li><li>Log out when using a shared computer.</li></ul> },
                   ].map(({ id, Icon, title, content }) => {
                     const expanded = openFaq === id;
                     return (
                       <div key={id} className="overflow-hidden rounded-xl border border-[var(--color-border-gray)] bg-[var(--surface-hover)] transition-colors">
-                        <button type="button" onClick={() => setOpenFaq(expanded ? '' : id)} aria-expanded={expanded} aria-controls={`faq-${id}`} className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm font-semibold text-[var(--color-dark-gray)] hover:bg-[var(--color-light-green-100)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--gold)]">
+                        <button type="button" onClick={() => setOpenFaq(expanded ? '' : id)} aria-expanded={expanded} aria-controls={`faq-${id}`} className="flex w-full items-center gap-3 px-4 py-3.5 text-left text-sm font-semibold text-[var(--color-dark-gray)] hover:bg-[var(--color-light-green-100)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--gold)] dark:text-[#F3F7F4]">
                           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-light-green-100)] text-[var(--color-medium-green)]"><Icon className="h-4 w-4" aria-hidden="true" /></span>
                           <span className="flex-1">{title}</span>
                           <ChevronDown className={`h-4 w-4 text-[var(--color-mid-gray)] transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
                         </button>
-                        {expanded && <div id={`faq-${id}`} className="border-t border-[var(--color-border-gray)] px-4 pb-4 pt-3 text-sm leading-relaxed text-[var(--color-mid-gray)]">{content}</div>}
+                        {expanded && <div id={`faq-${id}`} className="border-t border-[var(--color-border-gray)] px-4 pb-4 pt-3 text-sm leading-relaxed text-[var(--color-mid-gray)] dark:text-[#A9C0B9]">{content}</div>}
                       </div>
                     );
                   })}
                   <div className="mt-4 flex items-start gap-3 rounded-xl border border-[var(--gold)]/20 bg-[var(--color-light-green-100)] p-4">
                     <MessageCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-[var(--color-medium-green)]" aria-hidden="true" />
-                    <div><h3 className="font-semibold text-[var(--color-dark-gray)]">Still need help?</h3><p className="mt-1 text-sm text-[var(--color-mid-gray)]">Contact your system administrator or email <a href="mailto:info@ramburagarcons.rw" className="font-semibold text-[var(--color-medium-green)] hover:text-[var(--color-deep-green)]">info@ramburagarcons.rw</a>.</p></div>
+                    <div><h3 className="font-semibold text-[var(--color-dark-gray)] dark:text-[#F3F7F4]">Still need help?</h3><p className="mt-1 text-sm text-[var(--color-mid-gray)] dark:text-[#A9C0B9]">Contact your system administrator or email <a href="mailto:info@ramburagarcons.rw" className="font-semibold text-[var(--color-medium-green)] hover:text-[var(--color-deep-green)]">info@ramburagarcons.rw</a>.</p></div>
                   </div>
                 </div>
               </div>

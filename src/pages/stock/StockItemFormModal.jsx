@@ -9,6 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 import { STOCK_CATEGORIES, STOCK_UNITS } from '../../data/stock';
 import { createItem, updateItem } from '../../services/stockService';
 import { logActivity } from '../../services/activityService';
+import { useApp } from '../../context/AppContext';
 
 const EMPTY_FORM = { name: '', category: '', unit: '', quantity: '', minLevel: '', unitPrice: '', description: '', batchNumber: '', serialNumber: '', expiryDate: '' };
 
@@ -16,6 +17,7 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
   const { showToast } = useToast();
   const { addNotification } = useNotifications();
   const { user } = useAuth();
+  const { t } = useApp();
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
@@ -38,22 +40,22 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
 
   const validate = () => {
     const next = {};
-    if (!form.name?.trim()) next.name = 'Item name is required.';
-    if (!form.category) next.category = 'Select a category.';
-    if (!form.unit) next.unit = 'Select a unit.';
+    if (!form.name?.trim()) next.name = t('itemNameRequired');
+    if (!form.category) next.category = t('categoryRequired');
+    if (!form.unit) next.unit = t('unitRequired');
     const qty = Number(form.quantity);
-    if (form.quantity === '' || Number.isNaN(qty) || qty < 0) next.quantity = 'Enter a valid quantity.';
+    if (form.quantity === '' || Number.isNaN(qty) || qty < 0) next.quantity = t('validQuantityRequired');
     const min = Number(form.minLevel);
-    if (form.minLevel === '' || Number.isNaN(min) || min < 0) next.minLevel = 'Enter a valid minimum stock level.';
+    if (form.minLevel === '' || Number.isNaN(min) || min < 0) next.minLevel = t('validMinimumLevelRequired');
     const price = Number(form.unitPrice);
-    if (form.unitPrice === '' || Number.isNaN(price) || price < 0) next.unitPrice = 'Enter a valid unit value (RWF).';
+    if (form.unitPrice === '' || Number.isNaN(price) || price < 0) next.unitPrice = t('validUnitValueRequired');
     // NEW: Validate batch number for Foods
     if (form.category === 'Foods' && !form.batchNumber?.trim()) {
-      next.batchNumber = 'Batch number is required for Food items.';
+      next.batchNumber = t('batchNumberRequired');
     }
     // NEW: Validate serial number for Electronics
     if (form.category === 'Electronic Devices' && !form.serialNumber?.trim()) {
-      next.serialNumber = 'Serial number is required for Electronic Devices.';
+      next.serialNumber = t('serialNumberRequired');
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -80,7 +82,7 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
       setServerError(result.error);
       return;
     }
-      showToast(isEdit ? 'Stock item updated successfully.' : 'Stock item added.', 'success');
+      showToast(isEdit ? t('stockItemUpdated') : t('stockItemAdded'), 'success');
       logActivity({
         user: user?.fullName || 'Stock Manager',
         action: isEdit
@@ -104,29 +106,29 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? 'Edit Stock Item' : 'Add Stock Item'}
+      title={isEdit ? t('editStockItem') : t('addStockItem')}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit} loading={saving}>{isEdit ? 'Save Changes' : 'Save Item'}</Button>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>{t('cancel')}</Button>
+          <Button variant="primary" onClick={handleSubmit} loading={saving}>{isEdit ? t('saveChanges') : t('saveItem')}</Button>
         </>
       }
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {serverError && <Alert type="error">{serverError}</Alert>}
-        <Input label="Item Name" required value={form.name} onChange={update('name')} error={errors.name} />
+        <Input label={t('itemName')} required value={form.name} onChange={update('name')} error={errors.name} />
         <div className="grid sm:grid-cols-2 gap-4">
           <Select
-            label="Category"
+            label={t('category')}
             required
             value={form.category}
             onChange={update('category')}
             error={errors.category}
-            hint="Stock items are limited to Foods or Electronic Devices."
+            hint={t('stockCategoryHint')}
             options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))}
           />
           <Select
-            label="Unit"
+            label={t('unit')}
             required
             value={form.unit}
             onChange={update('unit')}
@@ -136,7 +138,7 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <Input
-            label="Quantity"
+            label={t('quantity')}
             type="number"
             min="0"
             required
@@ -144,12 +146,12 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
             onChange={update('quantity')}
             error={errors.quantity}
             disabled={isEdit}
-            hint={isEdit ? 'Quantity can\'t be edited here — use Stock Adjustment to change it (keeps the audit trail accurate).' : undefined}
+            hint={isEdit ? t('quantityEditHint') : undefined}
           />
-          <Input label="Minimum Stock Level" type="number" min="0" required value={form.minLevel} onChange={update('minLevel')} error={errors.minLevel} />
+          <Input label={t('minimumLevel')} type="number" min="0" required value={form.minLevel} onChange={update('minLevel')} error={errors.minLevel} />
         </div>
         <Input
-          label="Unit Value / Price (RWF)"
+          label={t('unitValuePrice')}
           type="number"
           min="0"
           step="0.01"
@@ -159,45 +161,45 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
           error={errors.unitPrice}
           hint={
             form.quantity !== '' && form.unitPrice !== '' && !Number.isNaN(Number(form.quantity)) && !Number.isNaN(Number(form.unitPrice))
-              ? `Total value at current quantity: ${new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', maximumFractionDigits: 0 }).format(Number(form.quantity) * Number(form.unitPrice))}`
-              : 'The value (in RWF) of one unit of this item — used to calculate total inventory value.'
+              ? t('totalValueAtQuantity', { value: new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', maximumFractionDigits: 0 }).format(Number(form.quantity) * Number(form.unitPrice)) })
+              : t('unitValueHint')
           }
         />
         {/* NEW: Batch Number (Required for Foods) */}
         {form.category === 'Foods' && (
           <Input
-            label="Batch Number"
+            label={t('batchNumber')}
             required={form.category === 'Foods'}
             value={form.batchNumber}
             onChange={update('batchNumber')}
             error={errors.batchNumber}
-            placeholder="e.g., LOT-2024-001"
-            hint="Unique batch/lot number for traceability"
+            placeholder={t('batchNumberPlaceholder')}
+            hint={t('batchNumberHint')}
           />
         )}
         {/* NEW: Serial Number (Required for Electronics) */}
         {form.category === 'Electronic Devices' && (
           <Input
-            label="Serial Number"
+            label={t('serialNumber')}
             required={form.category === 'Electronic Devices'}
             value={form.serialNumber}
             onChange={update('serialNumber')}
             error={errors.serialNumber}
-            placeholder="e.g., SN-12345678"
-            hint="Unique serial number for inventory tracking"
+            placeholder={t('serialNumberPlaceholder')}
+            hint={t('serialNumberHint')}
           />
         )}
         {/* NEW: Expiry Date (Optional, useful for Foods) */}
         {form.category === 'Foods' && (
           <Input
-            label="Expiry Date"
+            label={t('expiryDate')}
             type="date"
             value={form.expiryDate}
             onChange={update('expiryDate')}
-            hint="Date when this item expires or should no longer be used"
+            hint={t('expiryDateHint')}
           />
         )}
-        <Textarea label="Description / Notes" value={form.description} onChange={update('description')} rows={3} />
+        <Textarea label={t('descriptionNotes')} value={form.description} onChange={update('description')} rows={3} />
       </form>
     </Modal>
   );

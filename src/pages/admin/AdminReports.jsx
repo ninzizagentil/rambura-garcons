@@ -4,6 +4,7 @@ import PageHeader from '../../components/layout/PageHeader';
 import { ChartCard } from '../../components/cards/InsightChartCards';
 import Button from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
+import { useApp } from '../../context/AppContext';
 import { printReport } from '../../utils/print';
 
 const LIBRARY_DATA = [
@@ -17,6 +18,7 @@ const STOCK_DATA = [
 
 export default function AdminReports() {
   const { showToast } = useToast();
+  const { t } = useApp();
 
   const handlePrint = () => {
     const rows = [
@@ -24,27 +26,27 @@ export default function AdminReports() {
       ...STOCK_DATA.map((entry) => ({ module: 'Stock', month: entry.month, activity: entry.transactions })),
     ];
     const ok = printReport(
-      'Cross-Module Activity Report',
+      t('crossModuleActivityReport'),
       [
-        { key: 'module', header: 'Module' },
-        { key: 'month', header: 'Month' },
-        { key: 'activity', header: 'Activity Count' },
+        { key: 'module', header: t('module') },
+        { key: 'month', header: t('month') },
+        { key: 'activity', header: t('activityCount') },
       ],
       rows
     );
-    if (!ok) showToast('Enable pop-ups to print this report.', 'error');
+    if (!ok) showToast(t('enablePopupsToPrint'), 'error');
   };
 
   return (
     <div>
       <PageHeader
-        title="Reports"
-        description="Cross-module activity overview."
-        breadcrumb={[{ label: 'Admin', to: '/admin' }, { label: 'Reports' }]}
-        actions={<Button variant="secondary" icon={Printer} onClick={handlePrint}>Print</Button>}
+        title={t('reports')}
+        description={t('crossModuleActivityOverview')}
+        breadcrumb={[{ label: t('admin'), to: '/admin' }, { label: t('reports') }]}
+        actions={<Button variant="secondary" icon={Printer} onClick={handlePrint}>{t('print')}</Button>}
       />
       <div className="grid lg:grid-cols-2 gap-5">
-        <ChartCard title="Library Activity" description="Monthly loans issued">
+        <ChartCard title={t('libraryActivity')} description={t('monthlyLoansIssued')}>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={LIBRARY_DATA}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-gray)" />
@@ -55,7 +57,7 @@ export default function AdminReports() {
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
-        <ChartCard title="Stock Activity" description="Monthly stock transactions">
+        <ChartCard title={t('stockActivity')} description={t('monthlyStockTransactions')}>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={STOCK_DATA}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-gray)" />

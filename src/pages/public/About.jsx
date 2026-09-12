@@ -1,26 +1,19 @@
 import { Link } from 'react-router-dom';
 import { Target, Eye, HeartHandshake, Building2, ArrowRight } from 'lucide-react';
 import PageHero from '../../components/common/PageHero';
+import Button from '../../components/common/Button';
 import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
-
-const FACILITIES = [
-  { key: 'electrical', label: 'Electrical wiring workshop' },
-  { key: 'welding', label: 'Welding & fabrication bay' },
-  { key: 'construction', label: 'Construction training yard' },
-  { key: 'automobile', label: 'Automobile mechanics garage' },
-  { key: 'library', label: 'School library and reading hall' },
-  { key: 'dormitories', label: 'Boarding dormitories' },
-];
-
-const VALUES = ['Discipline', 'Craftsmanship', 'Integrity', 'Service to Community'];
+import { getAbout, useContentVersion } from '../../services/contentService';
 
 export default function About() {
+  useContentVersion();
   useSiteImageVersion();
+  const about = getAbout();
   return (
     <div>
-      <PageHero title="About Rambura Garçons" image={getSiteImage('about.campus')}>
+      <PageHero title={about.heroTitle} image={getSiteImage('about.campus')}>
         <p className="text-[var(--text-secondary)] mt-3 max-w-2xl">
-          A technical and vocational education and training school formed to serve Nyabihu District and beyond.
+          {about.heroIntro}
         </p>
       </PageHero>
 
@@ -30,12 +23,9 @@ export default function About() {
         </div>
 
         <div className="rounded-[30px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_18px_35px_rgba(0,0,0,0.14)] md:p-8">
-          <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)] mb-4">School History</h2>
+          <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)] mb-4">{about.historyTitle}</h2>
           <p className="text-[var(--text-secondary)] leading-relaxed">
-            Rambura Garçons was founded to answer a clear need in Nyabihu District: skilled tradespeople trained to a
-            professional standard, close to home. Since opening, the school has grown from a single workshop to four
-            full trade departments, graduating classes of electricians, welders, builders, and mechanics who now work
-            across Rwanda's growing construction and industrial sectors.
+            {about.history}
           </p>
           <Link to="/academics" className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--gold)] hover:underline mt-4">
             View Programs <ArrowRight className="w-4 h-4" />
@@ -47,18 +37,16 @@ export default function About() {
         <div className="max-w-5xl mx-auto px-4 md:px-6 grid sm:grid-cols-2 gap-6">
           <div id="mission" className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_18px_35px_rgba(0,0,0,0.14)]">
             <Target className="w-7 h-7 text-[var(--text-primary)] mb-3" aria-hidden="true" />
-            <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">Mission</h3>
+            <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">{about.missionTitle}</h3>
             <p className="text-sm text-[var(--text-secondary)] mt-2">
-              To equip young Rwandans with practical trade skills, professional discipline, and the confidence to
-              build sustainable livelihoods.
+              {about.mission}
             </p>
           </div>
           <div id="vision" className="rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_18px_35px_rgba(0,0,0,0.14)]">
             <Eye className="w-7 h-7 text-[var(--text-primary)] mb-3" aria-hidden="true" />
-            <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">Vision</h3>
+            <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">{about.visionTitle}</h3>
             <p className="text-sm text-[var(--text-secondary)] mt-2">
-              To be the leading TVET institution in Western Province, known for graduates who set the standard in
-              their trades.
+              {about.vision}
             </p>
           </div>
         </div>
@@ -67,10 +55,10 @@ export default function About() {
       <section id="values" className="max-w-5xl mx-auto px-4 md:px-6 py-14">
         <div className="flex items-center gap-2 mb-6">
           <HeartHandshake className="w-6 h-6 text-[var(--text-primary)]" aria-hidden="true" />
-          <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)]">Core Values</h2>
+          <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)]">{about.valuesTitle}</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {VALUES.map((v) => (
+          {about.values.map((v) => (
             <div key={v} className="text-center rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[0_12px_28px_rgba(0,0,0,0.12)]">
               <p className="font-display font-semibold text-[var(--text-primary)]">{v}</p>
             </div>
@@ -84,14 +72,18 @@ export default function About() {
             <img src={getSiteImage('about.leadership')} alt="Rambura Garçons school leadership" className="w-full h-full object-cover" loading="lazy" />
           </div>
           <div className="rounded-[30px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_18px_35px_rgba(0,0,0,0.14)]">
-            <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)] mb-2">Leadership</h2>
-            <p className="text-[var(--text-secondary)] mb-6">Meet the people guiding Rambura Garçons.</p>
-            <Link
+            <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)] mb-2">{about.leadershipTitle}</h2>
+            <p className="text-[var(--text-secondary)] mb-6">{about.leadershipIntro}</p>
+            <Button
+              as={Link}
               to="/staff"
-              className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--text-primary)] hover:underline"
+              variant="primary"
+              size="sm"
+              icon={ArrowRight}
+              iconPosition="right"
             >
-              Meet Staff <ArrowRight className="w-4 h-4" />
-            </Link>
+              Meet Staff
+            </Button>
           </div>
         </div>
       </section>
@@ -99,10 +91,10 @@ export default function About() {
       <section id="facilities" className="max-w-5xl mx-auto px-4 md:px-6 py-14">
         <div className="flex items-center gap-2 mb-6">
           <Building2 className="w-6 h-6 text-[var(--text-primary)]" aria-hidden="true" />
-          <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)]">Facilities</h2>
+          <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)]">{about.facilitiesTitle}</h2>
         </div>
         <ul className="grid sm:grid-cols-2 gap-4 text-sm text-[var(--text-secondary)]">
-          {FACILITIES.map((f) => (
+          {about.facilities.map((f) => (
             <li key={f.key} className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_12px_28px_rgba(0,0,0,0.12)]">
               <div className="aspect-[16/9] overflow-hidden">
                 <img src={getSiteImage(`about.facilities.${f.key}`)} alt={f.label} className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" loading="lazy" />

@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 
 import PublicLayout from './layouts/PublicLayout';
 import DashboardLayout from './layouts/DashboardLayout';
-import { ProtectedRoute, RoleProtectedRoute } from './routes/ProtectedRoute';
+import { ProtectedRoute, RoleProtectedRoute, PermissionProtectedRoute } from './routes/ProtectedRoute';
 import { ROLES } from './data/roles';
 
 const lazyPage = (loader) => lazy(loader);
@@ -18,8 +18,10 @@ const NewsDetails = lazyPage(() => import('./pages/public/NewsDetails'));
 const Gallery = lazyPage(() => import('./pages/public/Gallery'));
 const Admissions = lazyPage(() => import('./pages/public/Admissions'));
 const Contact = lazyPage(() => import('./pages/public/Contact'));
+const Developers = lazyPage(() => import('./pages/public/Developers'));
 const Login = lazyPage(() => import('./pages/auth/Login'));
 const ForgotPassword = lazyPage(() => import('./pages/auth/ForgotPassword'));
+const ResetPassword = lazyPage(() => import('./pages/auth/ResetPassword'));
 const AdminDashboard = lazyPage(() => import('./pages/admin/AdminDashboard'));
 const LibraryDashboard = lazyPage(() => import('./pages/library/LibraryDashboard'));
 const StockDashboard = lazyPage(() => import('./pages/stock/StockDashboard'));
@@ -56,6 +58,8 @@ const ManagementLibraryReports = lazyPage(() => import('./pages/management/Libra
 const ManagementStockReports = lazyPage(() => import('./pages/management/StockReports'));
 const ManagementInsights = lazyPage(() => import('./pages/management/ManagementInsights'));
 const ManagementApplications = lazyPage(() => import('./pages/management/Applications'));
+const ContactMessages = lazyPage(() => import('./pages/management/ContactMessages'));
+const DevelopersManagement = lazyPage(() => import('./pages/management/DevelopersManagement'));
 const Notifications = lazyPage(() => import('./pages/shared/Notifications'));
 const Profile = lazyPage(() => import('./pages/shared/Profile'));
 const ChangePassword = lazyPage(() => import('./pages/shared/ChangePassword'));
@@ -83,10 +87,12 @@ export default function App() {
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/admissions" element={<Admissions />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/developers" element={<Developers />} />
       </Route>
 
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
@@ -108,7 +114,7 @@ export default function App() {
         </Route>
       </Route>
 
-      <Route element={<RoleProtectedRoute allow={[ROLES.LIBRARIAN, ROLES.ADMIN]} />}>
+      <Route element={<PermissionProtectedRoute allow={[ROLES.LIBRARIAN, ROLES.ADMIN]} permissions={['library.view']} />}>
         <Route element={<DashboardLayout />}>
           <Route path="/library" element={<LibraryDashboard />} />
           <Route path="/library/books" element={<Books />} />
@@ -121,7 +127,7 @@ export default function App() {
         </Route>
       </Route>
 
-      <Route element={<RoleProtectedRoute allow={[ROLES.STOCK_MANAGER, ROLES.ADMIN]} />}>
+      <Route element={<PermissionProtectedRoute allow={[ROLES.STOCK_MANAGER, ROLES.ADMIN]} permissions={['stock.view']} />}>
         <Route element={<DashboardLayout />}>
           <Route path="/stock" element={<StockDashboard />} />
           <Route path="/stock/items" element={<StockItems />} />
@@ -142,10 +148,12 @@ export default function App() {
         </Route>
       </Route>
 
-      <Route element={<RoleProtectedRoute allow={[ROLES.MANAGEMENT, ROLES.ADMIN]} />}>
+      <Route element={<PermissionProtectedRoute allow={[ROLES.MANAGEMENT, ROLES.ADMIN]} permissions={['applications.view', 'reports.view']} />}>
         <Route element={<DashboardLayout />}>
           <Route path="/management" element={<ManagementDashboard />} />
           <Route path="/management/applications" element={<ManagementApplications />} />
+          <Route path="/management/contact-messages" element={<ContactMessages />} />
+          <Route path="/management/developers" element={<DevelopersManagement />} />
           <Route path="/management/library-reports" element={<ManagementLibraryReports />} />
           <Route path="/management/stock-reports" element={<ManagementStockReports />} />
           <Route path="/management/insights" element={<ManagementInsights />} />

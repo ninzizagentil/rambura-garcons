@@ -61,6 +61,7 @@ export const NEWS = [
   {
     slug: 'district-skills-competition-2026',
     title: 'Rambura Garçons Wins District Skills Competition',
+    category: 'Achievement',
     date: '2026-08-04',
     excerpt: 'Our welding and electrical teams took top honours at the Nyabihu District Skills Competition.',
     content:
@@ -70,6 +71,7 @@ export const NEWS = [
   {
     slug: 'new-welding-workshop-2026',
     title: 'New Welding Workshop Officially Opened',
+    category: 'Facilities',
     date: '2026-07-21',
     excerpt: 'A newly equipped welding workshop was inaugurated, doubling practical training capacity.',
     content:
@@ -79,6 +81,7 @@ export const NEWS = [
   {
     slug: 'admissions-2026-open',
     title: '2026 Admissions Window Now Open',
+    category: 'Admissions',
     date: '2026-07-10',
     excerpt: 'Applications for the next intake are open across all four trade programs.',
     content:
@@ -88,12 +91,29 @@ export const NEWS = [
 ];
 
 export const GALLERY = [
-  { id: 'g1', caption: 'Electrical workshop practical session', seedImage: 'gallery/g1.svg' },
-  { id: 'g2', caption: 'Welding & fabrication bay', seedImage: 'gallery/g2.svg' },
-  { id: 'g3', caption: 'Construction site training', seedImage: 'gallery/g3.svg' },
-  { id: 'g4', caption: 'Automobile mechanics workshop', seedImage: 'gallery/g4.svg' },
-  { id: 'g5', caption: 'Annual skills competition', seedImage: 'gallery/g5.svg' },
-  { id: 'g6', caption: 'Library reading hall', seedImage: 'gallery/g6.svg' },
-  { id: 'g7', caption: 'Graduation ceremony', seedImage: 'gallery/g7.svg' },
-  { id: 'g8', caption: 'Campus front view', seedImage: 'gallery/g8.svg' },
+  { id: 'g1', category: 'Workshops', caption: 'Electrical workshop practical session', seedImage: 'gallery/g1.svg' },
+  { id: 'g2', category: 'Workshops', caption: 'Welding & fabrication bay', seedImage: 'gallery/g2.svg' },
+  { id: 'g3', category: 'Workshops', caption: 'Construction site training', seedImage: 'gallery/g3.svg' },
+  { id: 'g4', category: 'Workshops', caption: 'Automobile mechanics workshop', seedImage: 'gallery/g4.svg' },
+  { id: 'g5', category: 'Events', caption: 'Annual skills competition', seedImage: 'gallery/g5.svg' },
+  { id: 'g6', category: 'Campus Life', caption: 'Library reading hall', seedImage: 'gallery/g6.svg' },
+  { id: 'g7', category: 'Events', caption: 'Graduation ceremony', seedImage: 'gallery/g7.svg' },
+  { id: 'g8', category: 'Campus Life', caption: 'Campus front view', seedImage: 'gallery/g8.svg' },
+  { id: 'g9', category: 'Student Life', caption: 'Students learning together', seedImage: 'gallery/g6.svg' },
+  { id: 'g10', category: 'Sports', caption: 'Students at a school competition', seedImage: 'gallery/g5.svg' },
+  { id: 'g11', category: 'Facilities', caption: 'Rambura Garçons campus facilities', seedImage: 'gallery/g8.svg' },
+  { id: 'g12', category: 'Community', caption: 'School and community activities', seedImage: 'gallery/g8.svg' },
+  { id: 'g13', category: 'Ceremonies', caption: 'Celebrating student achievement', seedImage: 'gallery/g7.svg' },
+];
+
+export const TESTIMONIALS = [
+  { quote: 'The workshop training gave me confidence to solve real electrical problems from my first day on placement.', name: 'Aline Mukamana', detail: 'Electrical Technology graduate' },
+  { quote: 'Rambura Garçons helped me turn an interest in welding into a practical career and a small fabrication business.', name: 'Jean Claude Habimana', detail: 'Welding & Fabrication graduate' },
+  { quote: 'The teachers know every learner and push us to build skills we can use beyond the classroom.', name: 'Diane Uwimana', detail: 'Construction student' },
+];
+
+export const ACHIEVEMENTS = [
+  { value: '1st', label: 'Nyabihu District Skills Competition', year: '2026' },
+  { value: '4', label: 'Industry-focused trade programmes', year: 'Active today' },
+  { value: '20+', label: 'Years serving practical education', year: 'Since 2005' },
 ];

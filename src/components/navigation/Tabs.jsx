@@ -13,7 +13,7 @@ export default function Tabs({ tabs, active, onChange }) {
           className={cn(
             'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors',
             active === tab.value
-              ? 'border-[#0F6CFF] text-[var(--color-heading)]'
+              ? 'border-[var(--color-gold)] text-[var(--color-heading)]'
               : 'border-transparent text-[var(--color-mid-gray)] hover:text-[var(--color-dark-gray)]'
           )}
         >

@@ -1,4 +1,5 @@
 import { api } from './api';
+import { hasPermission } from './authService';
 import { STOCK_CATEGORIES, EXPIRY_WARNING_DAYS } from '../data/stock';
 
 let items = [];
@@ -18,9 +19,30 @@ function normalizeItem(item) {
     expiryDaysRemaining: expiry?.daysRemaining ?? null,
   };
 }
-function normalizeList(result) { return Array.isArray(result.data) ? result.data : []; }
+function normalizeList(result) { return Array.isArray(result?.data) ? result.data : result?.data?.items || []; }
+function normalizeTransaction(transaction) {
+  const item = transaction.itemId && typeof transaction.itemId === 'object' ? transaction.itemId : null;
+  const responsibleUser = transaction.responsibleUser && typeof transaction.responsibleUser === 'object' ? transaction.responsibleUser : null;
+  return {
+    ...transaction,
+    itemId: item?._id || transaction.itemId,
+    itemName: transaction.itemName || item?.name || 'Unknown item',
+    category: transaction.category || item?.category || 'Other School Materials',
+    responsibleUser: responsibleUser?.fullName || responsibleUser?.name || transaction.responsibleUser || 'Unknown user',
+  };
+}
+
+function canViewStock() {
+  try {
+    const user = JSON.parse(localStorage.getItem('rg_auth_session') || 'null');
+    return hasPermission(user, 'stock.view');
+  } catch {
+    return false;
+  }
+}
 
 export async function refreshStock() {
+  if (!canViewStock()) return { items, transactions, damaged, removed, suppliers };
   if (loading) return loading;
   loading = Promise.all([
     api.get('/stock/items', { limit: 100 }),
@@ -30,7 +52,7 @@ export async function refreshStock() {
     api.get('/stock/suppliers', { limit: 100 }),
   ]).then(([itemResult, transactionResult, damagedResult, removedResult, supplierResult]) => {
     items = normalizeList(itemResult).map(normalizeItem);
-    transactions = normalizeList(transactionResult);
+    transactions = normalizeList(transactionResult).map(normalizeTransaction);
     damaged = normalizeList(damagedResult).map((record) => ({ ...record, id: record.id || record._id, itemName: record.itemId?.name || record.itemName, unit: record.itemId?.unit || record.unit }));
     removed = normalizeList(removedResult).map((record) => ({ ...record, id: record.id || record._id }));
     suppliers = normalizeList(supplierResult).map((supplier) => ({ ...supplier, id: supplier.id || supplier._id }));
@@ -68,7 +90,7 @@ async function mutate(method, path, data, key) {
     return { success: false, error: detail ? `${error.message}: ${detail}` : error.message };
   }
 }
-export function createItem(data) { if (!STOCK_CATEGORIES.includes(data.category)) return Promise.resolve({ success: false, error: 'Category must be Foods or Electronic Devices.' }); return mutate('post', '/stock/items', data, 'item'); }
+export function createItem(data) { if (!STOCK_CATEGORIES.includes(data.category)) return Promise.resolve({ success: false, error: 'Select a valid stock category.' }); return mutate('post', '/stock/items', data, 'item'); }
 export function updateItem(id, data) { return mutate('put', `/stock/items/${id}`, data, 'item'); }
 export function deleteItem(id) { return mutate('delete', `/stock/items/${id}`, {}, 'item'); }
 export function stockIn(data) { return mutate('post', '/stock/transactions/in', data, 'transaction'); }

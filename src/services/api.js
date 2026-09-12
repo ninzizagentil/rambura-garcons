@@ -34,18 +34,23 @@ async function request(path, options = {}, retry = true) {
 
   const response = await fetch(`${API_URL}${path.startsWith('/') ? path : `/${path}`}`, { ...options, headers });
   const body = await response.json().catch(() => ({}));
+
   if (response.status === 401 && retry) {
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
     if (refreshToken) {
       const refreshed = await request('/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken }) }, false).catch(() => null);
       if (refreshed?.data?.accessToken) {
-        setTokens(refreshed.data);
+        setTokens({ accessToken: refreshed.data.accessToken, refreshToken });
         return request(path, options, false);
       }
     }
-    clearTokens();
-    window.dispatchEvent(new Event('rg:session-expired'));
+
+    if (accessToken || refreshToken) {
+      clearTokens();
+      window.dispatchEvent(new Event('rg:session-expired'));
+    }
   }
+
   if (!response.ok || body.success === false) throw new ApiError(body.message || 'Request failed', response.status, body.errors || []);
   return body;
 }

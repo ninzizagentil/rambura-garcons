@@ -20,7 +20,7 @@ function filterFor(query) {
 // Category prefix + zero-padded sequence, e.g. "FOD-013". Retries on the
 // rare race where two requests generate the same code at once.
 async function generateItemCode(category) {
-  const prefix = category === 'Electronic Devices' ? 'ELC' : 'FOD';
+  const prefix = category === 'Electronic Devices' ? 'ELC' : category === 'Other School Materials' ? 'OTH' : 'FOD';
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const count = await StockItem.countDocuments({});
     const candidate = `${prefix}-${String(count + 1 + attempt).padStart(3, '0')}`;
@@ -32,8 +32,14 @@ async function generateItemCode(category) {
 export async function getItems(req, res) { const page = Math.max(1, Number(req.query.page || 1)); const limit = Math.min(100, Math.max(1, Number(req.query.limit || 20))); const filter = filterFor(req.query); const [data, total] = await Promise.all([StockItem.find(filter).sort(req.query.sort || '-createdAt').skip((page - 1) * limit).limit(limit), StockItem.countDocuments(filter)]); return list(res, data.map((item) => ({ ...item.toObject(), status: item.quantity <= 0 ? 'out-of-stock' : item.quantity <= item.minLevel ? 'low-stock' : 'normal', value: item.stockValue })), { page, limit, total, totalPages: Math.ceil(total / limit) }); }
 export async function getItem(req, res) { const item = await StockItem.findById(req.params.id); return item ? ok(res, item) : fail(res, 'Stock item not found', 404); }
 export async function createItem(req, res) {
-  const code = req.body.code?.trim() || (await generateItemCode(req.body.category));
-  const item = await StockItem.create({ ...req.body, code });
+  const { name, category, unit, quantity, minLevel, unitPrice, description, location, supplierId, batchNumber, serialNumber, expiryDate } = req.body;
+  if (!name?.trim() || !category || !unit) return fail(res, 'Name, category and unit are required', 422);
+  const numericFields = { quantity, minLevel, unitPrice };
+  const invalidNumber = Object.entries(numericFields).find(([, value]) => value === '' || value === null || value === undefined || !Number.isFinite(Number(value)) || Number(value) < 0);
+  if (invalidNumber) return fail(res, `${invalidNumber[0]} must be a non-negative number`, 422);
+  if (expiryDate && Number.isNaN(new Date(expiryDate).getTime())) return fail(res, 'Expiry date is invalid', 422);
+  const code = req.body.code?.trim() || (await generateItemCode(category));
+  const item = await StockItem.create({ name: name.trim(), category, unit, quantity: Number(quantity), minLevel: Number(minLevel), unitPrice: Number(unitPrice), description: description?.trim() || undefined, location: location || undefined, supplierId: supplierId || undefined, batchNumber: batchNumber?.trim() || undefined, serialNumber: serialNumber?.trim() || undefined, expiryDate: expiryDate || undefined, code });
   await recordAudit(req, { action: 'Stock item created', module: 'Stock', resourceType: 'StockItem', resourceId: item._id, description: `Created ${item.name}` });
   return ok(res, item, 'Stock item created', 201);
 }

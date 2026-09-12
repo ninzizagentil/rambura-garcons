@@ -14,7 +14,12 @@ export async function refreshActivity() {
   return loading;
 }
 
-if (typeof window !== 'undefined') window.addEventListener('rg:authenticated', () => { refreshActivity().catch(() => {}); });
+if (typeof window !== 'undefined') {
+  // The audit page can be opened with a session restored from storage, so it
+  // cannot rely on the login event to populate its server-backed cache.
+  refreshActivity().catch(() => {});
+  window.addEventListener('rg:authenticated', () => { refreshActivity().catch(() => {}); });
+}
 
 // Same rationale as useContentVersion/useSiteImageVersion: getActivity()
 // reads a plain in-memory array that's only populated after the async
@@ -32,12 +37,13 @@ export function useActivityVersion() {
 }
 
 export function getActivity() { return activity; }
-export function logActivity({ user, action, module, status = 'success' }) {
+export async function logActivity({ user, action, module, status = 'success' }) {
   const payload = { user, action, module, status, description: action };
-  // Posting alone isn't enough — the in-memory `activity` array above is
-  // only ever replaced by refreshActivity(), so without pulling a fresh
-  // copy here, this brand-new entry would stay invisible to every "Recent
-  // Activity" panel until the next login.
-  api.post('/activity', payload).then(() => refreshActivity()).catch(() => {});
-  return { id: `pending-${Date.now()}`, user, action, module, status, date: new Date().toISOString() };
+  try {
+    const result = await api.post('/activity', payload);
+    await refreshActivity();
+    return result.data;
+  } catch {
+    return null;
+  }
 }

@@ -3,11 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
 import { PROFILE_NAV } from '../../data/roles';
 import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../context/AppContext';
 import ConfirmModal from '../modals/ConfirmModal';
 import Avatar from '../common/Avatar';
 
 export default function ProfileMenu() {
   const { user, logout } = useAuth();
+  const { t } = useApp();
   const [open, setOpen] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
   const ref = useRef(null);
@@ -21,8 +23,8 @@ export default function ProfileMenu() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setConfirmLogout(false);
     navigate('/login');
   };
@@ -51,13 +53,13 @@ export default function ProfileMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-3 w-[min(19rem,calc(100vw-2rem))] overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--sidebar-bg)] shadow-[0_20px_48px_rgba(15,108,255,0.16)] z-30"
+          className="absolute right-0 mt-3 w-[min(19rem,calc(100vw-2rem))] overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--sidebar-bg)] shadow-[0_20px_48px_rgba(23,59,49,0.16)] z-30"
         >
           <div className="flex items-center gap-3 border-b border-[var(--color-border-gray)] bg-[var(--surface-hover)] px-4 py-4">
             <Avatar name={user?.fullName} src={user?.avatar} size="md" />
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-[var(--color-dark-gray)]">{user?.fullName || 'Account user'}</p>
-              <p className="mt-0.5 truncate text-xs text-[var(--color-mid-gray)]">{user?.role || 'School account'}</p>
+              <p className="truncate text-sm font-semibold text-[var(--color-dark-gray)]">{user?.fullName || t('accountUser')}</p>
+              <p className="mt-0.5 truncate text-xs text-[var(--color-mid-gray)]">{user?.role || t('schoolAccount')}</p>
             </div>
           </div>
 
@@ -76,7 +78,7 @@ export default function ProfileMenu() {
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--surface)] shadow-sm transition-transform duration-200 group-hover:translate-x-0.5">
                     <item.icon className="h-4 w-4" aria-hidden="true" />
                   </span>
-                  <span className="flex-1">{item.label}</span>
+                  <span className="flex-1">{t('logout')}</span>
                   <span className="text-xs opacity-60">&#8594;</span>
                 </button>
               ) : (
@@ -88,7 +90,7 @@ export default function ProfileMenu() {
                   className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-[var(--color-dark-gray)] transition-colors hover:bg-[var(--surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40"
                 >
                   <item.icon className="h-4 w-4 text-[var(--color-mid-gray)]" aria-hidden="true" />
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               )
             )}
@@ -100,9 +102,9 @@ export default function ProfileMenu() {
         open={confirmLogout}
         onClose={() => setConfirmLogout(false)}
         onConfirm={handleLogout}
-        title="Log out"
-        message="Are you sure you want to log out of your Rambura Garçons account?"
-        confirmLabel="Log out"
+        title={t('logOut')}
+        message={t('logoutConfirm')}
+        confirmLabel={t('confirmLogout')}
         variant="danger"
       />
     </div>

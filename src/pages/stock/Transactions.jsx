@@ -12,6 +12,13 @@ import { getTransactions } from '../../services/stockService';
 import { STOCK_CATEGORIES } from '../../data/stock';
 import { exportToCSV } from '../../utils/export';
 import { useToast } from '../../context/ToastContext';
+import { useApp } from '../../context/AppContext';
+
+function formatTransactionDate(value, language) {
+  const date = new Date(value);
+  const locale = language === 'fr' ? 'fr-FR' : language === 'rw' ? 'rw-RW' : 'en-GB';
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
+}
 
 const TYPE_CONFIG = {
   in: { label: 'Stock In', tone: 'green', sign: '+' },
@@ -25,6 +32,7 @@ const TYPE_CONFIG = {
 export default function Transactions() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { t, language } = useApp();
   const [transactions] = useState(getTransactions());
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -81,63 +89,58 @@ export default function Transactions() {
     exportToCSV(
       'stock-transactions',
       [
-        { key: 'itemName', header: 'Item' },
-        { key: 'category', header: 'Category' },
-        { header: 'Type', value: (t) => TYPE_CONFIG[t.type]?.label || t.type },
-        { key: 'quantity', header: 'Quantity' },
-        { key: 'previousQuantity', header: 'Previous Quantity' },
-        { key: 'newQuantity', header: 'New Quantity' },
-        { key: 'date', header: 'Date' },
-        { key: 'responsibleUser', header: 'Responsible User' },
-        { key: 'party', header: 'Source / Destination' },
-        { key: 'notes', header: 'Notes' },
+        { key: 'itemName', header: t('item') }, { key: 'category', header: t('category') },
+        { header: t('transactionType'), value: (row) => t(`transaction.${row.type}`) },
+        { key: 'quantity', header: t('quantity') }, { key: 'previousQuantity', header: t('previousQuantity') },
+        { key: 'newQuantity', header: t('newQuantity') }, { key: 'date', header: t('date') },
+        { key: 'responsibleUser', header: t('responsibleUser') }, { key: 'party', header: t('sourceDestination') }, { key: 'notes', header: t('notes') },
       ],
       filtered
     );
-    showToast('Stock transactions exported to CSV.', 'success');
+    showToast(t('transactionsExported'), 'success');
   };
 
   const columns = [
-    { key: 'itemName', header: 'Item', sortable: true },
-    { key: 'category', header: 'Category' },
+    { key: 'itemName', header: t('item'), sortable: true, render: (row) => <span className="whitespace-nowrap font-semibold text-[var(--color-heading)]">{row.itemName}</span> },
+    { key: 'category', header: t('category'), render: (row) => <span className="inline-flex whitespace-nowrap rounded-md bg-[var(--color-light-green-100)] px-2 py-1 text-xs font-semibold text-[var(--color-heading)]">{t(`stockCategory.${row.category}`)}</span> },
     {
       key: 'type',
-      header: 'Transaction Type',
-      render: (t) => <Badge tone={TYPE_CONFIG[t.type]?.tone || 'neutral'}>{TYPE_CONFIG[t.type]?.label || t.type}</Badge>,
+      header: t('transactionType'),
+      render: (row) => <Badge tone={TYPE_CONFIG[row.type]?.tone || 'neutral'}>{t(`transaction.${row.type}`)}</Badge>,
     },
     {
       key: 'quantity',
-      header: 'Quantity',
+      header: t('quantity'),
       sortable: true,
-      render: (t) => `${TYPE_CONFIG[t.type]?.sign || ''}${t.quantity}`,
+      render: (row) => `${TYPE_CONFIG[row.type]?.sign || ''}${row.quantity}`,
     },
-    { key: 'previousQuantity', header: 'Previous Qty', render: (t) => t.previousQuantity ?? '—' },
-    { key: 'newQuantity', header: 'New Qty', render: (t) => t.newQuantity ?? '—' },
-    { key: 'date', header: 'Date', sortable: true },
-    { key: 'responsibleUser', header: 'Responsible User' },
-    { key: 'party', header: 'Source / Destination' },
-    { key: 'notes', header: 'Notes', render: (t) => t.notes || '—' },
+    { key: 'previousQuantity', header: t('previousQuantity'), render: (row) => row.previousQuantity ?? '—' },
+    { key: 'newQuantity', header: t('newQuantity'), render: (row) => row.newQuantity ?? '—' },
+    { key: 'date', header: t('date'), sortable: true, render: (row) => <span className="whitespace-nowrap font-semibold text-[var(--color-heading)]">{formatTransactionDate(row.date, language)}</span> },
+    { key: 'responsibleUser', header: t('responsibleUser'), render: (row) => <span className="font-semibold text-[var(--color-heading)]">{row.responsibleUser}</span> },
+    { key: 'party', header: t('sourceDestination') },
+    { key: 'notes', header: t('notes'), render: (row) => row.notes || '—' },
   ];
 
   return (
     <div>
       <PageHeader
-        title="Stock Transactions"
-        description="Complete audit trail of every stock movement — in, out, adjustments, and transfers."
-        breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Transactions' }]}
-        actions={<Button variant="secondary" icon={Download} onClick={handleExport}>Export CSV</Button>}
+        title={t('stockTransactions')}
+        description={t('stockTransactionsAuditDescription')}
+        breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('transactions') }]}
+        actions={<Button variant="secondary" icon={Download} onClick={handleExport}>{t('exportCsv')}</Button>}
       />
       <div className="flex flex-wrap items-end gap-3 mb-4">
-        <SearchBar value={search} onChange={handleFilterChange(setSearch)} placeholder="Search by item, party, or user…" className="flex-1 min-w-[220px]" />
+        <SearchBar value={search} onChange={handleFilterChange(setSearch)} placeholder={t('searchItemPartyUser')} className="flex-1 min-w-[220px]" />
         <FilterDropdown
-          label="All Types"
+          label={t('allTypes')}
           value={typeFilter}
           onChange={handleFilterChange(setTypeFilter)}
-          options={Object.entries(TYPE_CONFIG).map(([value, cfg]) => ({ value, label: cfg.label }))}
+          options={Object.keys(TYPE_CONFIG).map((value) => ({ value, label: t(`transaction.${value}`) }))}
         />
-        <FilterDropdown label="All Categories" value={categoryFilter} onChange={handleFilterChange(setCategoryFilter)} options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))} />
-        <Input label="From" type="date" value={dateFrom} onChange={(e) => handleFilterChange(setDateFrom)(e.target.value)} className="!py-2" />
-        <Input label="To" type="date" value={dateTo} onChange={(e) => handleFilterChange(setDateTo)(e.target.value)} className="!py-2" />
+        <FilterDropdown label={t('allCategories')} value={categoryFilter} onChange={handleFilterChange(setCategoryFilter)} options={STOCK_CATEGORIES.map((c) => ({ value: c, label: t(`stockCategory.${c}`) }))} />
+        <Input label={t('fromDate')} type="date" value={dateFrom} onChange={(e) => handleFilterChange(setDateFrom)(e.target.value)} className="!py-2" />
+        <Input label={t('toDate')} type="date" value={dateTo} onChange={(e) => handleFilterChange(setDateTo)(e.target.value)} className="!py-2" />
       </div>
       <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
         <DataTable
@@ -146,7 +149,7 @@ export default function Transactions() {
           sortKey={sortKey}
           sortDir={sortDir}
           onSort={handleSort}
-          emptyState={<EmptyState title="No transactions found" message="Try a different search or filter." actionLabel="Record Stock In" onAction={() => navigate('/stock/stock-in')} />}
+          emptyState={<EmptyState title={t('noTransactionsFound')} message={t('tryDifferentSearchFilter')} actionLabel={t('recordStockIn')} onAction={() => navigate('/stock/stock-in')} />}
         />
         <TablePagination page={page} totalPages={totalPages} totalItems={filtered.length} pageSize={pageSize} onPageChange={setPage} />
       </div>

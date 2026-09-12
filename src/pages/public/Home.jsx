@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ArrowRight, Star, Wrench, Zap, HardHat, Car, Award,
+  ArrowRight, Star, Wrench, Zap, HardHat, Car, Award, Quote, Trophy,
   UserCheck, Building2, Target, GraduationCap, Users, BookOpen, Play,
 } from 'lucide-react';
 import Button from '../../components/common/Button';
-import { getHero, getPrograms, useContentVersion } from '../../services/contentService';
+import { getAchievements, getHero, getPrograms, getTestimonials, useContentVersion } from '../../services/contentService';
 import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 
 const HERO_SLIDE_INTERVAL = 6000;
@@ -45,9 +45,6 @@ const ABOUT_FEATURES = [
 
 const STAT_ICONS = [GraduationCap, Users, BookOpen, Award];
 
-/** Splits the CMS headline into a light first line and a neutral second line,
- *  mirroring the two-tone hero heading, while staying safe if the title
- *  only has a single sentence. */
 function splitHeadline(title = '') {
   const parts = title.split(/(?<=[.!?])\s+/).filter(Boolean);
   if (parts.length < 2) return { first: title, rest: '' };
@@ -59,11 +56,16 @@ export default function Home() {
   useSiteImageVersion();
   const hero = getHero();
   const programs = getPrograms().slice(0, 4);
+  const testimonials = getTestimonials();
+  const achievements = getAchievements();
   const heroSlides = [0, 1, 2]
     .map((index) => getSiteImage(`home.heroSlides.${index}`))
     .filter(Boolean);
   const aboutImage = getSiteImage('about.campus');
   const { first: headlineFirst, rest: headlineRest } = splitHeadline(hero.title);
+  const studentVoices = hero.studentVoices || {};
+  const progress = hero.progress || {};
+  const homeContent = hero.homeContent || {};
 
   const [activeSlide, setActiveSlide] = useState(0);
   const heroCardRef = useRef(null);
@@ -92,7 +94,6 @@ export default function Home() {
 
   return (
     <div>
-      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0" aria-hidden="true">
           {heroSlides.map((src, index) => (
@@ -153,7 +154,7 @@ export default function Home() {
               <div className="flex flex-wrap gap-3 mt-8">
                 <Link to="/academics">
                   <Button variant="primary" size="lg" icon={ArrowRight} iconPosition="right">
-                    Discover More
+                    {homeContent.heroButtons?.primary}
                   </Button>
                 </Link>
                 <Link to="/about">
@@ -163,7 +164,7 @@ export default function Home() {
                     icon={ArrowRight}
                     iconPosition="right"
                   >
-                    Learn About Us
+                    {homeContent.heroButtons?.secondary}
                   </Button>
                 </Link>
               </div>
@@ -172,9 +173,11 @@ export default function Home() {
 
           <div className="-mx-4 mt-12 border-t border-white/10 bg-[rgba(11,19,39,0.38)] px-4 py-6 shadow-[0_-8px_30px_rgba(0,0,0,0.10)] backdrop-blur-md md:-mx-6 md:px-6">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {HERO_HIGHLIGHTS.map(({ Icon, title, subtitle }) => (
+              {(homeContent.highlights || HERO_HIGHLIGHTS).map(({ title, subtitle }, index) => {
+                const Icon = HERO_HIGHLIGHTS[index % HERO_HIGHLIGHTS.length].Icon;
+                return (
                 <div key={title} className="flex items-center gap-3 rounded-2xl border border-white/20 bg-white/[0.08] px-4 py-3.5 shadow-[0_12px_30px_rgba(0,0,0,0.12)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:bg-white/[0.14] hover:shadow-[0_18px_45px_rgba(0,0,0,0.18)] hover:border-white/30">
-                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[linear-gradient(135deg,rgba(15,108,255,0.28),rgba(15,108,255,0.12))] text-[var(--color-gold)] ring-1 ring-white/20 shadow-[0_8px_16px_rgba(15,108,255,0.15)]">
+                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[linear-gradient(135deg,rgba(25,135,84,0.28),rgba(25,135,84,0.12))] text-[var(--color-gold)] ring-1 ring-white/20 shadow-[0_8px_16px_rgba(25,135,84,0.15)]">
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <span className="text-sm font-semibold leading-tight text-white">
@@ -182,27 +185,27 @@ export default function Home() {
                     <span className="block font-normal text-white/75 text-xs">{subtitle}</span>
                   </span>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
       </section>
 
-      {/* About Us */}
       <section className="py-16 md:py-20 max-w-7xl mx-auto px-4 md:px-6">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          <div className="relative overflow-hidden rounded-[32px] shadow-[0_22px_60px_rgba(15,108,255,0.12)] aspect-[4/3] ring-1 ring-[rgba(15,108,255,0.08)]">
+          <div className="relative overflow-hidden rounded-[32px] shadow-[0_22px_60px_rgba(25,135,84,0.12)] aspect-[4/3] ring-1 ring-[rgba(25,135,84,0.08)]">
             <img src={aboutImage} alt="Students training in the workshop" className="w-full h-full object-cover" loading="lazy" />
             <div className="absolute inset-0 bg-gradient-to-t from-[rgba(11,19,39,0.42)] via-transparent to-transparent" />
             <div className="absolute inset-x-6 bottom-6 flex items-center justify-between rounded-2xl border border-white/20 bg-[rgba(17,31,59,0.45)] px-4 py-3 backdrop-blur-sm">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">Hands-on learning</p>
-                <p className="mt-1 text-sm font-medium text-white">Industry-ready practical training</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">{homeContent.aboutPreview?.imageLabel}</p>
+                <p className="mt-1 text-sm font-medium text-white">{homeContent.aboutPreview?.imageTitle}</p>
               </div>
               <Link
                 to="/about"
                 aria-label="Learn more about Rambura Garçons"
-                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white text-[var(--color-medium-green)] shadow-[0_16px_30px_rgba(15,108,255,0.18)] hover:scale-105 transition-transform"
+                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-white text-[var(--color-medium-green)] shadow-[0_16px_30px_rgba(25,135,84,0.18)] hover:scale-105 transition-transform"
               >
                 <Play className="w-5 h-5 fill-current ml-0.5" aria-hidden="true" />
               </Link>
@@ -211,15 +214,14 @@ export default function Home() {
 
           <div>
             <span className="text-xs font-bold tracking-[0.15em] uppercase text-[var(--color-medium-green)]">
-              About Us
+              {homeContent.aboutPreview?.eyebrow}
             </span>
             <h2 className="font-display text-3xl md:text-4xl font-bold mt-2 text-[var(--color-dark-gray)]">
-              Empowering Youth Through
-              <span className="block text-[var(--color-medium-green)]">Quality Technical Education</span>
+              {homeContent.aboutPreview?.title}
+              <span className="block text-[var(--color-medium-green)]">{homeContent.aboutPreview?.titleAccent}</span>
             </h2>
             <p className="text-[var(--color-mid-gray)] mt-5 leading-relaxed max-w-lg">
-              We are committed to providing industry-relevant training, modern facilities and a supportive
-              learning environment that prepares students for successful careers and lifelong impact.
+              {homeContent.aboutPreview?.description}
             </p>
 
             <div className="grid sm:grid-cols-3 gap-6 mt-8">
@@ -237,20 +239,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Programs */}
       <section className="pb-16 max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
           <div>
             <span className="text-xs font-bold tracking-[0.15em] uppercase text-[var(--color-medium-green)]">
-              Our Programs
+              {homeContent.programs?.eyebrow}
             </span>
             <h2 className="font-display text-3xl md:text-4xl font-bold mt-2 text-[var(--color-dark-gray)]">
-              Programs We Offer
+              {homeContent.programs?.title}
             </h2>
           </div>
           <Link to="/academics">
             <Button variant="primary" size="md" icon={ArrowRight} iconPosition="right">
-              View All Programs
+              {homeContent.programs?.button}
             </Button>
           </Link>
         </div>
@@ -262,7 +263,7 @@ export default function Home() {
               <Link
                 key={p.slug}
                 to="/academics"
-                className="group overflow-hidden rounded-[28px] border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] shadow-[0_18px_35px_rgba(15,108,255,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(15,108,255,0.12)] hover:border-[rgba(15,108,255,0.28)]"
+                className="group overflow-hidden rounded-[28px] border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] shadow-[0_18px_35px_rgba(25,135,84,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_50px_rgba(25,135,84,0.12)] hover:border-[rgba(25,135,84,0.28)]"
               >
                 <div className="relative aspect-[4/3] overflow-hidden">
                   <img
@@ -271,7 +272,7 @@ export default function Home() {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <span className="absolute left-4 -bottom-5 inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[linear-gradient(135deg,#0F6CFF,#0B5BD8)] text-white shadow-[0_16px_30px_rgba(15,108,255,0.22)]">
+                  <span className="absolute left-4 -bottom-5 inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[linear-gradient(135deg,var(--color-medium-green),var(--color-medium-green-600))] text-white shadow-[0_16px_30px_rgba(25,135,84,0.22)]">
                     <Icon className="w-5 h-5" aria-hidden="true" />
                   </span>
                 </div>
@@ -279,7 +280,7 @@ export default function Home() {
                   <h3 className="font-display font-semibold text-[var(--color-dark-gray)]">{p.title}</h3>
                   <p className="text-sm text-[var(--color-mid-gray)] mt-1.5 leading-relaxed">{p.summary}</p>
                   <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[var(--color-medium-green)]">
-                    Learn More <ArrowRight className="w-3.5 h-3.5" />
+                    {homeContent.programs?.cardAction} <ArrowRight className="w-3.5 h-3.5" />
                   </span>
                 </div>
               </Link>
@@ -287,12 +288,11 @@ export default function Home() {
           })}
         </div>
 
-        {/* Stats strip */}
-        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 rounded-[30px] border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] p-6 md:p-8 shadow-[0_18px_40px_rgba(15,108,255,0.05)]">
+        <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 rounded-[30px] border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] p-6 md:p-8 shadow-[0_18px_40px_rgba(25,135,84,0.05)]">
           {hero.stats.map((s, i) => {
             const Icon = STAT_ICONS[i % STAT_ICONS.length];
             return (
-              <div key={s.label} className="flex items-center gap-3 justify-center rounded-[22px] bg-[var(--color-white)] p-3 ring-1 ring-[rgba(15,108,255,0.04)] shadow-[0_8px_20px_rgba(15,108,255,0.03)] transition-transform duration-200 hover:-translate-y-0.5 md:justify-start">
+              <div key={s.label} className="flex items-center gap-3 justify-center rounded-[22px] bg-[var(--color-white)] p-3 ring-1 ring-[rgba(25,135,84,0.04)] shadow-[0_8px_20px_rgba(25,135,84,0.03)] transition-transform duration-200 hover:-translate-y-0.5 md:justify-start">
                 <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--color-light-green-100)] text-[var(--color-medium-green)]">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
@@ -308,20 +308,48 @@ export default function Home() {
 
       {/* CTA banner */}
       <section className="pb-16 max-w-7xl mx-auto px-4 md:px-6">
-        <div className="relative overflow-hidden rounded-[32px] border border-[var(--color-border-gray)] bg-[var(--surface)] px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_18px_40px_rgba(15,108,255,0.08)]">
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <span className="text-xs font-bold tracking-[0.15em] uppercase text-[var(--color-medium-green)]">{studentVoices.eyebrow}</span>
+            <h2 className="font-display text-3xl md:text-4xl font-bold mt-2 text-[var(--color-dark-gray)]">{studentVoices.title}</h2>
+            <div className="mt-7 grid gap-4">
+              {testimonials.map((testimonial) => (
+                <blockquote key={testimonial.name} className="rounded-[24px] border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] p-5 shadow-[0_12px_28px_rgba(25,135,84,0.05)]">
+                  <Quote className="h-5 w-5 text-[var(--color-medium-green)]" aria-hidden="true" />
+                  <p className="mt-3 text-sm leading-relaxed text-[var(--color-dark-gray)]">{testimonial.quote}</p>
+                  <footer className="mt-4 text-xs font-semibold text-[var(--color-mid-gray)]">{testimonial.name} · {testimonial.detail}</footer>
+                </blockquote>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-[28px] border border-[var(--color-border-gray)] bg-[var(--color-deep-green)] p-6 text-white shadow-[0_20px_45px_rgba(15,33,63,0.16)] md:p-8">
+            <div className="flex items-center gap-3"><Trophy className="h-6 w-6 text-[var(--color-gold)]" aria-hidden="true" /><p className="text-xs font-bold uppercase tracking-[0.18em] text-white/70">{progress.eyebrow}</p></div>
+            <h2 className="mt-4 font-display text-2xl font-bold">{progress.title}</h2>
+            <div className="mt-7 space-y-5">
+              {achievements.map((achievement) => (
+                <div key={achievement.label} className="flex items-start gap-4 border-t border-white/15 pt-4 first:border-t-0 first:pt-0">
+                  <span className="min-w-14 font-display text-2xl font-bold text-[var(--color-gold)]">{achievement.value}</span>
+                  <span><span className="block text-sm font-semibold">{achievement.label}</span><span className="mt-1 block text-xs text-white/60">{achievement.year}</span></span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="pb-16 max-w-7xl mx-auto px-4 md:px-6">
+        <div className="relative overflow-hidden rounded-[32px] border border-[var(--color-deep-green)] bg-[var(--color-deep-green)] px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_18px_40px_rgba(23,59,49,0.2)]">
           <div className="absolute -right-10 top-1/2 hidden h-40 w-40 -translate-y-1/2 rounded-full border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] md:block" aria-hidden="true" />
           <GraduationCap className="hidden md:block absolute right-8 top-1/2 -translate-y-1/2 w-28 h-28 text-[var(--color-mid-gray)]/20" aria-hidden="true" />
           <div className="relative text-center md:text-left">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-mid-gray)]">Admissions open</p>
-            <h2 className="font-display text-2xl md:text-3xl font-bold text-[var(--color-dark-gray)]">Ready to Start Your Journey?</h2>
-            <p className="text-[var(--color-mid-gray)] mt-2 max-w-md">
-              Join Rambura Garçons TVET School and build the skills for a better future.
-            </p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-gold)]">{homeContent.admissionsCta?.eyebrow}</p>
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-white">{homeContent.admissionsCta?.title}</h2>
+            <p className="text-white/80 mt-2 max-w-md">{homeContent.admissionsCta?.description}</p>
           </div>
           <div className="relative shrink-0">
             <Link to="/admissions">
-              <Button variant="primary" size="lg" icon={ArrowRight} iconPosition="right" className="!bg-[var(--color-medium-green)] !text-white !border-[var(--color-medium-green)] shadow-[0_18px_35px_rgba(15,108,255,0.18)] hover:!bg-[var(--color-medium-green-600)] hover:!text-white">
-                Apply Now
+              <Button variant="primary" size="lg" icon={ArrowRight} iconPosition="right" contentStyle={{ color: '#FFFFFF' }} contentClassName="!text-white [&_*]:!text-white" style={{ color: '#FFFFFF' }} className="apply-now-cta min-w-44 justify-center !bg-[var(--color-deep-green)] !text-white !border-[var(--color-gold)] !border-2 font-bold shadow-[0_16px_32px_rgba(23,59,49,0.28)] ring-2 ring-[rgba(185,130,45,0.18)] hover:!bg-[var(--color-deep-green-600)] hover:!text-white hover:shadow-[0_20px_38px_rgba(23,59,49,0.34)]">
+                {homeContent.admissionsCta?.button || 'Apply Now'}
               </Button>
             </Link>
           </div>

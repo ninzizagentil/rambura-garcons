@@ -6,6 +6,7 @@ import Button from '../../components/common/Button';
 import Alert from '../../components/feedback/Alert';
 import { useToast } from '../../context/ToastContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useApp } from '../../context/AppContext';
 import { BOOK_CATEGORIES } from '../../data/library';
 import { createBook, updateBook } from '../../services/bookService';
 
@@ -14,6 +15,7 @@ const EMPTY_FORM = { title: '', author: '', category: '', bookCode: '', descript
 export default function BookFormModal({ open, onClose, book, onSaved }) {
   const { showToast } = useToast();
   const { addNotification } = useNotifications();
+  const { t } = useApp();
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
@@ -32,12 +34,12 @@ export default function BookFormModal({ open, onClose, book, onSaved }) {
 
   const validate = () => {
     const next = {};
-    if (!form.title?.trim()) next.title = 'Title is required.';
-    if (!form.author?.trim()) next.author = 'Author is required.';
-    if (!form.category) next.category = 'Select a category.';
-    if (!form.bookCode?.trim()) next.bookCode = 'Book Code / ISBN is required.';
+    if (!form.title?.trim()) next.title = t('titleRequired');
+    if (!form.author?.trim()) next.author = t('authorRequired');
+    if (!form.category) next.category = t('categoryRequired');
+    if (!form.bookCode?.trim()) next.bookCode = t('bookCodeRequired');
     const copies = Number(form.totalCopies);
-    if (!form.totalCopies || Number.isNaN(copies) || copies <= 0) next.totalCopies = 'Enter a positive number of copies.';
+    if (!form.totalCopies || Number.isNaN(copies) || copies <= 0) next.totalCopies = t('positiveCopiesRequired');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -56,10 +58,10 @@ export default function BookFormModal({ open, onClose, book, onSaved }) {
       setServerError(result.error);
       return;
     }
-    showToast(isEdit ? 'Book updated successfully.' : 'Book added to catalogue.', 'success');
+    showToast(isEdit ? t('bookUpdated') : t('bookAdded'), 'success');
     addNotification({
       type: 'library',
-      message: isEdit ? `"${form.title}" was updated in the catalogue.` : `"${form.title}" was added to the catalogue.`,
+      message: isEdit ? t('bookUpdatedInCatalogue', { title: form.title }) : t('bookAddedToCatalogue', { title: form.title }),
       to: '/library/books',
     });
     onSaved(result.book);
@@ -69,39 +71,39 @@ export default function BookFormModal({ open, onClose, book, onSaved }) {
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? 'Edit Book' : 'Add Book'}
+      title={isEdit ? t('editBook') : t('addBook')}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit} loading={saving}>{isEdit ? 'Save Changes' : 'Save Book'}</Button>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>{t('cancel')}</Button>
+          <Button variant="primary" onClick={handleSubmit} loading={saving}>{isEdit ? t('saveChanges') : t('saveBook')}</Button>
         </>
       }
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {serverError && <Alert type="error">{serverError}</Alert>}
         <ImageField
-          label="Cover Photo"
-          hint="Optional — shown on the book's catalogue entry and details page."
+          label={t('coverPhoto')}
+          hint={t('coverPhotoHint')}
           value={form.coverImage}
           onChange={(dataUrl) => setForm((f) => ({ ...f, coverImage: dataUrl }))}
         />
-        <Input label="Title" required value={form.title} onChange={update('title')} error={errors.title} />
+        <Input label={t('title')} required value={form.title} onChange={update('title')} error={errors.title} />
         <div className="grid sm:grid-cols-2 gap-4">
-          <Input label="Author" required value={form.author} onChange={update('author')} error={errors.author} />
+          <Input label={t('author')} required value={form.author} onChange={update('author')} error={errors.author} />
           <Select
-            label="Category"
+            label={t('category')}
             required
             value={form.category}
             onChange={update('category')}
             error={errors.category}
-            options={BOOK_CATEGORIES.map((c) => ({ value: c, label: c }))}
+            options={BOOK_CATEGORIES.map((c) => ({ value: c, label: t(`bookCategory.${c}`) }))}
           />
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Input label="Book Code / ISBN" required value={form.bookCode} onChange={update('bookCode')} error={errors.bookCode} disabled={isEdit} />
-          <Input label="Number of Copies" type="number" min="1" required value={form.totalCopies} onChange={update('totalCopies')} error={errors.totalCopies} />
+          <Input label={t('bookCodeIsbn')} required value={form.bookCode} onChange={update('bookCode')} error={errors.bookCode} disabled={isEdit} />
+          <Input label={t('numberOfCopies')} type="number" min="1" required value={form.totalCopies} onChange={update('totalCopies')} error={errors.totalCopies} />
         </div>
-        <Textarea label="Description" value={form.description} onChange={update('description')} rows={3} />
+        <Textarea label={t('description')} value={form.description} onChange={update('description')} rows={3} />
       </form>
     </Modal>
   );

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import Modal from '../../components/modals/Modal';
 import { Input, Select } from '../../components/forms/FormField';
 import Button from '../../components/common/Button';
 import Alert from '../../components/feedback/Alert';
 import { useToast } from '../../context/ToastContext';
+import { useApp } from '../../context/AppContext';
 import { ROLE_LABELS } from '../../data/roles';
 import { createUser, updateUser } from '../../services/userService';
 
@@ -11,17 +13,21 @@ const EMPTY_FORM = { fullName: '', username: '', email: '', role: '', status: 'a
 
 export default function UserFormModal({ open, onClose, user, onSaved }) {
   const { showToast } = useToast();
+  const { t } = useApp();
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const isEdit = !!user;
+  const formId = 'user-form';
 
   useEffect(() => {
     if (open) {
       setForm(user ? { ...user, password: '' } : EMPTY_FORM);
       setErrors({});
       setServerError('');
+      setShowPassword(false);
     }
   }, [open, user]);
 
@@ -29,12 +35,12 @@ export default function UserFormModal({ open, onClose, user, onSaved }) {
 
   const validate = () => {
     const next = {};
-    if (!form.fullName?.trim()) next.fullName = 'Full name is required.';
-    if (!form.username?.trim()) next.username = 'Username is required.';
-    if (!form.email?.trim()) next.email = 'Email is required.';
-    else if (!/^\S+@\S+\.\S+$/.test(form.email)) next.email = 'Enter a valid email address.';
-    if (!form.role) next.role = 'Select a role.';
-    if (!isEdit && (!form.password || form.password.length < 6)) next.password = 'Password must be at least 6 characters.';
+    if (!form.fullName?.trim()) next.fullName = t('fullNameRequired');
+    if (!form.username?.trim()) next.username = t('usernameRequired');
+    if (!form.email?.trim()) next.email = t('emailRequired');
+    else if (!/^\S+@\S+\.\S+$/.test(form.email)) next.email = t('validEmailRequired');
+    if (!form.role) next.role = t('roleRequired');
+    if (!isEdit && (!form.password || form.password.length < 6)) next.password = t('passwordMinSix');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -42,6 +48,7 @@ export default function UserFormModal({ open, onClose, user, onSaved }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError('');
+    setErrors({});
     if (!validate()) return;
     setSaving(true);
 
@@ -49,8 +56,15 @@ export default function UserFormModal({ open, onClose, user, onSaved }) {
       ? await updateUser(user.id, { fullName: form.fullName, username: form.username, email: form.email, role: form.role, status: form.status })
       : await createUser(form);
     setSaving(false);
-    if (!result.success) { setServerError(result.error); return; }
-    showToast(isEdit ? 'User updated successfully.' : 'User created successfully.', 'success');
+    if (!result.success) {
+      const fieldErrors = Object.fromEntries(
+        (result.errors || []).filter((item) => item.field).map((item) => [item.field, item.message])
+      );
+      setErrors(fieldErrors);
+      setServerError(Object.keys(fieldErrors).length ? '' : result.error);
+      return;
+    }
+    showToast(isEdit ? t('userUpdated') : t('userCreated'), 'success');
     onSaved();
   };
 
@@ -58,24 +72,24 @@ export default function UserFormModal({ open, onClose, user, onSaved }) {
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? 'Edit User' : 'Add User'}
+      title={isEdit ? t('editUser') : t('addUser')}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit} loading={saving}>{isEdit ? 'Save Changes' : 'Create User'}</Button>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>{t('cancel')}</Button>
+          <Button variant="primary" type="submit" form={formId} loading={saving}>{isEdit ? t('saveChanges') : t('createUser')}</Button>
         </>
       }
     >
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <form id={formId} onSubmit={handleSubmit} noValidate className="space-y-4">
         {serverError && <Alert type="error">{serverError}</Alert>}
-        <Input label="Full Name" required value={form.fullName} onChange={update('fullName')} error={errors.fullName} />
+        <Input label={t('fullName')} required autoComplete="name" value={form.fullName} onChange={update('fullName')} error={errors.fullName} />
         <div className="grid sm:grid-cols-2 gap-4">
-          <Input label="Username" required value={form.username} onChange={update('username')} error={errors.username} />
-          <Input label="Email" type="email" required value={form.email} onChange={update('email')} error={errors.email} />
+          <Input label={t('username')} required autoComplete="off" value={form.username} onChange={update('username')} error={errors.username} />
+          <Input label={t('email')} type="email" required autoComplete="off" value={form.email} onChange={update('email')} error={errors.email} />
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <Select
-            label="Role"
+            label={t('role')}
             required
             value={form.role}
             onChange={update('role')}
@@ -84,28 +98,39 @@ export default function UserFormModal({ open, onClose, user, onSaved }) {
           />
           {!isEdit && (
             <Select
-              label="Status"
+              label={t('status')}
               required
               value={form.status}
               onChange={update('status')}
-              options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]}
+              options={[{ value: 'active', label: t('active') }, { value: 'inactive', label: t('inactive') }]}
             />
           )}
         </div>
         {isEdit && (
           <p className="text-xs text-[var(--color-mid-gray)]">
-            To activate or deactivate this account, use the status action on the Users list instead.
+            {t('useUsersStatusAction')}
           </p>
         )}
         {!isEdit && (
           <Input
-            label="Password"
-            type="password"
+            label={t('password')}
+            type={showPassword ? 'text' : 'password'}
             required
+            autoComplete="new-password"
             value={form.password}
             onChange={update('password')}
             error={errors.password}
-            hint="At least 6 characters. The user can change this after logging in."
+            hint={t('passwordHint')}
+            trailing={(
+              <button
+                type="button"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? t('hideNewPassword') : t('showNewPassword')}
+                className="text-[var(--color-mid-gray)] hover:text-[var(--color-gold)]"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            )}
           />
         )}
       </form>

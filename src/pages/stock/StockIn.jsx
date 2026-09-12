@@ -14,6 +14,7 @@ import { logActivity } from '../../services/activityService';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
+import { useApp } from '../../context/AppContext';
 
 
 
@@ -24,6 +25,7 @@ export default function StockIn() {
   const { addNotification } = useNotifications();
   const { user } = useAuth();
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
+  const { t, language } = useApp();
   const [items, setItems] = useState(() => getItems());
 
   useEffect(() => {
@@ -52,12 +54,12 @@ export default function StockIn() {
 
   const validate = () => {
     const next = {};
-    if (!form.itemId) next.itemId = 'Select an item.';
+    if (!form.itemId) next.itemId = t('selectAnItem');
     const qty = Number(form.quantity);
-    if (!form.quantity || Number.isNaN(qty) || qty <= 0) next.quantity = 'Enter a positive quantity.';
-    if (!form.date) next.date = 'Date is required.';
-    if (!form.party?.trim()) next.party = 'Source / Supplier is required.';
-    if (!form.responsibleUser?.trim()) next.responsibleUser = 'Responsible user is required.';
+    if (!form.quantity || Number.isNaN(qty) || qty <= 0) next.quantity = t('positiveQuantityRequired');
+    if (!form.date) next.date = t('dateRequired');
+    if (!form.party?.trim()) next.party = t('sourceSupplierRequired');
+    if (!form.responsibleUser?.trim()) next.responsibleUser = t('responsibleUserRequired');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -79,15 +81,15 @@ export default function StockIn() {
     }
       setResult(res);
       setStep('success');
-      showToast(`Stock In recorded for "${selectedItem.name}".`, 'success');
+      showToast(t('stockInRecordedFor', { name: selectedItem.name }), 'success');
       addNotification({
         type: 'stock',
-        message: `Stock In recorded: ${form.quantity} ${selectedItem.unit} of ${selectedItem.name}.`,
+        message: t('stockInNotification', { quantity: form.quantity, unit: selectedItem.unit, name: selectedItem.name }),
         to: '/stock/transactions',
       });
       logActivity({
         user: user?.fullName || 'Stock Manager',
-        action: `Recorded Stock In: ${selectedItem.name} (+${form.quantity}${selectedItem.unit})`,
+        action: t('recordedStockInActivity', { name: selectedItem.name, quantity: form.quantity, unit: selectedItem.unit }),
         module: 'Stock',
         status: 'success',
       });
@@ -105,11 +107,11 @@ export default function StockIn() {
   if (viewOnly) {
     return (
       <div>
-        <PageHeader title="Stock In" description="Record incoming stock for an item." breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock In' }]} />
+        <PageHeader title={t('stockIn')} description={t('recordIncomingStock')} breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('stockIn') }]} />
         <ViewOnlyBanner module="Stock MIS" />
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
-          <p className="text-sm text-[var(--color-mid-gray)]">Recording Stock In is reserved for the Stock Manager account.</p>
-          <Button variant="secondary" className="mt-4" onClick={() => navigate('/stock')}>Back to Stock Dashboard</Button>
+          <p className="text-sm text-[var(--color-mid-gray)]">{t('stockInReserved')}</p>
+          <Button variant="secondary" className="mt-4" onClick={() => navigate('/stock')}>{t('backToStockDashboard')}</Button>
         </div>
       </div>
     );
@@ -118,35 +120,35 @@ export default function StockIn() {
   if (step === 'success') {
     return (
       <div>
-        <PageHeader title="Stock In" breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock In' }]} />
+        <PageHeader title={t('stockIn')} breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('stockIn') }]} />
         <div className="stock-success-state">
           <CheckCircle2 className="stock-success-icon" aria-hidden="true" />
-          <h3 className="stock-success-title">✨ Stock In Successful!</h3>
+          <h3 className="stock-success-title">{t('stockInSuccessful')}</h3>
           <p className="stock-success-message">
-            Successfully recorded +{form.quantity} {selectedItem?.unit} of {selectedItem?.name}
+            {t('stockInSuccessMessage', { quantity: form.quantity, unit: selectedItem?.unit, name: selectedItem?.name })}
           </p>
           <div className="stock-success-details">
             <div className="stock-success-detail-row">
-              <span className="stock-success-detail-label">Item</span>
+              <span className="stock-success-detail-label">{t('item')}</span>
               <span className="stock-success-detail-value">{selectedItem?.name}</span>
             </div>
             <div className="stock-success-detail-row">
-              <span className="stock-success-detail-label">Quantity Added</span>
+              <span className="stock-success-detail-label">{t('quantityAdded')}</span>
               <span className="stock-success-detail-value">+{form.quantity} {selectedItem?.unit}</span>
             </div>
             <div className="stock-success-detail-row">
-              <span className="stock-success-detail-label">New Total</span>
+              <span className="stock-success-detail-label">{t('newTotal')}</span>
               <span className="stock-success-detail-value">{result?.newQuantity} {selectedItem?.unit}</span>
             </div>
             <div className="stock-success-detail-row">
-              <span className="stock-success-detail-label">Date</span>
+              <span className="stock-success-detail-label">{t('date')}</span>
               <span className="stock-success-detail-value">{new Date(form.date).toLocaleDateString()}</span>
             </div>
           </div>
           <div className="flex gap-3 flex-wrap justify-center">
-            <Button variant="secondary" onClick={() => navigate(`/stock/items/${form.itemId}`)}>View Item</Button>
-            <Button variant="outline" onClick={() => navigate('/stock/transactions')}>View Transactions</Button>
-            <Button variant="primary" onClick={startAnother}>Record Another</Button>
+            <Button variant="secondary" onClick={() => navigate(`/stock/items/${form.itemId}`)}>{t('viewItem')}</Button>
+            <Button variant="outline" onClick={() => navigate('/stock/transactions')}>{t('viewTransactions')}</Button>
+            <Button variant="primary" onClick={startAnother}>{t('recordAnother')}</Button>
           </div>
         </div>
       </div>
@@ -155,19 +157,19 @@ export default function StockIn() {
 
   return (
     <div>
-      <PageHeader title="Stock In" description="Record incoming stock for an item." breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock In' }]} />
+      <PageHeader title={t('stockIn')} description={t('recordIncomingStock')} breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('stockIn') }]} />
 
       <div className="stock-form-container">
         {step === 'form' ? (
           <form onSubmit={handleContinue} noValidate className="space-y-4">
-            <h3 className="stock-form-title">📥 Record Stock In</h3>
+            <h3 className="stock-form-title">{t('recordStockIn')}</h3>
             {serverError && <Alert type="error">{serverError}</Alert>}
             
             <div className="stock-form-section">
-              <label className="stock-form-section-title">Item & Quantity</label>
+              <label className="stock-form-section-title">{t('itemAndQuantity')}</label>
               <div className="stock-form-grid full">
                 <Select
-                  label="Item"
+                  label={t('item')}
                   required
                   value={form.itemId}
                   onChange={update('itemId')}
@@ -178,43 +180,43 @@ export default function StockIn() {
             </div>
 
             <div className="stock-form-section">
-              <label className="stock-form-section-title">Transaction Details</label>
+              <label className="stock-form-section-title">{t('transactionDetails')}</label>
               <div className="stock-form-grid">
-                <Input label="Quantity" type="number" min="1" required value={form.quantity} onChange={update('quantity')} error={errors.quantity} />
-                <Input label="Date" type="date" required value={form.date} onChange={update('date')} error={errors.date} />
+                <Input label={t('quantity')} type="number" min="1" required value={form.quantity} onChange={update('quantity')} error={errors.quantity} />
+                <Input label={t('date')} type="date" required value={form.date} onChange={update('date')} error={errors.date} />
               </div>
               <div className="stock-form-grid full">
-                <Input label="Source / Supplier" required value={form.party} onChange={update('party')} error={errors.party} placeholder="e.g. Kigali Grain Suppliers Ltd" />
+                <Input label={t('sourceSupplier')} required value={form.party} onChange={update('party')} error={errors.party} placeholder={t('sourceSupplierPlaceholder')} />
               </div>
               <div className="stock-form-grid full">
-                <Input label="Responsible User" required value={form.responsibleUser} onChange={update('responsibleUser')} error={errors.responsibleUser} />
+                <Input label={t('responsibleUser')} required value={form.responsibleUser} onChange={update('responsibleUser')} error={errors.responsibleUser} />
               </div>
               <div className="stock-form-grid full">
-                <Textarea label="Notes" value={form.notes} onChange={update('notes')} rows={3} />
+                <Textarea label={t('notes')} value={form.notes} onChange={update('notes')} rows={3} />
               </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="ghost" onClick={() => navigate('/stock')}>Cancel</Button>
-              <Button type="submit" variant="primary" icon={PackagePlus}>Continue</Button>
+              <Button type="button" variant="ghost" onClick={() => navigate('/stock')}>{t('cancel')}</Button>
+              <Button type="submit" variant="primary" icon={PackagePlus}>{t('continue')}</Button>
             </div>
           </form>
         ) : (
           <div className="space-y-4">
             {serverError && <Alert type="error">{serverError}</Alert>}
-            <h3 className="stock-form-title flex items-center gap-2"><ClipboardList className="w-5 h-5" /> Confirm Stock In</h3>
-            <p className="text-sm text-[var(--color-dark-gray)]">Please review and confirm the details below:</p>
+            <h3 className="stock-form-title flex items-center gap-2"><ClipboardList className="w-5 h-5" /> {t('confirmStockIn')}</h3>
+            <p className="text-sm text-[var(--color-dark-gray)]">{t('confirmDetailsBelow')}</p>
             <dl className="text-sm bg-[var(--color-off-white)] rounded-[var(--radius-control)] p-4 space-y-1.5">
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Item</dt><dd className="font-medium">{selectedItem?.name}</dd></div>
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Quantity</dt><dd className="font-medium">+{form.quantity} {selectedItem?.unit}</dd></div>
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Date</dt><dd className="font-medium">{form.date}</dd></div>
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Source / Supplier</dt><dd className="font-medium">{form.party}</dd></div>
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Responsible User</dt><dd className="font-medium">{form.responsibleUser}</dd></div>
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">New Quantity</dt><dd className="font-medium">{(selectedItem?.quantity || 0) + Number(form.quantity)} {selectedItem?.unit}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('item')}</dt><dd className="font-medium">{selectedItem?.name}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('quantity')}</dt><dd className="font-medium">+{form.quantity} {selectedItem?.unit}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('date')}</dt><dd className="font-medium">{form.date}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('sourceSupplier')}</dt><dd className="font-medium">{form.party}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('responsibleUser')}</dt><dd className="font-medium">{form.responsibleUser}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('newQuantity')}</dt><dd className="font-medium">{(selectedItem?.quantity || 0) + Number(form.quantity)} {selectedItem?.unit}</dd></div>
             </dl>
             <div className="flex justify-end gap-3">
-              <Button variant="ghost" onClick={() => setStep('form')} disabled={saving}>Back</Button>
-              <Button variant="primary" onClick={handleConfirm} loading={saving}>Confirm Stock In</Button>
+              <Button variant="ghost" onClick={() => setStep('form')} disabled={saving}>{t('back')}</Button>
+              <Button variant="primary" onClick={handleConfirm} loading={saving}>{t('confirmStockIn')}</Button>
             </div>
           </div>
         )}

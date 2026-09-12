@@ -3,16 +3,20 @@ import { MapPin, Phone, Mail, CheckCircle2, User, MessageSquare, Send } from 'lu
 import { Input, Textarea } from '../../components/forms/FormField';
 import Button from '../../components/common/Button';
 import PageHero from '../../components/common/PageHero';
-import { getContactInfo, useContentVersion } from '../../services/contentService';
+import { getContactInfo, getContactPage, submitContactMessage, useContentVersion } from '../../services/contentService';
+import { useToast } from '../../context/ToastContext';
 import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 
 export default function Contact() {
   useContentVersion();
   useSiteImageVersion();
   const info = getContactInfo();
+  const page = getContactPage();
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const { showToast } = useToast();
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -26,23 +30,33 @@ export default function Contact() {
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) setSubmitted(true);
+    if (!validate()) return;
+    setSending(true);
+    try {
+      await submitContactMessage(form);
+      setSubmitted(true);
+      showToast('Your message has been sent.', 'success');
+    } catch (error) {
+      showToast(error.message || 'Unable to send your message.', 'error');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
     <div>
-      <PageHero title="Contact Us" image={getSiteImage('pageHeroes.contact')}>
-        <p className="text-[var(--text-secondary)] mt-3">We'd love to hear from you.</p>
+      <PageHero title={page.title} image={getSiteImage('pageHeroes.contact')}>
+        <p className="text-[var(--text-secondary)] mt-3">{page.intro}</p>
       </PageHero>
 
       <section className="max-w-5xl mx-auto px-4 md:px-6 py-14">
         <div className="mb-12">
           <h2 className="font-display text-3xl font-bold text-[var(--text-primary)] mb-3">
-            Get in Touch
+            {page.informationTitle}
           </h2>
-          <p className="text-[var(--text-secondary)] text-lg">We're here to answer any questions you may have</p>
+          <p className="text-[var(--text-secondary)] text-lg">{page.informationIntro}</p>
           <span className="block w-16 h-1.5 rounded-full bg-[var(--gold)] mt-4" aria-hidden="true" />
         </div>
 
@@ -182,12 +196,13 @@ export default function Contact() {
                 <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
                   <Button 
                     type="submit" 
-                    variant="gold" 
+                    variant="primary" 
                     className="flex-1" 
                     icon={Send} 
                     iconPosition="right"
+                    loading={sending}
                   >
-                    Send Message
+                      {sending ? 'Sending...' : 'Send Message'}
                   </Button>
                   <button
                     type="reset"

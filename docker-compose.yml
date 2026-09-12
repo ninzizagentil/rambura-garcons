@@ -1,23 +1,50 @@
-version: "3.8"
-
-# One-command local MongoDB for Rambura Garçons.
-# Usage:
-#   docker compose up -d      # start MongoDB in the background
-#   docker compose down       # stop it
-#   docker compose down -v    # stop it and wipe all data
-#
-# Matches the default MONGODB_URI in backend/.env.example:
-#   mongodb://localhost:27017/rambura_garcons
-
 services:
   mongo:
-    image: mongo:7
-    container_name: rambura-garcons-mongo
+    image: mongo:8.0
     restart: unless-stopped
     ports:
       - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: rambura_garcons
     volumes:
-      - rambura_mongo_data:/data/db
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok' localhost:27017/test | grep 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/rambura_garcons
+      CLIENT_URL: ${CLIENT_URL:-http://localhost}
+      SERVER_URL: ${SERVER_URL:-http://localhost/api}
+      BACKUP_DIR: /app/backups
+    depends_on:
+      mongo:
+        condition: service_healthy
+    volumes:
+      - backend-uploads:/app/uploads
+      - backend-backups:/app/backups
+    expose:
+      - "5000"
+
+  frontend:
+    build:
+      context: .
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
 
 volumes:
-  rambura_mongo_data:
+  mongo-data:
+  backend-uploads:
+  backend-backups:

@@ -5,11 +5,13 @@ import Button from '../../../components/common/Button';
 import Alert from '../../../components/feedback/Alert';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { useApp } from '../../../context/AppContext';
 import { createGalleryImage, updateGalleryImage } from '../../../services/contentService';
 
 export default function GalleryFormModal({ open, onClose, image, onSaved }) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useApp();
   const [caption, setCaption] = useState('');
   const [error, setError] = useState('');
   const [serverError, setServerError] = useState('');
@@ -28,7 +30,7 @@ export default function GalleryFormModal({ open, onClose, image, onSaved }) {
     e.preventDefault();
     setServerError('');
     if (!caption.trim()) {
-      setError('Caption is required.');
+      setError(t('captionRequired'));
       return;
     }
     setSaving(true);
@@ -36,7 +38,7 @@ export default function GalleryFormModal({ open, onClose, image, onSaved }) {
     const result = isEdit ? await updateGalleryImage(image.id, { caption }, actor) : await createGalleryImage({ caption }, actor);
     setSaving(false);
     if (!result.success) { setServerError(result.error); return; }
-    showToast(isEdit ? 'Image updated successfully.' : 'Image added successfully.', 'success');
+    showToast(isEdit ? t('imageUpdatedSuccessfully') : t('imageAddedSuccessfully'), 'success');
     onSaved();
   };
 
@@ -44,23 +46,23 @@ export default function GalleryFormModal({ open, onClose, image, onSaved }) {
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? 'Edit Gallery Image' : 'Add Gallery Image'}
+      title={isEdit ? t('editGalleryImage') : t('addGalleryImage')}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
-          <Button variant="primary" onClick={handleSubmit} loading={saving}>{isEdit ? 'Save Changes' : 'Add Image'}</Button>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>{t('cancel')}</Button>
+          <Button variant="primary" onClick={handleSubmit} loading={saving}>{isEdit ? t('saveChanges') : t('addImage')}</Button>
         </>
       }
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {serverError && <Alert type="error">{serverError}</Alert>}
         <Input
-          label="Caption"
+          label={t('caption')}
           required
           value={caption}
           onChange={(e) => { setCaption(e.target.value); if (error) setError(''); }}
           error={error}
-          hint="A representative photo is generated automatically for this entry on the public Gallery page."
+          hint={t('galleryCaptionHint')}
         />
       </form>
     </Modal>

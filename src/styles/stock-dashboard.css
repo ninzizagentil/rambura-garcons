@@ -9,8 +9,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  background: linear-gradient(135deg, rgba(15, 108, 255, 0.08) 0%, rgba(15, 108, 255, 0.02) 100%);
-  border: 1px solid rgba(15, 108, 255, 0.1);
+  background: linear-gradient(135deg, rgba(25, 135, 84, 0.08) 0%, rgba(25, 135, 84, 0.02) 100%);
+  border: 1px solid rgba(25, 135, 84, 0.1);
   border-radius: 1.125rem;
   padding: 2rem 2.5rem;
   margin-bottom: 2rem;
@@ -60,16 +60,16 @@
 
 /* ===== METRIC CARDS ===== */
 .stock-metric-card {
-  background: linear-gradient(135deg, rgba(15, 108, 255, 0.04) 0%, transparent 100%);
-  border: 1px solid rgba(15, 108, 255, 0.1);
+  background: linear-gradient(135deg, rgba(25, 135, 84, 0.04) 0%, transparent 100%);
+  border: 1px solid rgba(25, 135, 84, 0.1);
   padding: 1.75rem;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stock-metric-card:hover {
-  border-color: rgba(15, 108, 255, 0.2);
-  box-shadow: 0 12px 30px rgba(15, 108, 255, 0.15);
+  border-color: rgba(25, 135, 84, 0.2);
+  box-shadow: 0 12px 30px rgba(25, 135, 84, 0.15);
   transform: translateY(-2px);
 }
 
@@ -91,7 +91,7 @@ html.dark-public .stock-panel,
 
 .stock-panel:hover {
   box-shadow: var(--shadow-card-hover);
-  border-color: rgba(15, 108, 255, 0.15);
+  border-color: rgba(25, 135, 84, 0.15);
 }
 
 html.dark-public .stock-panel:hover,
@@ -115,7 +115,7 @@ html.dark-public .stock-panel:hover,
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: linear-gradient(90deg, rgba(15, 108, 255, 0.02) 0%, transparent 100%);
+  background: linear-gradient(90deg, rgba(25, 135, 84, 0.02) 0%, transparent 100%);
   border-left: 3px solid transparent;
   border-radius: 0.5rem;
   transition: all 0.2s ease;
@@ -128,7 +128,7 @@ html.dark-public .stock-list-item,
 }
 
 .stock-list-item:hover {
-  background: linear-gradient(90deg, rgba(15, 108, 255, 0.04) 0%, transparent 100%);
+  background: linear-gradient(90deg, rgba(25, 135, 84, 0.04) 0%, transparent 100%);
   border-left-color: var(--color-medium-green);
   transform: translateX(2px);
 }

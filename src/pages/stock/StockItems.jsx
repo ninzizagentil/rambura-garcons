@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus, Eye, Pencil, Trash2, Boxes, TrendingDown, PackageX, Wallet,
-  Download, SlidersHorizontal, UtensilsCrossed, Cpu,
+  Download, SlidersHorizontal, UtensilsCrossed, Cpu, Package, Printer, FileSpreadsheet,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { TablePagination } from '../../components/tables/DataTable';
@@ -19,20 +19,24 @@ import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { useToast } from '../../context/ToastContext';
 import { ROLES } from '../../data/roles';
-import { getItems, refreshStock, deleteItem } from '../../services/stockService';
+import { getItems, refreshStock, deleteItem, createItem } from '../../services/stockService';
 import { STOCK_CATEGORIES, STOCK_UNITS } from '../../data/stock';
-import { exportToCSV } from '../../utils/export';
+import { exportToCSV, exportToExcel, parseCSV } from '../../utils/export';
+import { printReport } from '../../utils/print';
+import CsvImportButton from '../../components/common/CsvImportButton';
 import { cn } from '../../utils/cn';
 import StockItemFormModal from './StockItemFormModal';
+import { useApp } from '../../context/AppContext';
 
 const STATUS_OPTIONS = [
-  { value: 'normal', label: 'Normal' },
-  { value: 'low-stock', label: 'Low Stock' },
-  { value: 'out-of-stock', label: 'Out of Stock' },
+  { value: 'normal', label: 'normal' },
+  { value: 'low-stock', label: 'lowStock' },
+  { value: 'out-of-stock', label: 'outOfStock' },
 ];
 
-function formatRWF(amount) {
-  return `RWF ${Math.round(amount || 0).toLocaleString('en-US')}`;
+function formatRWF(amount, language) {
+  const locale = language === 'fr' ? 'fr-FR' : language === 'rw' ? 'rw-RW' : 'en-US';
+  return `RWF ${Math.round(amount || 0).toLocaleString(locale)}`;
 }
 
 /**
@@ -42,7 +46,7 @@ function formatRWF(amount) {
  * placeholder tied to the item's category.
  */
 function ItemThumb({ category }) {
-  const Icon = category === 'Foods' ? UtensilsCrossed : Cpu;
+  const Icon = category === 'Foods' ? UtensilsCrossed : category === 'Electronic Devices' ? Cpu : Package;
   return (
     <span
       className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--color-light-green-100)] text-[var(--color-medium-green)] flex-shrink-0"
@@ -57,6 +61,7 @@ export default function StockItems() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
+  const { t, language } = useApp();
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,23 +93,35 @@ export default function StockItems() {
       setError(null);
       return true;
     } catch {
-      setError('Failed to load stock items. Please try again.');
+      setError(t('failedLoadStockItems'));
       return false;
     }
   };
 
-  const refresh = () => fetchItems();
+  const refresh = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await refreshStock();
+      fetchItems();
+    } catch {
+      setError(t('failedLoadStockItems'));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    window.addEventListener('rg:stock-updated', refresh);
+    const handleStockUpdated = () => fetchItems();
+    window.addEventListener('rg:stock-updated', handleStockUpdated);
     setLoading(true);
     refreshStock()
-      .catch(() => setError('Failed to load stock items. Please try again.'))
+      .catch(() => setError(t('failedLoadStockItems')))
       .finally(() => {
         fetchItems();
         setLoading(false);
       });
-    return () => window.removeEventListener('rg:stock-updated', refresh);
+    return () => window.removeEventListener('rg:stock-updated', handleStockUpdated);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -185,24 +202,47 @@ export default function StockItems() {
 
   const handleExport = () => {
     if (sorted.length === 0) {
-      showToast('There are no items to export for the current filters.', 'warning');
+      showToast(t('noItemsToExportFilters'), 'warning');
       return;
     }
     exportToCSV(
       'stock-items',
       [
-        { key: 'code', header: 'Code' },
-        { key: 'name', header: 'Item Name' },
-        { key: 'category', header: 'Category' },
-        { key: 'unit', header: 'Unit' },
-        { key: 'quantity', header: 'Quantity' },
-        { key: 'minLevel', header: 'Minimum Level' },
-        { key: 'status', header: 'Status' },
-        { key: 'value', header: 'Value (RWF)', value: (row) => row.value },
+        { key: 'code', header: t('code') }, { key: 'name', header: t('itemName') }, { key: 'category', header: t('category') },
+        { key: 'unit', header: t('unit') }, { key: 'quantity', header: t('quantity') }, { key: 'minLevel', header: t('minimumLevel') },
+        { key: 'status', header: t('status') }, { key: 'value', header: t('valueRwf'), value: (row) => row.value },
       ],
       sorted
     );
-    showToast('Stock items exported.', 'success');
+    showToast(t('stockItemsExported'), 'success');
+  };
+
+  const exportColumns = [
+    { key: 'code', header: t('code') }, { key: 'name', header: t('itemName') }, { key: 'category', header: t('category') },
+    { key: 'unit', header: t('unit') }, { key: 'quantity', header: t('quantity') }, { key: 'minLevel', header: t('minimumLevel') },
+    { key: 'status', header: t('status') }, { key: 'value', header: t('valueRwf'), value: (row) => row.value },
+  ];
+
+  const handleExcelExport = () => {
+    if (!sorted.length) { showToast(t('noItemsToExport'), 'warning'); return; }
+    exportToExcel('stock-items', exportColumns, sorted); showToast(t('excelFileExported'), 'success');
+  };
+
+  const handlePrint = () => {
+    printReport(t('stockItems'), exportColumns, sorted); showToast(t('printReportOpened'), 'success');
+  };
+
+  const handleImport = async (text) => {
+    const rows = parseCSV(text);
+    if (!rows.length) { showToast(t('csvNoDataRows'), 'warning'); return; }
+    let imported = 0;
+    for (const row of rows) {
+      if (!row.name || !STOCK_CATEGORIES.includes(row.category)) continue;
+      const result = await createItem({ ...row, quantity: Number(row.quantity || 0), minLevel: Number(row.minLevel || 0), unitPrice: Number(row.unitPrice || 0) });
+      if (result.success) imported += 1;
+    }
+    await refresh();
+    showToast(t('stockItemsImported', { count: imported }), imported ? 'success' : 'warning');
   };
 
   const handleDelete = async () => {
@@ -212,7 +252,7 @@ export default function StockItems() {
     setDeleting(false);
     setDeleteTarget(null);
     if (result.success) {
-        showToast(`${deleteTarget.name} removed from stock.`, 'success');
+        showToast(t('stockItemRemoved', { name: deleteTarget.name }), 'success');
         refresh();
         setSelectedKeys((prev) => {
           const next = new Set(prev);
@@ -227,7 +267,7 @@ export default function StockItems() {
   const columns = [
     {
       key: 'name',
-      header: 'Item Name',
+      header: t('itemName'),
       sortable: true,
       render: (i) => (
         <div className="flex items-center gap-3">
@@ -239,24 +279,23 @@ export default function StockItems() {
         </div>
       ),
     },
-    { key: 'category', header: 'Category' },
-    { key: 'unit', header: 'Unit' },
-    { key: 'quantity', header: 'Quantity', sortable: true, render: (i) => `${i.quantity} ${i.unit}` },
-    { key: 'minLevel', header: 'Minimum Level', render: (i) => `${i.minLevel} ${i.unit}` },
-    { key: 'status', header: 'Status', render: (i) => <StatusBadge status={i.status} /> },
-    { key: 'value', header: 'Value (RWF)', sortable: true, render: (i) => formatRWF(i.value) },
+    { key: 'category', header: t('category') }, { key: 'unit', header: t('unit') },
+    { key: 'quantity', header: t('quantity'), sortable: true, render: (i) => `${i.quantity} ${i.unit}` },
+    { key: 'minLevel', header: t('minimumLevel'), render: (i) => `${i.minLevel} ${i.unit}` },
+    { key: 'status', header: t('status'), render: (i) => <StatusBadge status={i.status} label={t(i.status === 'normal' ? 'normal' : i.status === 'low-stock' ? 'lowStock' : 'outOfStock')} /> },
+    { key: 'value', header: t('valueRwf'), sortable: true, render: (i) => formatRWF(i.value, language) },
     {
       key: 'actions',
       header: 'Actions',
       render: (i) => (
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-          <IconButton icon={Eye} label={`View ${i.name}`} onClick={() => setViewItem(i)} />
+          <IconButton icon={Eye} label={`${t('view')} ${i.name}`} onClick={() => setViewItem(i)} />
           <RowActionMenu
-            label={`Actions for ${i.name}`}
+            label={t('actionsForItem', { name: i.name })}
             items={[
-              { label: 'View Details', icon: Eye, onClick: () => navigate(`/stock/items/${i.id}`) },
-              !viewOnly && { label: 'Edit', icon: Pencil, onClick: () => setEditItem(i) },
-              !viewOnly && { label: 'Delete', icon: Trash2, tone: 'danger', onClick: () => setDeleteTarget(i) },
+              { label: t('viewDetails'), icon: Eye, onClick: () => navigate(`/stock/items/${i.id}`) },
+              !viewOnly && { label: t('edit'), icon: Pencil, onClick: () => setEditItem(i) },
+              !viewOnly && { label: t('delete'), icon: Trash2, tone: 'danger', onClick: () => setDeleteTarget(i) },
             ]}
           />
         </div>
@@ -267,10 +306,10 @@ export default function StockItems() {
   return (
     <div>
       <PageHeader
-        title="All Items"
-        description="Manage the school's stock catalogue."
-        breadcrumb={[{ label: 'Stock MIS', to: '/stock' }, { label: 'All Items' }]}
-        actions={!viewOnly && <Button icon={Plus} onClick={() => setFormOpen(true)}>Add New Item</Button>}
+        title={t('allItems')}
+        description={t('manageStockCatalogue')}
+        breadcrumb={[{ label: t('stockMis'), to: '/stock' }, { label: t('allItems') }]}
+        actions={!viewOnly && <Button icon={Plus} onClick={() => setFormOpen(true)}>{t('addNewItem')}</Button>}
       />
 
       {viewOnly && <ViewOnlyBanner module="Stock MIS" />}
@@ -282,22 +321,22 @@ export default function StockItems() {
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatCard label="Total Items" value={stats.total} icon={Boxes} />
+            <StatCard label={t('totalItems')} value={stats.total} icon={Boxes} />
             <StatCard
-              label="Low Stock"
+              label={t('lowStock')}
               value={stats.lowStock}
               icon={TrendingDown}
               tone="amber"
               onClick={() => setStatusFilter('low-stock')}
             />
             <StatCard
-              label="Out of Stock"
+              label={t('outOfStock')}
               value={stats.outOfStock}
               icon={PackageX}
               tone="red"
               onClick={() => setStatusFilter('out-of-stock')}
             />
-            <StatCard label="Total Value" value={formatRWF(stats.totalValue)} icon={Wallet} tone="blue" />
+            <StatCard label={t('totalValue')} value={formatRWF(stats.totalValue, language)} icon={Wallet} tone="blue" />
           </div>
 
           <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
@@ -305,26 +344,26 @@ export default function StockItems() {
               <SearchBar
                 value={search}
                 onChange={setSearch}
-                placeholder="Search by item name, code or category…"
+                placeholder={t('searchStockItems')}
                 className="flex-1 min-w-[220px]"
               />
               <FilterDropdown
-                label="All Categories"
+                label={t('allCategories')}
                 value={categoryFilter}
                 onChange={setCategoryFilter}
                 options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))}
               />
               <FilterDropdown
-                label="All Units"
+                label={t('allUnits')}
                 value={unitFilter}
                 onChange={setUnitFilter}
                 options={STOCK_UNITS.map((u) => ({ value: u, label: u }))}
               />
               <FilterDropdown
-                label="All Status"
+                label={t('allStatus')}
                 value={statusFilter}
                 onChange={setStatusFilter}
-                options={STATUS_OPTIONS}
+                options={STATUS_OPTIONS.map((option) => ({ ...option, label: t(option.label) }))}
               />
             </div>
 
@@ -335,17 +374,20 @@ export default function StockItems() {
                 onClick={() => setFiltersOpen((v) => !v)}
                 className="sm:hidden"
               >
-                Filters
+                {t('filters')}
               </Button>
               <Button variant="secondary" icon={Download} onClick={handleExport}>
-                Export
+                {t('csv')}
               </Button>
+              <Button variant="secondary" icon={FileSpreadsheet} onClick={handleExcelExport}>{t('excel')}</Button>
+              <Button variant="secondary" icon={Printer} onClick={handlePrint}>{t('printPdf')}</Button>
+              {!viewOnly && <CsvImportButton onImport={handleImport} />}
             </div>
           </div>
 
           {selectedKeys.size > 0 && (
             <p className="text-xs font-medium text-[var(--color-medium-green)] mb-2">
-              {selectedKeys.size} item{selectedKeys.size > 1 ? 's' : ''} selected
+              {t('itemsSelected', { count: selectedKeys.size })}
             </p>
           )}
 
@@ -365,9 +407,9 @@ export default function StockItems() {
               onSort={handleSort}
               emptyState={
                 <EmptyState
-                  title="No stock items found"
-                  message="Try a different search or filter, or add a new item to the catalogue."
-                  actionLabel={viewOnly ? undefined : 'Add New Item'}
+                  title={t('noStockItemsFound')}
+                  message={t('tryDifferentStockSearch')}
+                  actionLabel={viewOnly ? undefined : t('addNewItem')}
                   onAction={viewOnly ? undefined : () => setFormOpen(true)}
                 />
               }
@@ -403,9 +445,9 @@ export default function StockItems() {
             open={!!deleteTarget}
             onClose={() => setDeleteTarget(null)}
             onConfirm={handleDelete}
-            title="Delete stock item"
-            message={deleteTarget ? `Are you sure you want to delete "${deleteTarget.name}"? This cannot be undone.` : ''}
-            confirmLabel="Delete"
+            title={t('deleteStockItem')}
+            message={deleteTarget ? t('confirmDeleteStockItem', { name: deleteTarget.name }) : ''}
+            confirmLabel={t('delete')}
             variant="danger"
             loading={deleting}
           />
@@ -415,16 +457,16 @@ export default function StockItems() {
       <Modal
         open={!!viewItem}
         onClose={() => setViewItem(null)}
-        title={viewItem?.name || 'Item details'}
+        title={viewItem?.name || t('itemDetails')}
         size="md"
         footer={
           <>
-            <Button variant="ghost" onClick={() => setViewItem(null)}>Close</Button>
+            <Button variant="ghost" onClick={() => setViewItem(null)}>{t('close')}</Button>
             <Button
               variant="primary"
               onClick={() => { if (viewItem) navigate(`/stock/items/${viewItem.id}`); }}
             >
-              Open Full Details
+              {t('openFullDetails')}
             </Button>
           </>
         }
@@ -443,11 +485,11 @@ export default function StockItems() {
               <p className="text-sm text-[var(--color-dark-gray)] leading-relaxed">{viewItem.description}</p>
             )}
             <dl className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--color-border-gray)]">
-              <div><dt className="text-xs text-[var(--color-mid-gray)]">Category</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{viewItem.category}</dd></div>
-              <div><dt className="text-xs text-[var(--color-mid-gray)]">Unit</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{viewItem.unit}</dd></div>
-              <div><dt className="text-xs text-[var(--color-mid-gray)]">Quantity</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{viewItem.quantity} {viewItem.unit}</dd></div>
-              <div><dt className="text-xs text-[var(--color-mid-gray)]">Minimum Level</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{viewItem.minLevel} {viewItem.unit}</dd></div>
-              <div className="col-span-2"><dt className="text-xs text-[var(--color-mid-gray)]">Total Value</dt><dd className="font-display font-semibold text-[var(--color-heading)] mt-0.5">{formatRWF(viewItem.value)}</dd></div>
+              <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('category')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{viewItem.category}</dd></div>
+              <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('unit')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{viewItem.unit}</dd></div>
+              <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('quantity')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{viewItem.quantity} {viewItem.unit}</dd></div>
+              <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('minimumLevel')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{viewItem.minLevel} {viewItem.unit}</dd></div>
+              <div className="col-span-2"><dt className="text-xs text-[var(--color-mid-gray)]">{t('totalValue')}</dt><dd className="font-display font-semibold text-[var(--color-heading)] mt-0.5">{formatRWF(viewItem.value, language)}</dd></div>
             </dl>
           </div>
         )}

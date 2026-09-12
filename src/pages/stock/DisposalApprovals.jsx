@@ -30,7 +30,7 @@ export default function DisposalApprovals() {
     setLoading(true);
     try {
       const response = await fetch(`/api/stock/disposal-requests/pending?page=${page}&limit=10`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('rg_access_token')}` }
       });
       const json = await response.json();
       if (json.success) {
@@ -53,7 +53,7 @@ export default function DisposalApprovals() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          Authorization: `Bearer ${localStorage.getItem('rg_access_token')}`
         },
         body: JSON.stringify({ approvalNotes: actionNotes })
       });
@@ -86,7 +86,7 @@ export default function DisposalApprovals() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+          Authorization: `Bearer ${localStorage.getItem('rg_access_token')}`
         },
         body: JSON.stringify({ rejectionReason: actionNotes })
       });

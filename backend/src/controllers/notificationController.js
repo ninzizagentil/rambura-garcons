@@ -1,18 +1,26 @@
 import Notification from '../models/Notification.js';
 import { list, ok, fail } from '../utils/api.js';
+import { scanOperationalAlerts } from '../services/alertService.js';
+
+export async function scanAlerts(_req, res) {
+  return ok(res, await scanOperationalAlerts(), 'Operational alerts scanned');
+}
 
 export async function createNotification(req, res) {
-  const { type, message, link } = req.body;
+  const { type, title, message, link, module, dedupeKey } = req.body;
   if (!type || !message) return fail(res, 'Type and message are required', 422);
   const notification = new Notification({
     userId: req.user._id,
+    title: title || 'System notification',
     type,
     message,
+    module,
     link: link || null,
+    dedupeKey: dedupeKey || null,
     read: false,
   });
   await notification.save();
-  return ok(res, { ...notification.toObject(), to: notification.link, date: notification.createdAt }, 'Notification created', 201);
+  return ok(res, { ...notification.toObject(), id: notification._id.toString(), to: notification.link, date: notification.createdAt }, 'Notification created', 201);
 }
 
 export async function getNotifications(req, res) {
@@ -23,7 +31,7 @@ export async function getNotifications(req, res) {
     Notification.find(filter).sort('-createdAt').skip((page - 1) * limit).limit(limit),
     Notification.countDocuments(filter),
   ]);
-  return list(res, data.map((n) => ({ ...n.toObject(), to: n.link, date: n.createdAt })), {
+  return list(res, data.map((n) => ({ ...n.toObject(), id: n._id.toString(), to: n.link, date: n.createdAt })), {
     page,
     limit,
     total,

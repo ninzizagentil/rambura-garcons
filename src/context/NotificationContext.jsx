@@ -1,9 +1,14 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '../services/api';
-import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../services/notificationService';
+import { ROLE_HOME, ROLE_LABELS } from '../data/roles';
+import { getNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification as removeNotification } from '../services/notificationService';
 
 const NotificationContext = createContext(null);
 const SOUND_KEY = 'rg_notification_sound_enabled';
+
+function normalizeNotification(notification) {
+  return { ...notification, id: notification.id || notification._id, to: notification.to || notification.link, date: notification.date || notification.createdAt };
+}
 
 /** Plays a short two-tone chime using the Web Audio API — no external audio
  * file needed, so it works instantly offline and isn't blocked by CSP/asset
@@ -45,45 +50,6 @@ export function NotificationProvider({ children }) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const hydrated = useRef(false);
 
-  useEffect(() => {
-    const refresh = () => getNotifications().then(setNotifications).catch(() => setNotifications([]));
-    const authenticated = () => refresh();
-    window.addEventListener('rg:authenticated', authenticated);
-    refresh();
-    try {
-      const rawSound = localStorage.getItem(SOUND_KEY);
-      if (rawSound !== null) setSoundEnabled(rawSound === 'true');
-    } catch {
-      // keep default (enabled)
-    }
-    // Mark hydration complete on the next tick so the initial seed/load
-    // above never itself triggers the "new notification" chime.
-    const t = setTimeout(() => { hydrated.current = true; }, 0);
-    return () => { clearTimeout(t); window.removeEventListener('rg:authenticated', authenticated); };
-  }, []);
-
-  const toggleSound = useCallback(() => {
-    setSoundEnabled((prev) => {
-      const next = !prev;
-      localStorage.setItem(SOUND_KEY, String(next));
-      return next;
-    });
-  }, []);
-
-  const markAsRead = useCallback(async (id) => {
-    await markNotificationRead(id).catch(() => {});
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  }, []);
-
-  const markAllAsRead = useCallback(async () => {
-    await markAllNotificationsRead().catch(() => {});
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, []);
-
-  /** Adds a brand-new notification (unread, timestamped now by default) and
-   * plays the chime — this is the single path real app events (a book going
-   * overdue, stock dropping low, etc.) should call so the bell badge and
-   * sound both stay in sync with what actually happened. */
   const addNotification = useCallback(({ type = 'system', message, to }) => {
     const notification = {
       id: `n_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -97,18 +63,103 @@ export function NotificationProvider({ children }) {
     if (hydrated.current && soundEnabled) playChime();
     
     // Persist to backend
-    api.post('/notifications', { type, message, link: to }).catch(() => {
-      // Fail silently if backend save fails — the in-memory notification is already shown
-    });
+    api.post('/notifications', { type: type === 'system' ? 'info' : type, title: 'System notification', message, link: to })
+      .then((result) => {
+        const saved = result.data && normalizeNotification(result.data);
+        if (saved?.id) setNotifications((prev) => prev.map((item) => item.id === notification.id ? { ...item, ...saved } : item));
+      })
+      .catch(() => {});
     
     return notification;
   }, [soundEnabled]);
+
+  const notifyLogin = useCallback(() => {
+    try {
+      const session = localStorage.getItem('rg_auth_session');
+      if (!session) return;
+      const user = JSON.parse(session);
+      const role = user?.role;
+      if (!role) return;
+
+      const panelLabel = ROLE_LABELS[role] || role;
+      const to = ROLE_HOME[role] || '/';
+      const fullName = user?.fullName || user?.name || 'User';
+      addNotification({
+        type: 'info',
+        message: `${fullName} signed in to ${panelLabel}.`,
+        to,
+      });
+    } catch {
+      // Keep quiet if the session payload is missing or malformed.
+    }
+  }, [addNotification]);
+
+  useEffect(() => {
+    const refresh = () => {
+      const accessToken = localStorage.getItem('rg_access_token');
+      if (!accessToken) {
+        setNotifications([]);
+        return Promise.resolve([]);
+      }
+      return api.post('/notifications/scan', {}).catch(() => null)
+        .then(() => getNotifications())
+        .then((result) => setNotifications((Array.isArray(result) ? result : result?.items || []).map(normalizeNotification)))
+        .catch(() => setNotifications([]));
+    };
+
+    const authenticated = () => {
+      refresh();
+      notifyLogin();
+    };
+    window.addEventListener('rg:authenticated', authenticated);
+
+    if (localStorage.getItem('rg_access_token')) {
+      refresh();
+    }
+
+    try {
+      const rawSound = localStorage.getItem(SOUND_KEY);
+      if (rawSound !== null) setSoundEnabled(rawSound === 'true');
+    } catch {
+      // keep default (enabled)
+    }
+
+    const t = setTimeout(() => { hydrated.current = true; }, 0);
+    return () => { clearTimeout(t); window.removeEventListener('rg:authenticated', authenticated); };
+  }, [notifyLogin]);
+
+  const toggleSound = useCallback(() => {
+    setSoundEnabled((prev) => {
+      const next = !prev;
+      localStorage.setItem(SOUND_KEY, String(next));
+      return next;
+    });
+  }, []);
+
+  const markAsRead = useCallback(async (id) => {
+    if (typeof id === 'string' && /^[a-f\d]{24}$/i.test(id)) await markNotificationRead(id).catch(() => {});
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  }, []);
+
+  const markAllAsRead = useCallback(async () => {
+    await markAllNotificationsRead();
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  }, []);
+
+  const deleteNotification = useCallback(async (id) => {
+    try {
+      await removeNotification(id);
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch {
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    }
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, markAsRead, markAllAsRead, addNotification, soundEnabled, toggleSound }}
+      value={{ notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, addNotification, soundEnabled, toggleSound }}
     >
       {children}
     </NotificationContext.Provider>

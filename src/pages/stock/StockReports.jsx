@@ -17,6 +17,7 @@ import {
 import { STOCK_CATEGORIES } from '../../data/stock';
 import { exportToCSV } from '../../utils/export';
 import { printReport } from '../../utils/print';
+import { useApp } from '../../context/AppContext';
 
 const PIE_COLORS = ['var(--color-medium-green)', 'var(--color-status-blue)'];
 
@@ -26,6 +27,7 @@ function formatRWF(amount) {
 
 export default function StockReports() {
   const { showToast } = useToast();
+  const { t } = useApp();
   const navigate = useNavigate();
   const [category, setCategory] = useState('');
 
@@ -216,32 +218,32 @@ export default function StockReports() {
   return (
     <div>
       <PageHeader
-        title="Stock Reports"
-        description="Every inventory and movement report, ready to view, print, or export."
-        breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Reports' }]}
+        title={t('stockReports')}
+        description={t('stockReportsDescription')}
+        breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('reports') }]}
       />
 
       <div className="flex flex-wrap gap-3 mb-5">
-        <FilterDropdown label="All Categories" value={category} onChange={setCategory} options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))} />
+        <FilterDropdown label={t('allCategories')} value={category} onChange={setCategory} options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
-          <p className="text-sm text-[var(--color-mid-gray)]">Received Stock</p>
+          <p className="text-sm text-[var(--color-mid-gray)]">{t('receivedStock')}</p>
           <p className="font-display text-2xl font-semibold text-[var(--color-status-green)] mt-1">+{received}</p>
         </div>
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
-          <p className="text-sm text-[var(--color-mid-gray)]">Issued / Used Stock</p>
+          <p className="text-sm text-[var(--color-mid-gray)]">{t('issuedUsedStock')}</p>
           <p className="font-display text-2xl font-semibold text-[var(--color-status-amber)] mt-1">−{issued}</p>
         </div>
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
-          <p className="text-sm text-[var(--color-mid-gray)]">Total Stock Value</p>
+          <p className="text-sm text-[var(--color-mid-gray)]">{t('totalStockValue')}</p>
           <p className="font-display text-2xl font-semibold text-[var(--color-dark-gray)] mt-1">{formatRWF(totalValue)}</p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-5 mb-6">
-        <ChartCard title="Current Balances by Category" description="Foods vs. Electronic Devices">
+        <ChartCard title={t('currentBalancesCategory')} description={t('stockCategoriesDescription')}>
           <ResponsiveContainer width="100%" height={240}>
             <PieChart>
               <Pie data={categoryBalanceData} dataKey="value" nameKey="name" outerRadius={85} label>
@@ -253,7 +255,7 @@ export default function StockReports() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Most Used Items" description="Top items by total quantity issued">
+        <ChartCard title={t('mostUsedItems')} description={t('mostUsedItemsDescription')}>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={mostUsed}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-gray)" />
@@ -266,7 +268,7 @@ export default function StockReports() {
         </ChartCard>
       </div>
 
-      <h2 className="font-display text-base font-semibold text-[var(--color-heading)] mb-3">All Reports</h2>
+      <h2 className="font-display text-base font-semibold text-[var(--color-heading)] mb-3">{t('allReports')}</h2>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {REPORTS.map((report) => (
           <div key={report.id} className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5 flex flex-col">

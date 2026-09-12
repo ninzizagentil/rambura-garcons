@@ -50,10 +50,10 @@ function DesktopItem({ item }) {
         className={({ isActive }) =>
           cn(
             'group relative px-3.5 py-2.5 text-sm font-semibold tracking-[0.02em] transition-all duration-200',
-            'before:absolute before:inset-x-2 before:-bottom-1 before:h-[2px] before:rounded-full before:bg-[var(--gold)] before:origin-left before:scale-x-0 before:transition-transform before:duration-200',
+            'before:absolute before:inset-x-2 before:-bottom-1 before:h-[2px] before:rounded-full before:bg-[var(--button-primary)] before:origin-left before:scale-x-0 before:transition-transform before:duration-200',
             isActive
-              ? 'text-[var(--gold)] before:scale-x-100'
-              : 'text-[var(--text-primary)] hover:text-[var(--gold)] hover:before:scale-x-100'
+              ? 'text-[var(--button-primary)] before:scale-x-100'
+              : 'text-[var(--text-primary)] hover:text-[var(--button-primary)] hover:before:scale-x-100'
           )
         }
       >
@@ -68,9 +68,9 @@ function DesktopItem({ item }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="group relative flex items-center gap-1 px-3.5 py-2.5 text-sm font-semibold tracking-[0.02em] text-[var(--text-primary)] transition-all duration-200 hover:text-[var(--gold)]"
+        className="group relative flex items-center gap-1 px-3.5 py-2.5 text-sm font-semibold tracking-[0.02em] text-[var(--text-primary)] transition-all duration-200 hover:text-[var(--button-primary)]"
       >
-        <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-full after:rounded-full after:bg-[var(--gold)] after:origin-left after:scale-x-0 after:transition-transform after:duration-200 group-hover:after:scale-x-100">
+        <span className="relative after:absolute after:-bottom-1 after:left-0 after:h-[2px] after:w-full after:rounded-full after:bg-[var(--button-primary)] after:origin-left after:scale-x-0 after:transition-transform after:duration-200 group-hover:after:scale-x-100">
           {item.label}
         </span>
         <ChevronDown className={cn('w-3.5 h-3.5 transition-transform duration-200', open && 'rotate-180')} aria-hidden="true" />
@@ -87,8 +87,8 @@ function DesktopItem({ item }) {
                   cn(
                     'block px-4 py-2.5 text-sm font-medium transition-colors',
                     isActive
-                      ? 'text-[var(--gold)] bg-[rgba(217,164,65,0.08)]'
-                      : 'text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.03)] hover:text-[var(--gold)]'
+                      ? 'text-[var(--button-primary)] bg-[var(--button-primary-soft)]'
+                      : 'text-[var(--text-primary)] hover:bg-[var(--button-primary-soft)] hover:text-[var(--button-primary)]'
                   )
                 }
               >
@@ -115,8 +115,8 @@ function MobileItem({ item, onNavigate }) {
           cn(
             'block px-3 py-2.5 rounded-md text-sm font-medium',
             isActive
-              ? 'text-[var(--gold)] bg-[rgba(217,164,65,0.08)]'
-              : 'text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.03)]'
+              ? 'text-[var(--button-primary)] bg-[var(--button-primary-soft)]'
+              : 'text-[var(--text-primary)] hover:bg-[var(--button-primary-soft)] hover:text-[var(--button-primary)]'
           )
         }
       >
@@ -131,7 +131,7 @@ function MobileItem({ item, onNavigate }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium text-[var(--text-primary)] hover:bg-[rgba(255,255,255,0.03)]"
+        className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--button-primary-soft)] hover:text-[var(--button-primary)]"
       >
         {item.label}
         <ChevronDown className={cn('w-4 h-4 transition-transform', open && 'rotate-180')} aria-hidden="true" />
@@ -147,8 +147,8 @@ function MobileItem({ item, onNavigate }) {
                 cn(
                   'block px-3 py-2 rounded-md text-sm',
                   isActive
-                    ? 'text-[var(--gold)] bg-[rgba(217,164,65,0.08)]'
-                    : 'text-[var(--text-secondary)] hover:bg-[rgba(255,255,255,0.03)]'
+                    ? 'text-[var(--button-primary)] bg-[var(--button-primary-soft)]'
+                    : 'text-[var(--text-secondary)] hover:bg-[var(--button-primary-soft)] hover:text-[var(--button-primary)]'
                 )
               }
             >
@@ -222,7 +222,7 @@ export default function PublicNavbar() {
             </button>
             <Link
               to="/login"
-              className="inline-flex items-center px-5 py-2.5 rounded-full border border-[var(--gold)] bg-transparent text-[var(--text-primary)] text-sm font-semibold shadow-[0_10px_20px_rgba(0,0,0,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--gold)] hover:text-[var(--dark-bg)]"
+              className="inline-flex items-center px-5 py-2.5 rounded-full border border-[var(--button-primary)] bg-transparent text-[var(--text-primary)] text-sm font-semibold shadow-[0_10px_20px_rgba(0,0,0,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[var(--button-primary)] hover:text-white"
             >
               Login
             </Link>
@@ -261,7 +261,7 @@ export default function PublicNavbar() {
           <Link
             to="/login"
             onClick={() => setOpen(false)}
-            className="block mt-2 text-center px-4 py-2.5 rounded-full border border-[var(--color-border-gray)] bg-[rgba(255,255,255,0.8)] text-[var(--color-dark-gray)] text-sm font-semibold shadow-[0_10px_20px_rgba(31,41,55,0.08)] backdrop-blur-xl"
+            className="block mt-2 text-center px-4 py-2.5 rounded-full border border-[var(--button-primary)] bg-[rgba(255,255,255,0.8)] text-[var(--color-dark-gray)] text-sm font-semibold shadow-[0_10px_20px_rgba(31,41,55,0.08)] backdrop-blur-xl transition-colors hover:bg-[var(--button-primary)] hover:text-white"
           >
             Login
           </Link>

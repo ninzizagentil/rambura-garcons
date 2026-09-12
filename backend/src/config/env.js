@@ -16,6 +16,8 @@ export const env = {
   refreshSecret: process.env.JWT_REFRESH_SECRET || 'development-refresh-secret',
   accessExpires: process.env.JWT_ACCESS_EXPIRES || '15m',
   refreshExpires: process.env.JWT_REFRESH_EXPIRES || '7d',
+  sessionIdleMinutes: Number(process.env.SESSION_IDLE_MINUTES || 30),
+  passwordResetMinutes: Number(process.env.PASSWORD_RESET_MINUTES || 30),
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
   // Used to build absolute /uploads URLs for locally-stored images.
   serverUrl: process.env.SERVER_URL || `http://localhost:${Number(process.env.PORT || 5000)}`,

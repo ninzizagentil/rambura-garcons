@@ -12,9 +12,11 @@ import DisposeStockModal from '../../components/modals/DisposeStockModal';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import { getDamagedItems, getItems, refreshStock } from '../../services/stockService';
+import { useApp } from '../../context/AppContext';
 
 export default function DamagedItems() {
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
+  const { t } = useApp();
 
   const [records, setRecords] = useState(() => getDamagedItems());
   const [reportItemId, setReportItemId] = useState('');
@@ -32,20 +34,19 @@ export default function DamagedItems() {
   }, []);
 
   const columns = [
-    { key: 'itemName', header: 'Item' },
-    { key: 'quantity', header: 'Quantity', render: (d) => `${d.quantity} ${d.unit}` },
-    { key: 'reason', header: 'Reason', render: (d) => <Badge tone="orange">{d.reason}</Badge> },
-    { key: 'date', header: 'Date' },
-    { key: 'reportedBy', header: 'Reported By' },
-    { key: 'notes', header: 'Notes', render: (d) => <span className="text-[var(--color-mid-gray)]">{d.notes || '—'}</span> },
-    { key: 'status', header: 'Status', render: () => <Badge tone="orange">Reported</Badge> },
+    { key: 'itemName', header: t('item') },
+    { key: 'quantity', header: t('quantity'), render: (d) => `${d.quantity} ${d.unit}` },
+    { key: 'reason', header: t('reason'), render: (d) => <Badge tone="orange">{d.reason}</Badge> },
+    { key: 'date', header: t('date') }, { key: 'reportedBy', header: t('reportedBy') },
+    { key: 'notes', header: t('notes'), render: (d) => <span className="text-[var(--color-mid-gray)]">{d.notes || '—'}</span> },
+    { key: 'status', header: t('status'), render: () => <Badge tone="orange">{t('reported')}</Badge> },
   ];
   if (!viewOnly) {
     columns.push({
       key: 'actions',
-      header: 'Action',
+      header: t('action'),
       render: (d) => (
-        <Button size="sm" variant="danger" icon={Trash2} onClick={() => setDisposeTarget(d)}>Dispose</Button>
+        <Button size="sm" variant="danger" icon={Trash2} onClick={() => setDisposeTarget(d)}>{t('dispose')}</Button>
       ),
     });
   }
@@ -53,9 +54,9 @@ export default function DamagedItems() {
   return (
     <div>
       <PageHeader
-        title="Damaged Items"
-        description="Stock that has been reported broken, faulty, or otherwise damaged."
-        breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Damaged Items' }]}
+        title={t('damagedItems')}
+        description={t('damagedItemsDescription')}
+        breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('damagedItems') }]}
       />
       {viewOnly && <ViewOnlyBanner module="Stock MIS" />}
 
@@ -63,7 +64,7 @@ export default function DamagedItems() {
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-4 mb-5 flex flex-col sm:flex-row sm:items-end gap-3">
           <div className="flex-1 max-w-xs">
             <Select
-              label="Select an item to report damage for"
+              label={t('selectDamageItem')}
               value={reportItemId}
               onChange={(e) => setReportItemId(e.target.value)}
               options={items.map((i) => ({ value: i.id, label: `${i.name} (${i.quantity} ${i.unit} in stock)` }))}
@@ -75,7 +76,7 @@ export default function DamagedItems() {
             disabled={!reportItemId}
             onClick={() => setReportOpen(true)}
           >
-            Report Damage
+            {t('reportDamage')}
           </Button>
         </div>
       )}
@@ -84,7 +85,7 @@ export default function DamagedItems() {
         <DataTable
           columns={columns}
           data={records}
-          emptyState={<EmptyState icon={AlertTriangle} title="No damaged items" message="No damage reports are currently pending." />}
+          emptyState={<EmptyState icon={AlertTriangle} title={t('noDamagedItems')} message={t('noDamageReports')} />}
         />
       </div>
 

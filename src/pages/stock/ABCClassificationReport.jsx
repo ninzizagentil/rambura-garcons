@@ -22,7 +22,7 @@ export default function ABCClassificationReport() {
     setLoading(true);
     try {
       const response = await fetch('/api/stock/reports/abc-classification', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('rg_access_token')}` }
       });
       const json = await response.json();
       if (json.success) {

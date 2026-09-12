@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle2, FileText, CalendarDays, ListChecks, Phone, User, Mail, GraduationCap, Send } from 'lucide-react';
-import { Input, Select, Textarea } from '../../components/forms/FormField';
+import { Input, Select } from '../../components/forms/FormField';
 import { FormSection } from '../../components/cards/InsightChartCards';
 import Button from '../../components/common/Button';
 import PageHero from '../../components/common/PageHero';
@@ -18,6 +18,7 @@ export default function Admissions() {
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', program: '', message: '' });
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [applicationReference, setApplicationReference] = useState('');
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState('');
 
@@ -47,7 +48,8 @@ export default function Admissions() {
     setSaving(true);
     setServerError('');
     try {
-      await submitApplication({ ...form, programLabel: program?.title });
+      const application = await submitApplication({ ...form, programLabel: program?.title });
+      setApplicationReference(application.referenceNumber || application._id || application.id || 'Submitted');
       setSubmitted(true);
     } catch (error) {
       setServerError(error.message);
@@ -58,7 +60,7 @@ export default function Admissions() {
 
   return (
     <div>
-      <PageHero title="Admissions" image={getSiteImage('admissions.hero')}>
+      <PageHero title={info.title} image={getSiteImage('admissions.hero')}>
         <p className="text-[var(--text-secondary)] mt-3">{info.intro}</p>
       </PageHero>
 
@@ -71,9 +73,9 @@ export default function Admissions() {
       <section className="max-w-5xl mx-auto px-4 md:px-6 py-14">
         <div className="mb-12">
           <h2 className="font-display text-3xl font-bold text-[var(--text-primary)] mb-3">
-            Admission Information
+            {info.informationTitle}
           </h2>
-          <p className="text-[var(--text-secondary)] text-lg">Everything you need to know before applying</p>
+          <p className="text-[var(--text-secondary)] text-lg">{info.informationIntro}</p>
           <span className="block w-16 h-1.5 rounded-full bg-[var(--gold)] mt-4" aria-hidden="true" />
         </div>
 
@@ -81,9 +83,9 @@ export default function Admissions() {
           <div className="space-y-6">
             <div className="mb-2">
               <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
-                <span className="text-[var(--gold)]">##</span> Requirements
+                <span className="text-[var(--gold)]">##</span> {info.requirementsTitle}
               </h2>
-              <p className="text-sm text-[var(--text-secondary)] mt-1">What you need to qualify for admission</p>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">{info.requirementsIntro}</p>
             </div>
             
             <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.1)]">
@@ -92,7 +94,7 @@ export default function Admissions() {
                   <ListChecks className="w-5 h-5 text-[var(--gold)]" />
                 </div>
                 <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">
-                  Admission Requirements
+                  {info.requirementsCardTitle}
                 </h3>
               </div>
               <ul className="text-sm text-[var(--text-secondary)] space-y-2.5">
@@ -107,9 +109,9 @@ export default function Admissions() {
 
             <div className="mt-8 mb-2">
               <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
-                <span className="text-[var(--gold)]">##</span> Important Dates
+                <span className="text-[var(--gold)]">##</span> {info.datesTitle}
               </h2>
-              <p className="text-sm text-[var(--text-secondary)] mt-1">Key dates for the admission cycle</p>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">{info.datesIntro}</p>
             </div>
 
             <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.1)]">
@@ -118,7 +120,7 @@ export default function Admissions() {
                   <CalendarDays className="w-5 h-5 text-[var(--gold)]" />
                 </div>
                 <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">
-                  Important Dates
+                  {info.datesCardTitle}
                 </h3>
               </div>
               <ul className="text-sm text-[var(--text-secondary)] space-y-2.5">
@@ -133,9 +135,9 @@ export default function Admissions() {
 
             <div className="mt-8 mb-2">
               <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
-                <span className="text-[var(--gold)]">##</span> Admission Process
+                <span className="text-[var(--gold)]">##</span> {info.processTitle}
               </h2>
-              <p className="text-sm text-[var(--text-secondary)] mt-1">How our admission process works</p>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">{info.processIntro}</p>
             </div>
 
             <div className="rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.1)]">
@@ -144,7 +146,7 @@ export default function Admissions() {
                   <FileText className="w-5 h-5 text-[var(--gold)]" />
                 </div>
                 <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">
-                  Step-by-Step Process
+                  {info.processCardTitle}
                 </h3>
               </div>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
@@ -154,9 +156,9 @@ export default function Admissions() {
 
             <div className="mt-8 mb-2">
               <h2 className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-2">
-                <span className="text-[var(--gold)]">##</span> Contact & Support
+                <span className="text-[var(--gold)]">##</span> {info.supportTitle}
               </h2>
-              <p className="text-sm text-[var(--text-secondary)] mt-1">Questions? We're here to help</p>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">{info.supportIntro}</p>
             </div>
 
             <div className="rounded-[24px] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(15,108,255,0.08),rgba(11,19,39,0.02))] p-6 shadow-[0_12px_28px_rgba(0,0,0,0.08)]">
@@ -164,7 +166,7 @@ export default function Admissions() {
                 <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[rgba(15,108,255,0.12)]">
                   <Phone className="w-5 h-5 text-[var(--gold)]" />
                 </div>
-                <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">Get in Touch</h3>
+                <h3 className="font-display text-lg font-semibold text-[var(--text-primary)]">{info.supportCardTitle}</h3>
               </div>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 {info.contactLine}
@@ -189,6 +191,9 @@ export default function Admissions() {
                 <CheckCircle2 className="w-7 h-7 text-[var(--success)]" aria-hidden="true" />
               </div>
               <p className="font-display font-semibold text-lg text-[var(--text-primary)]">Application Submitted Successfully!</p>
+              <p className="mt-3 inline-flex rounded-lg border border-[var(--border)] bg-[var(--color-soft-gray)] px-3 py-2 text-sm font-semibold tracking-wide text-[var(--gold)]">
+                Reference: {applicationReference}
+              </p>
               <p className="text-sm text-[var(--text-secondary)] mt-2">
                 Thank you, <span className="font-semibold">{form.fullName.split(' ')[0]}</span>. We'll review your application and contact you at <span className="font-semibold">{form.email}</span> with next steps within 3-5 business days.
               </p>
@@ -201,8 +206,8 @@ export default function Admissions() {
                 </div>
               )}
               <div>
-                <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)]">Admission Application</h2>
-                <p className="text-sm text-[var(--text-secondary)] mt-1">Complete the form below to apply for any of our programs.</p>
+                <h2 className="font-display text-2xl font-semibold text-[var(--text-primary)]">{info.applicationTitle}</h2>
+                <p className="text-sm text-[var(--text-secondary)] mt-1">{info.applicationIntro}</p>
                 <span className="block w-12 h-1 rounded-full bg-[var(--gold)] mt-3" aria-hidden="true" />
               </div>
               
@@ -238,25 +243,10 @@ export default function Admissions() {
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="font-semibold text-[var(--text-primary)] text-sm mb-4 flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--gold)] text-white text-xs font-bold">3</span>
-                    Additional Information
-                  </h3>
-                  <div className="pl-7">
-                    <Textarea 
-                      label="Message (Optional)" 
-                      value={form.message} 
-                      onChange={update('message')} 
-                      placeholder="Tell us anything else we should know about your application..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
               </div>
 
               <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
-                <Button type="submit" variant="gold" className="flex-1" icon={Send} iconPosition="right" loading={saving} disabled={saving}>
+                <Button type="submit" variant="primary" className="flex-1" icon={Send} iconPosition="right" loading={saving} disabled={saving}>
                   {saving ? 'Submitting...' : 'Submit Application'}
                 </Button>
                 <button

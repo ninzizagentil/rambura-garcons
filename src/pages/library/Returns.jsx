@@ -11,11 +11,13 @@ import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import { useToast } from '../../context/ToastContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useApp } from '../../context/AppContext';
 import { getLoans, refreshLibrary, returnBook, daysOverdue } from '../../services/bookService';
 
 export default function Returns() {
   const { showToast } = useToast();
   const { addNotification } = useNotifications();
+  const { t } = useApp();
   const { viewOnly } = useModuleAccess(ROLES.LIBRARIAN);
   const [loans, setLoans] = useState(() => getLoans().filter((l) => l.status !== 'returned'));
   const [search, setSearch] = useState('');
@@ -44,10 +46,10 @@ export default function Returns() {
       if (!result.success) { showToast(result.error, 'error'); return; }
       setConfirmOpen(false);
       setJustReturned(selected);
-      showToast(`"${selected.bookTitle}" returned successfully.`, 'success');
+      showToast(t('bookReturnedSuccess', { bookTitle: selected.bookTitle }), 'success');
       addNotification({
         type: 'borrow',
-        message: `"${selected.bookTitle}" was returned by ${selected.borrower}.`,
+        message: t('confirmReturnBook', { bookTitle: selected.bookTitle, borrower: selected.borrower }),
         to: '/library/history',
       });
       refresh();
@@ -58,14 +60,14 @@ export default function Returns() {
   if (justReturned) {
     return (
       <div>
-        <PageHeader title="Returns" breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Returns' }]} />
+        <PageHeader title={t('returns')} breadcrumb={[{ label: t('library'), to: '/library' }, { label: t('returns') }]} />
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
           <CheckCircle2 className="w-12 h-12 text-[var(--color-status-green)] mb-4" aria-hidden="true" />
-          <p className="font-display text-lg font-semibold text-[var(--color-dark-gray)]">Return Successful</p>
+          <p className="font-display text-lg font-semibold text-[var(--color-dark-gray)]">{t('returnSuccessful')}</p>
           <p className="text-sm text-[var(--color-mid-gray)] mt-1">
-            "{justReturned.bookTitle}" has been marked as returned by {justReturned.borrower}.
+            {t('confirmReturnBook', { bookTitle: justReturned.bookTitle, borrower: justReturned.borrower })}
           </p>
-          <Button variant="primary" className="mt-6" onClick={() => setJustReturned(null)}>Return Another Book</Button>
+          <Button variant="primary" className="mt-6" onClick={() => setJustReturned(null)}>{t('returnAnotherBook')}</Button>
         </div>
       </div>
     );
@@ -73,13 +75,13 @@ export default function Returns() {
 
   return (
     <div>
-      <PageHeader title="Returns" description={viewOnly ? 'Active loans awaiting return.' : 'Select a loan to process its return.'} breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Returns' }]} />
+      <PageHeader title={t('returns')} description={viewOnly ? t('activeLoansAwaitingReturn') : t('selectLoanToProcessReturn')} breadcrumb={[{ label: t('library'), to: '/library' }, { label: t('returns') }]} />
       {viewOnly && <ViewOnlyBanner module="Library MIS" />}
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by borrower or book…" className="mb-4 max-w-sm" />
+      <SearchBar value={search} onChange={setSearch} placeholder={t('searchBorrowerBook')} className="mb-4 max-w-sm" />
 
       {filtered.length === 0 ? (
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
-          <EmptyState title="No active loans" message="There are no borrowed books awaiting return." />
+          <EmptyState title={t('noActiveLoans')} message={t('noBorrowedAwaitingReturn')} />
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -90,7 +92,7 @@ export default function Returns() {
               <div className="flex items-center justify-between mt-3">
                 <StatusBadge status={daysOverdue(l.dueDate) > 0 ? 'overdue' : 'borrowed'} />
                 {!viewOnly && (
-                  <Button size="sm" onClick={() => { setSelected(l); setConfirmOpen(true); }}>Return</Button>
+                  <Button size="sm" onClick={() => { setSelected(l); setConfirmOpen(true); }}>{t('returnButton')}</Button>
                 )}
               </div>
             </div>
@@ -103,9 +105,9 @@ export default function Returns() {
         onClose={() => setConfirmOpen(false)}
         onConfirm={handleConfirmReturn}
         loading={processing}
-        title="Confirm return"
-        message={selected ? `Confirm that "${selected.bookTitle}" has been returned by ${selected.borrower}.` : ''}
-        confirmLabel="Confirm Return"
+        title={t('confirmReturn')}
+        message={selected ? t('confirmReturnBook', { bookTitle: selected.bookTitle, borrower: selected.borrower }) : ''}
+        confirmLabel={t('confirmReturn')}
       />
     </div>
   );

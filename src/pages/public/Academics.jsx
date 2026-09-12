@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Clock, GraduationCap, ArrowRight, X } from 'lucide-react';
-import { getPrograms, useContentVersion } from '../../services/contentService';
+import { getAcademicsPage, getPrograms, useContentVersion } from '../../services/contentService';
 import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 import Modal from '../../components/modals/Modal';
 import Button from '../../components/common/Button';
@@ -13,6 +13,7 @@ export default function Academics() {
   const [selected, setSelected] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const programs = getPrograms();
+  const page = getAcademicsPage();
 
   // Deep link support: /academics?program=<slug> (used by the footer's
   // Programs list) opens straight to that program's details modal.
@@ -34,8 +35,8 @@ export default function Academics() {
 
   return (
     <div>
-      <PageHero title="Academics" image={getSiteImage('pageHeroes.academics')}>
-        <p className="text-[var(--text-secondary)] mt-3">Four trade programs, each built for real workplace readiness.</p>
+      <PageHero title={page.title} image={getSiteImage('pageHeroes.academics')}>
+        <p className="text-[var(--text-secondary)] mt-3">{page.intro}</p>
       </PageHero>
 
       <section className="max-w-6xl mx-auto px-4 md:px-6 py-14">

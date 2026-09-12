@@ -77,7 +77,7 @@ export function StockItemCard({
         <div>
           <p className="text-xs text-[var(--color-mid-gray)] mb-0.5">Category</p>
           <p className="text-sm font-semibold text-[var(--color-dark-gray)]">
-            {item.category === 'Foods' ? 'Foods' : 'Electronics'}
+            {item.category}
           </p>
         </div>
       </div>

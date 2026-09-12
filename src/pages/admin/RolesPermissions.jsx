@@ -3,40 +3,24 @@ import { ShieldCheck, Check } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import Button from '../../components/common/Button';
 import { useToast } from '../../context/ToastContext';
+import { useApp } from '../../context/AppContext';
 import { ROLE_LABELS } from '../../data/roles';
 import { getRoles, getPermissions, updateRolePermissions } from '../../services/accessService';
 
 const MODULE_LABELS = {
-  users: 'User Management',
-  website: 'Website Management',
-  library: 'Library MIS',
-  stock: 'Stock MIS',
-  applications: 'Admissions',
-  reports: 'Reports',
-  audit: 'Activity & Audit',
-  settings: 'Settings',
+  users: 'userManagement', website: 'websiteManagement', library: 'libraryMis', stock: 'stockMis',
+  applications: 'admissions', reports: 'reports', audit: 'activityAudit', settings: 'settings',
 };
 
 const PERMISSION_LABELS = {
-  view: 'View',
-  create: 'Create',
-  update: 'Update',
-  delete: 'Delete',
-  borrow: 'Borrow',
-  return: 'Return',
-  reports: 'Reports',
-  adjust: 'Adjust',
-  in: 'Stock In',
-  out: 'Stock Out',
-  transfer: 'Transfer',
-  damage: 'Damage',
-  dispose: 'Dispose',
-  suppliers: 'Suppliers',
-  settings: 'Settings',
+  view: 'view', create: 'create', update: 'update', delete: 'delete', borrow: 'borrowBook',
+  return: 'returnButton', reports: 'reports', adjust: 'adjust', in: 'stockInMenu', out: 'stockOutMenu',
+  transfer: 'stockTransfer', damage: 'damage', dispose: 'dispose', suppliers: 'suppliers', settings: 'settings',
 };
 
 export default function RolesPermissions() {
   const { showToast } = useToast();
+  const { t } = useApp();
   const [activeRole, setActiveRole] = useState('librarian');
   const [permissions, setPermissions] = useState([]);
   // roleName -> Set of permission ids currently checked for that role (pending save)
@@ -51,7 +35,7 @@ export default function RolesPermissions() {
         setPermissions(permissionsData);
         setSelections(Object.fromEntries(rolesData.map((role) => [role.name, new Set(role.permissions.map((p) => p._id || p))])));
       } catch {
-        showToast('Could not load roles and permissions.', 'error');
+        showToast(t('couldNotLoadRoles'), 'error');
       } finally {
         setLoading(false);
       }
@@ -81,24 +65,34 @@ export default function RolesPermissions() {
     });
   };
 
+  const togglePermission = (permissionId) => {
+    if (activeRole === 'admin') return;
+    setSelections((prev) => {
+      const next = new Set(prev[activeRole] || []);
+      if (next.has(permissionId)) next.delete(permissionId);
+      else next.add(permissionId);
+      return { ...prev, [activeRole]: next };
+    });
+  };
+
   const handleSave = async () => {
     if (activeRole === 'admin') return;
     setSaving(true);
     const result = await updateRolePermissions(activeRole, Array.from(activeSelection));
     setSaving(false);
-    if (!result.success) { showToast(result.error || 'Could not save permissions.', 'error'); return; }
-    showToast('Permissions saved successfully.', 'success');
+    if (!result.success) { showToast(result.error || t('couldNotSavePermissions'), 'error'); return; }
+    showToast(t('permissionsSaved'), 'success');
   };
 
   if (loading) {
     return (
       <div>
         <PageHeader
-          title="Roles & Permissions"
-          description="Control which modules each role can access."
-          breadcrumb={[{ label: 'Admin', to: '/admin' }, { label: 'Roles & Permissions' }]}
+          title={t('rolesPermissions')}
+          description={t('controlRoleAccess')}
+          breadcrumb={[{ label: t('admin'), to: '/admin' }, { label: t('rolesPermissions') }]}
         />
-        <p className="text-sm text-[var(--color-mid-gray)]">Loading permissions…</p>
+        <p className="text-sm text-[var(--color-mid-gray)]">{t('loadingPermissions')}</p>
       </div>
     );
   }
@@ -106,15 +100,15 @@ export default function RolesPermissions() {
   return (
     <div>
       <PageHeader
-        title="Roles & Permissions"
-        description="Control which modules each role can access."
-        breadcrumb={[{ label: 'Admin', to: '/admin' }, { label: 'Roles & Permissions' }]}
+        title={t('rolesPermissions')}
+        description={t('controlRoleAccess')}
+        breadcrumb={[{ label: t('admin'), to: '/admin' }, { label: t('rolesPermissions') }]}
       />
 
       <div className="grid lg:grid-cols-[260px_1fr] gap-6">
         <aside className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-3 shadow-[var(--shadow-card)]">
           <div className="mb-3 px-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-mid-gray)]">Roles</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-mid-gray)]">{t('roles')}</p>
           </div>
           <div className="space-y-2">
             {Object.entries(ROLE_LABELS).map(([value, label]) => {
@@ -137,7 +131,7 @@ export default function RolesPermissions() {
                     <div className="min-w-0">
                       <div className="text-sm font-semibold">{label}</div>
                       <div className="text-[11px] opacity-75">
-                        {value === 'admin' ? 'Full access' : 'Custom access'}
+                        {value === 'admin' ? t('fullAccess') : t('customAccess')}
                       </div>
                     </div>
                   </div>
@@ -150,31 +144,31 @@ export default function RolesPermissions() {
         <section className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-6 shadow-[var(--shadow-card)]">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-mid-gray)]">Access Control</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-mid-gray)]">{t('accessControl')}</p>
               <h2 className="mt-2 font-display text-2xl font-semibold text-[var(--color-dark-gray)]">
                 {ROLE_LABELS[activeRole]}
               </h2>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-full border border-[var(--color-border-gray)] bg-[var(--color-off-white)] px-3 py-1.5 text-xs font-medium text-[var(--color-mid-gray)]">
-                {activeRole === 'admin' ? 'Full system access' : `${activeSelection.size} permissions`}
+                {activeRole === 'admin' ? t('fullSystemAccess') : t('permissionsCount', { count: activeSelection.size })}
               </span>
               <span className="inline-flex items-center rounded-full bg-[var(--color-gold-100)] px-3 py-1.5 text-xs font-medium text-[var(--color-heading)]">
-                {activeRole === 'admin' ? 'Protected' : 'Editable'}
+                {activeRole === 'admin' ? t('protected') : t('editable')}
               </span>
             </div>
           </div>
 
           <p className="mt-5 text-sm text-[var(--color-mid-gray)]">
             {activeRole === 'admin'
-              ? 'Administrators always have unrestricted access across the entire platform.'
-              : 'Choose the permission groups this role should be allowed to use.'}
+              ? t('administratorsUnrestricted')
+              : t('choosePermissionGroups')}
           </p>
 
           <div className="mt-6 space-y-4">
             {Object.keys(modules).length === 0 && (
               <div className="rounded-xl border border-dashed border-[var(--color-border-gray)] bg-[var(--color-off-white)] p-5 text-sm text-[var(--color-mid-gray)]">
-                No permission modules found.
+                {t('noPermissionModules')}
               </div>
             )}
 
@@ -186,9 +180,9 @@ export default function RolesPermissions() {
                 <div key={module} className="rounded-2xl border border-[var(--color-border-gray)] bg-[var(--color-off-white)] p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <h3 className="text-base font-semibold text-[var(--color-dark-gray)]">{MODULE_LABELS[module] || module}</h3>
+                      <h3 className="text-base font-semibold text-[var(--color-dark-gray)]">{t(MODULE_LABELS[module] || module)}</h3>
                       <p className="mt-1 text-xs text-[var(--color-mid-gray)]">
-                        {modulePermissions.length} permissions available
+                        {t('permissionsAvailable', { count: modulePermissions.length })}
                       </p>
                     </div>
 
@@ -214,11 +208,15 @@ export default function RolesPermissions() {
                     {modulePermissions.map((permission) => {
                       const checked = activeRole === 'admin' || activeSelection.has(permission._id);
                       const keyName = permission.key.split('.').pop();
-                      const label = PERMISSION_LABELS[keyName] || keyName;
+                      const label = t(PERMISSION_LABELS[keyName] || keyName);
 
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={permission._id}
+                          onClick={() => togglePermission(permission._id)}
+                          disabled={activeRole === 'admin'}
+                          aria-pressed={checked}
                           className={`flex items-center justify-between rounded-xl border px-3 py-2.5 ${
                             checked
                               ? 'border-[var(--color-medium-green)] bg-[var(--surface)] text-[var(--color-heading)]'
@@ -229,7 +227,7 @@ export default function RolesPermissions() {
                           <span className={`flex h-5 w-5 items-center justify-center rounded-full ${checked ? 'bg-[var(--color-medium-green)] text-white' : 'bg-[var(--color-off-white)] text-[var(--color-mid-gray)]'}`}>
                             {checked ? <Check className="w-3 h-3" /> : null}
                           </span>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -240,7 +238,7 @@ export default function RolesPermissions() {
 
           <div className="mt-6 flex justify-end">
             <Button variant="primary" onClick={handleSave} loading={saving} disabled={activeRole === 'admin'}>
-              Save Permissions
+              {t('savePermissions')}
             </Button>
           </div>
         </section>

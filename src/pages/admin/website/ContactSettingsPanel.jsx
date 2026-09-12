@@ -3,11 +3,13 @@ import { Input, Textarea } from '../../../components/forms/FormField';
 import Button from '../../../components/common/Button';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
+import { useApp } from '../../../context/AppContext';
 import { getContactSettings, updateContactSettings } from '../../../services/contentService';
 
 export default function ContactSettingsPanel() {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useApp();
   const [form, setForm] = useState(getContactSettings());
   const [saving, setSaving] = useState(false);
 
@@ -20,7 +22,7 @@ export default function ContactSettingsPanel() {
   const handleSave = async () => {
     setSaving(true);
     const result = await updateContactSettings(form, user?.fullName || 'System Administrator');
-    if (result.success) showToast('Contact page details updated successfully.', 'success');
+    if (result.success) showToast(t('contactUpdated'), 'success');
     else showToast(result.error, 'error');
     setSaving(false);
   };
@@ -28,19 +30,19 @@ export default function ContactSettingsPanel() {
   return (
     <div className="p-6 space-y-4 max-w-xl">
       <p className="text-sm text-[var(--color-mid-gray)]">
-        This content is shown live on the public Contact page.
+        {t('liveContactContent')}
       </p>
-      <Textarea label="Address" rows={2} value={form.address} onChange={update('address')} />
-      <Input label="Phone" value={form.phone} onChange={update('phone')} />
-      <Input label="Email" type="email" value={form.email} onChange={update('email')} />
+      <Textarea label={t('address')} rows={2} value={form.address} onChange={update('address')} />
+      <Input label={t('phone')} value={form.phone} onChange={update('phone')} />
+      <Input label={t('email')} type="email" value={form.email} onChange={update('email')} />
       <Input
-        label="Map Search Query"
+        label={t('mapSearchQuery')}
         value={form.mapQuery}
         onChange={update('mapQuery')}
-        hint="Used to render the embedded Google Map, e.g. Rambura,Nyabihu+District,Rwanda"
+        hint={t('mapSearchHint')}
       />
       <div className="flex justify-end pt-2">
-        <Button variant="primary" onClick={handleSave} loading={saving}>Save Changes</Button>
+        <Button variant="primary" onClick={handleSave} loading={saving}>{t('saveChanges')}</Button>
       </div>
     </div>
   );

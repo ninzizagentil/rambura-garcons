@@ -14,6 +14,7 @@ import { logActivity } from '../../services/activityService';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
+import { useApp } from '../../context/AppContext';
 
 export default function StockAdjustment() {
   const [searchParams] = useSearchParams();
@@ -22,6 +23,7 @@ export default function StockAdjustment() {
   const { addNotification } = useNotifications();
   const { user } = useAuth();
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
+  const { t } = useApp();
   const [items, setItems] = useState(() => getItems());
 
   useEffect(() => {
@@ -55,13 +57,13 @@ export default function StockAdjustment() {
 
   const validate = () => {
     const next = {};
-    if (!form.itemId) next.itemId = 'Select an item.';
+    if (!form.itemId) next.itemId = t('selectAnItem');
     const physical = Number(form.physicalQuantity);
-    if (form.physicalQuantity === '' || Number.isNaN(physical) || physical < 0) next.physicalQuantity = 'Enter the counted physical quantity.';
-    else if (selectedItem && physical === selectedItem.quantity) next.physicalQuantity = 'Physical quantity matches the system quantity — no adjustment needed.';
-    if (!form.reason) next.reason = 'Select a reason for the adjustment.';
-    if (!form.date) next.date = 'Date is required.';
-    if (!form.responsibleUser?.trim()) next.responsibleUser = 'Responsible user is required.';
+    if (form.physicalQuantity === '' || Number.isNaN(physical) || physical < 0) next.physicalQuantity = t('countedQuantityRequired');
+    else if (selectedItem && physical === selectedItem.quantity) next.physicalQuantity = t('noAdjustmentNeeded');
+    if (!form.reason) next.reason = t('adjustmentReasonRequired');
+    if (!form.date) next.date = t('dateRequired');
+    if (!form.responsibleUser?.trim()) next.responsibleUser = t('responsibleUserRequired');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -83,18 +85,18 @@ export default function StockAdjustment() {
     }
       setResult(res);
       setStep('success');
-      showToast(`Stock Adjustment recorded for "${selectedItem.name}".`, 'success');
+      showToast(t('adjustmentRecordedFor', { name: selectedItem.name }), 'success');
       const nowLow = isLowStock({ ...selectedItem, quantity: res.newQuantity });
       if (nowLow) {
         addNotification({
           type: 'low-stock',
-          message: `${selectedItem.name} is below minimum stock level after adjustment (${res.newQuantity} ${selectedItem.unit} left).`,
+          message: t('belowMinimumAfterAdjustment', { name: selectedItem.name, quantity: res.newQuantity, unit: selectedItem.unit }),
           to: '/stock/low-stock',
         });
       }
       logActivity({
         user: user?.fullName || 'Stock Manager',
-        action: `Recorded Stock Adjustment: ${selectedItem.name} (${res.difference > 0 ? '+' : ''}${res.difference}${selectedItem.unit}) — ${form.reason}`,
+        action: t('recordedAdjustmentActivity', { name: selectedItem.name, difference: `${res.difference > 0 ? '+' : ''}${res.difference}`, unit: selectedItem.unit, reason: form.reason }),
         module: 'Stock',
         status: nowLow ? 'warning' : 'success',
       });
@@ -112,11 +114,11 @@ export default function StockAdjustment() {
   if (viewOnly) {
     return (
       <div>
-        <PageHeader title="Stock Adjustment" description="Reconcile system quantity against a physical count." breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock Adjustment' }]} />
+        <PageHeader title={t('stockAdjustment')} description={t('adjustmentDescription')} breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('stockAdjustment') }]} />
         <ViewOnlyBanner module="Stock MIS" />
-        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
-          <p className="text-sm text-[var(--color-mid-gray)]">Recording Stock Adjustments is reserved for the Stock Manager account.</p>
-          <Button variant="secondary" className="mt-4" onClick={() => navigate('/stock')}>Back to Stock Dashboard</Button>
+        <div className="stock-success-state">
+          <p className="text-sm text-[var(--color-mid-gray)]">{t('adjustmentReserved')}</p>
+          <Button variant="secondary" className="mt-4" onClick={() => navigate('/stock')}>{t('backToStockDashboard')}</Button>
         </div>
       </div>
     );
@@ -125,17 +127,17 @@ export default function StockAdjustment() {
   if (step === 'success') {
     return (
       <div>
-        <PageHeader title="Stock Adjustment" breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock Adjustment' }]} />
+        <PageHeader title={t('stockAdjustment')} breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('stockAdjustment') }]} />
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
           <CheckCircle2 className="w-12 h-12 text-[var(--color-status-green)] mb-4" aria-hidden="true" />
-          <p className="font-display text-lg font-semibold text-[var(--color-dark-gray)]">Stock Adjustment Recorded</p>
+          <p className="font-display text-lg font-semibold text-[var(--color-dark-gray)]">{t('adjustmentRecorded')}</p>
           <p className="text-sm text-[var(--color-mid-gray)] mt-1">
-            "{selectedItem?.name}" adjusted by {result?.difference > 0 ? '+' : ''}{result?.difference} {selectedItem?.unit}. New quantity: {result?.newQuantity} {selectedItem?.unit}.
+            {t('adjustmentSuccessMessage', { name: selectedItem?.name, difference: `${result?.difference > 0 ? '+' : ''}${result?.difference}`, unit: selectedItem?.unit, quantity: result?.newQuantity })}
           </p>
           <div className="flex gap-3 mt-6">
-            <Button variant="secondary" onClick={() => navigate(`/stock/items/${form.itemId}`)}>View Item Details</Button>
-            <Button variant="outline" onClick={() => navigate('/stock/transactions')}>View Transactions</Button>
-            <Button variant="primary" onClick={startAnother}>Record Another</Button>
+            <Button variant="secondary" onClick={() => navigate(`/stock/items/${form.itemId}`)}>{t('viewItemDetails')}</Button>
+            <Button variant="outline" onClick={() => navigate('/stock/transactions')}>{t('viewTransactions')}</Button>
+            <Button variant="primary" onClick={startAnother}>{t('recordAnother')}</Button>
           </div>
         </div>
       </div>
@@ -144,9 +146,9 @@ export default function StockAdjustment() {
 
   return (
     <div>
-      <PageHeader title="Stock Adjustment" description="Reconcile system quantity against a physical count." breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock Adjustment' }]} />
+      <PageHeader title={t('stockAdjustment')} description={t('adjustmentDescription')} breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('stockAdjustment') }]} />
 
-      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-2xl">
+      <div className="stock-form-container">
         {step === 'form' ? (
           <form onSubmit={handleContinue} noValidate className="space-y-4">
             {serverError && <Alert type="error">{serverError}</Alert>}

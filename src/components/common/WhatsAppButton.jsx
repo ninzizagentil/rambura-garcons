@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 /** WhatsApp's real brand glyph, drawn at a fixed viewBox so it stays crisp
  * at any button size — matches the pattern used for the footer's social
  * icons (see components/common/socialIcons.jsx). */
@@ -18,8 +16,6 @@ function WhatsAppGlyph(props) {
 const WHATSAPP_NUMBER = '250796377311';
 
 export default function WhatsAppButton() {
-  const [hovered, setHovered] = useState(false);
-
   const message = encodeURIComponent("Hello Rambura Garçons, I'd like to ask about...");
   const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
 
@@ -28,23 +24,19 @@ export default function WhatsAppButton() {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       aria-label="Chat with us on WhatsApp"
-      className="fixed bottom-6 right-6 z-50 flex items-center"
+      className="whatsapp-fab group fixed bottom-5 right-5 z-50 flex items-center sm:bottom-6 sm:right-6"
     >
       <span
-        className={`overflow-hidden whitespace-nowrap bg-[var(--color-dark-gray)] text-white text-sm font-medium rounded-full shadow-card-hover transition-all duration-300 ease-out ${
-          hovered ? 'max-w-[220px] opacity-100 px-4 py-2 mr-3' : 'max-w-0 opacity-0 px-0 py-2 mr-0'
-        }`}
+        className="whatsapp-fab__label pointer-events-none max-w-0 overflow-hidden whitespace-nowrap rounded-full border border-[var(--border)] bg-[var(--surface)] px-0 py-2 text-sm font-semibold text-[var(--text-primary)] opacity-0 shadow-[0_12px_28px_rgba(0,0,0,0.18)] transition-all duration-300 ease-out group-hover:mr-3 group-hover:max-w-[220px] group-hover:px-4 group-hover:opacity-100"
       >
         Chat with us on WhatsApp
       </span>
 
-      <span className="relative flex items-center justify-center w-14 h-14 flex-shrink-0">
-        <span className="absolute inset-0 rounded-full bg-[#25D366] opacity-75 animate-ping" />
-        <span className="relative flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] text-white shadow-card-hover transition-transform duration-200 ease-out hover:scale-105">
-          <WhatsAppGlyph className="w-7 h-7" />
+      <span className="whatsapp-fab__icon relative flex h-14 w-14 flex-shrink-0 items-center justify-center">
+        <span className="whatsapp-fab__ring absolute inset-0 rounded-full bg-[#25D366]/30" aria-hidden="true" />
+        <span className="whatsapp-fab__button relative flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(145deg,#2BE477,#1DB954)] text-white shadow-[0_14px_30px_rgba(37,211,102,0.38)] transition-transform duration-300 ease-out group-hover:scale-105 group-focus-visible:scale-105">
+          <WhatsAppGlyph className="h-7 w-7 drop-shadow-[0_2px_2px_rgba(0,0,0,0.15)]" />
         </span>
       </span>
     </a>

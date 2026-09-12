@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { LoadingState } from '../feedback/States';
 import { cn } from '../../utils/cn';
+import { useApp } from '../../context/AppContext';
 
 /**
  * DataTable — generic table renderer.
@@ -26,7 +27,8 @@ export default function DataTable({
   sortDir,
   onSort,
 }) {
-  if (loading) return <LoadingState label="Loading records…" />;
+  const { t } = useApp();
+  if (loading) return <LoadingState label={t('loadingRecords')} />;
   if (!data || data.length === 0) return emptyState || null;
 
   const allSelected = selectable && data.length > 0 && data.every((row) => selectedKeys?.has(row[rowKey]));
@@ -44,7 +46,7 @@ export default function DataTable({
                   checked={allSelected}
                   ref={(el) => el && (el.indeterminate = someSelected)}
                   onChange={onToggleAll}
-                  aria-label="Select all rows"
+                  aria-label={t('selectAllRows')}
                   className="w-4 h-4 rounded border-[var(--color-border-gray)] accent-[var(--color-medium-green)] cursor-pointer"
                 />
               </th>
@@ -98,7 +100,7 @@ export default function DataTable({
                       type="checkbox"
                       checked={checked}
                       onChange={() => onToggleRow?.(row)}
-                      aria-label={`Select row ${row[rowKey]}`}
+                      aria-label={t('selectRow', { row: row[rowKey] })}
                       className="w-4 h-4 rounded border-[var(--color-border-gray)] accent-[var(--color-medium-green)] cursor-pointer"
                     />
                   </td>
@@ -124,6 +126,7 @@ export default function DataTable({
  * signature) so neither call site needs to change.
  */
 export function TablePagination({ page, totalPages, totalItems, pageSize, onPageChange, onPageSizeChange, pageSizeOptions = [10, 25, 50] }) {
+  const { t } = useApp();
   if (totalItems === 0) return null;
 
   const from = (page - 1) * pageSize + 1;
@@ -148,10 +151,10 @@ export function TablePagination({ page, totalPages, totalItems, pageSize, onPage
   return (
     <nav
       className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-6 py-4 border-t border-[var(--color-border-gray)] bg-gradient-to-r from-[rgba(217,164,65,0.01)] to-transparent"
-      aria-label="Pagination"
+      aria-label={t('pagination')}
     >
       <p className="text-xs font-medium text-[var(--color-mid-gray)] order-2 sm:order-1">
-        Showing <span className="font-bold text-[var(--color-dark-gray)]">{from}</span> to <span className="font-bold text-[var(--color-dark-gray)]">{to}</span> of <span className="font-bold text-[var(--color-dark-gray)]">{totalItems}</span> items
+        {t('showingItems', { from, to, total: totalItems })}
       </p>
 
       <div className="flex items-center gap-1.5 flex-wrap order-1 sm:order-2">
@@ -162,7 +165,7 @@ export function TablePagination({ page, totalPages, totalItems, pageSize, onPage
           className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-[var(--color-border-gray)] text-xs font-medium text-[var(--color-dark-gray)] disabled:opacity-40 hover:bg-[var(--color-soft-gray)] disabled:hover:bg-transparent"
         >
           <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
-          Previous
+          {t('previous')}
         </button>
 
         {pageNumbers().map((n, i) =>
@@ -192,7 +195,7 @@ export function TablePagination({ page, totalPages, totalItems, pageSize, onPage
           onClick={() => onPageChange(page + 1)}
           className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-[var(--color-border-gray)] text-xs font-medium text-[var(--color-dark-gray)] disabled:opacity-40 hover:bg-[var(--color-soft-gray)] disabled:hover:bg-transparent"
         >
-          Next
+          {t('next')}
           <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
       </div>
@@ -202,11 +205,11 @@ export function TablePagination({ page, totalPages, totalItems, pageSize, onPage
           <select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            aria-label="Items per page"
+            aria-label={t('itemsPerPage')}
             className="rounded-md border border-[var(--color-border-gray)] bg-[var(--color-white)] px-1.5 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)]"
           >
             {pageSizeOptions.map((n) => (
-              <option key={n} value={n}>{n} / page</option>
+              <option key={n} value={n}>{t('perPage', { count: n })}</option>
             ))}
           </select>
         </label>
@@ -216,18 +219,19 @@ export function TablePagination({ page, totalPages, totalItems, pageSize, onPage
 }
 
 export function Pagination({ page, totalPages, onPageChange }) {
+  const { t } = useApp();
   if (totalPages <= 1) return null;
   return (
-    <nav className="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border-gray)]" aria-label="Pagination">
+    <nav className="flex items-center justify-between px-4 py-3 border-t border-[var(--color-border-gray)]" aria-label={t('pagination')}>
       <p className="text-xs text-[var(--color-mid-gray)]">
-        Page {page} of {totalPages}
+        {t('pageOf', { page, total: totalPages })}
       </p>
       <div className="flex gap-1">
         <button
           type="button"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
-          aria-label="Previous page"
+          aria-label={t('previousPage')}
           className="p-1.5 rounded-md border border-[var(--color-border-gray)] disabled:opacity-40 hover:bg-[var(--color-soft-gray)]"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -236,7 +240,7 @@ export function Pagination({ page, totalPages, onPageChange }) {
           type="button"
           disabled={page >= totalPages}
           onClick={() => onPageChange(page + 1)}
-          aria-label="Next page"
+          aria-label={t('nextPage')}
           className="p-1.5 rounded-md border border-[var(--color-border-gray)] disabled:opacity-40 hover:bg-[var(--color-soft-gray)]"
         >
           <ChevronRight className="w-4 h-4" />

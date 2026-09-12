@@ -24,15 +24,15 @@ export default function PublicTopbar() {
       <div className="max-w-7xl mx-auto px-4 md:px-6 h-9 flex items-center justify-between gap-4">
         <div className="flex items-center gap-5">
           <a href={`tel:${contact.phone.replace(/\s+/g, '')}`} className="flex items-center gap-1.5 hover:text-white">
-            <Phone className="w-3.5 h-3.5 text-[#0F6CFF]" aria-hidden="true" />
+            <Phone className="w-3.5 h-3.5 text-[var(--color-gold)]" aria-hidden="true" />
             {contact.phone}
           </a>
           <a href={`mailto:${contact.email}`} className="flex items-center gap-1.5 hover:text-white">
-            <Mail className="w-3.5 h-3.5 text-[#0F6CFF]" aria-hidden="true" />
+            <Mail className="w-3.5 h-3.5 text-[var(--color-gold)]" aria-hidden="true" />
             {contact.email}
           </a>
           <span className="hidden lg:flex items-center gap-1.5 text-white/75">
-            <MapPin className="w-3.5 h-3.5 text-[#0F6CFF]" aria-hidden="true" />
+            <MapPin className="w-3.5 h-3.5 text-[var(--color-gold)]" aria-hidden="true" />
             Nyabihu District, Rwanda
           </span>
         </div>

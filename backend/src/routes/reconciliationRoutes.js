@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate, authorize } from '../middleware/auth.js';
+import { authenticate, requirePermission } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/api.js';
 import {
   createReconciliation,
@@ -15,22 +15,22 @@ const router = Router();
 router.use(authenticate);
 
 // Create and list reconciliations
-router.post('/', authorize('admin', 'stock_manager'), asyncHandler(createReconciliation));
-router.get('/', asyncHandler(getReconciliations));
+router.post('/', requirePermission('stock.adjust'), asyncHandler(createReconciliation));
+router.get('/', requirePermission('stock.view'), asyncHandler(getReconciliations));
 
 // Get specific reconciliation
-router.get('/:id', asyncHandler(getReconciliation));
+router.get('/:id', requirePermission('stock.view'), asyncHandler(getReconciliation));
 
 // Start reconciliation
-router.post('/:id/start', authorize('admin', 'stock_manager'), asyncHandler(startReconciliation));
+router.post('/:id/start', requirePermission('stock.adjust'), asyncHandler(startReconciliation));
 
 // Complete reconciliation (submit for approval)
-router.post('/:id/complete', authorize('admin', 'stock_manager'), asyncHandler(completeReconciliation));
+router.post('/:id/complete', requirePermission('stock.adjust'), asyncHandler(completeReconciliation));
 
 // Approve reconciliation (admin only)
-router.post('/:id/approve', authorize('admin'), asyncHandler(approveReconciliation));
+router.post('/:id/approve', requirePermission('stock.adjust'), asyncHandler(approveReconciliation));
 
 // Reject reconciliation (admin only)
-router.post('/:id/reject', authorize('admin'), asyncHandler(rejectReconciliation));
+router.post('/:id/reject', requirePermission('stock.adjust'), asyncHandler(rejectReconciliation));
 
 export default router;

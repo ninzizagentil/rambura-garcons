@@ -18,18 +18,21 @@ import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import { useToast } from '../../context/ToastContext';
+import { useApp } from '../../context/AppContext';
 import { getLoans, getBooks, refreshLibrary, returnBook, daysOverdue } from '../../services/bookService';
 import { exportToCSV } from '../../utils/export';
 
 const PAGE_SIZE = 5;
 
-function formatDate(iso) {
+function formatDate(iso, language = 'en') {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const locale = language === 'fr' ? 'fr-FR' : language === 'rw' ? 'rw-RW' : 'en-GB';
+  return new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export default function BorrowingHistory() {
   const { showToast } = useToast();
+  const { t, language } = useApp();
   const { viewOnly } = useModuleAccess(ROLES.LIBRARIAN);
 
   const [loans, setLoans] = useState(() => getLoans());
@@ -114,35 +117,35 @@ export default function BorrowingHistory() {
       showToast(result.error, 'error');
       return;
     }
-    showToast(`"${confirmReturn.bookTitle}" marked as returned.`, 'success');
+    showToast(t('bookMarkedReturned', { bookTitle: confirmReturn.bookTitle }), 'success');
     refresh();
     setConfirmReturn(null);
   };
 
-  const handleNotify = (loan) => showToast(`Overdue reminder sent to ${loan.borrower}.`, 'info');
-  const handlePrint = (loan) => showToast(`Receipt for "${loan.bookTitle}" sent to printer.`, 'info');
+  const handleNotify = (loan) => showToast(t('overdueReminderSent', { borrower: loan.borrower }), 'info');
+  const handlePrint = (loan) => showToast(t('printReceiptForBook', { bookTitle: loan.bookTitle }), 'info');
 
   const handleExport = () => {
     exportToCSV(
       'borrowing-history',
       [
-        { key: 'borrower', header: 'Borrower' },
-        { key: 'borrowerType', header: 'Borrower Type' },
-        { key: 'bookTitle', header: 'Book' },
-        { key: 'borrowDate', header: 'Borrowed' },
-        { key: 'dueDate', header: 'Due' },
-        { key: 'returnDate', header: 'Returned', value: (l) => l.returnDate || '' },
-        { key: 'effectiveStatus', header: 'Status' },
+        { key: 'borrower', header: t('borrowedBy') },
+        { key: 'borrowerType', header: t('borrowerType') },
+        { key: 'bookTitle', header: t('bookTitle') },
+        { key: 'borrowDate', header: t('borrowDate') },
+        { key: 'dueDate', header: t('due') },
+        { key: 'returnDate', header: t('returnedOn'), value: (l) => l.returnDate || '' },
+        { key: 'effectiveStatus', header: t('status') },
       ],
       filtered
     );
-    showToast(`Borrowing history exported — ${filtered.length} record${filtered.length === 1 ? '' : 's'}.`, 'success');
+    showToast(t('borrowingHistoryExported', { count: filtered.length }), 'success');
   };
 
   const columns = [
     {
       key: 'borrower',
-      header: 'Borrower',
+      header: t('borrowedBy'),
       render: (l) => (
         <div className="flex items-center gap-3">
           <Avatar name={l.borrower} size="sm" />
@@ -155,7 +158,7 @@ export default function BorrowingHistory() {
     },
     {
       key: 'bookTitle',
-      header: 'Book',
+      header: t('bookTitle'),
       render: (l) => (
         <div className="min-w-0">
           <p className="font-medium text-[var(--color-dark-gray)] truncate max-w-[220px]">{l.bookTitle}</p>
@@ -163,39 +166,39 @@ export default function BorrowingHistory() {
         </div>
       ),
     },
-    { key: 'borrowDate', header: 'Borrowed', render: (l) => formatDate(l.borrowDate) },
+    { key: 'borrowDate', header: t('borrowDate'), render: (l) => formatDate(l.borrowDate, language) },
     {
       key: 'dueDate',
-      header: 'Due',
+      header: t('due'),
       render: (l) => (
         <div>
           <p className={l.effectiveStatus === 'overdue' ? 'text-[var(--color-status-red)] font-medium' : undefined}>
-            {formatDate(l.dueDate)}
+            {formatDate(l.dueDate, language)}
           </p>
           {l.effectiveStatus === 'overdue' && (
-            <p className="text-xs text-[var(--color-status-red)]">{daysOverdue(l.dueDate)} days late</p>
+            <p className="text-xs text-[var(--color-status-red)]">{t('daysLate', { days: daysOverdue(l.dueDate) })}</p>
           )}
         </div>
       ),
     },
-    { key: 'returnDate', header: 'Returned', render: (l) => formatDate(l.returnDate) },
-    { key: 'status', header: 'Status', render: (l) => <StatusBadge status={l.effectiveStatus} /> },
+    { key: 'returnDate', header: t('returnedOn'), render: (l) => formatDate(l.returnDate, language) },
+    { key: 'status', header: t('status'), render: (l) => <StatusBadge status={l.effectiveStatus} /> },
     {
       key: 'actions',
-      header: '',
+      header: t('actions'),
       render: (l) => (
         <RowActionMenu
-          label={`Actions for ${l.borrower}'s loan`}
+          label={t('actionsForLoan', { borrower: l.borrower })}
           items={[
-            { label: 'View Details', icon: Eye, onClick: () => setViewLoan(l) },
+            { label: t('viewDetails'), icon: Eye, onClick: () => setViewLoan(l) },
             l.effectiveStatus !== 'returned' && !viewOnly
-              ? { label: 'Mark as Returned', icon: RotateCcw, onClick: () => setConfirmReturn(l) }
+              ? { label: t('markReturned'), icon: RotateCcw, onClick: () => setConfirmReturn(l) }
               : null,
             l.effectiveStatus === 'overdue' && !viewOnly
-              ? { label: 'Send Reminder', icon: Bell, onClick: () => handleNotify(l) }
+              ? { label: t('sendReminder'), icon: Bell, onClick: () => handleNotify(l) }
               : null,
             l.effectiveStatus === 'returned'
-              ? { label: 'Print Receipt', icon: Printer, onClick: () => handlePrint(l) }
+              ? { label: t('printReceipt'), icon: Printer, onClick: () => handlePrint(l) }
               : null,
           ]}
         />
@@ -206,12 +209,12 @@ export default function BorrowingHistory() {
   return (
     <div>
       <PageHeader
-        title="Borrowing History"
-        description="Complete record of all library loans and returns."
-        breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Borrowing History' }]}
+        title={t('borrowingHistory')}
+        description={t('completeLoanRecord')}
+        breadcrumb={[{ label: t('library'), to: '/library' }, { label: t('borrowingHistory') }]}
         actions={
           <Button variant="gold" icon={Download} onClick={handleExport}>
-            Export Report
+            {t('exportReport')}
           </Button>
         }
       />
@@ -220,10 +223,10 @@ export default function BorrowingHistory() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Total Loans" value={totalLoans} icon={BookOpen} />
-        <StatCard label="Active Loans" value={activeLoans} icon={BookMarked} tone="blue" />
-        <StatCard label="Returned" value={returnedLoans} icon={CheckCircle2} />
-        <StatCard label="Overdue" value={overdueLoans} icon={AlertTriangle} tone="red" />
+        <StatCard label={t('totalLoans')} value={totalLoans} icon={BookOpen} />
+        <StatCard label={t('activeLoans')} value={activeLoans} icon={BookMarked} tone="blue" />
+        <StatCard label={t('returned')} value={returnedLoans} icon={CheckCircle2} />
+        <StatCard label={t('overdue')} value={overdueLoans} icon={AlertTriangle} tone="red" />
       </div>
 
       {/* Search + filters */}
@@ -232,21 +235,21 @@ export default function BorrowingHistory() {
           <SearchBar
             value={search}
             onChange={resetToFirstPage(setSearch)}
-            placeholder="Search by borrower or book…"
+            placeholder={t('searchBorrowerBook')}
             className="flex-1 min-w-[220px]"
           />
           <FilterDropdown
-            label="All Status"
+            label={t('allStatus')}
             value={statusFilter}
             onChange={resetToFirstPage(setStatusFilter)}
             options={[
-              { value: 'borrowed', label: 'Borrowed' },
-              { value: 'overdue', label: 'Overdue' },
-              { value: 'returned', label: 'Returned' },
+              { value: 'borrowed', label: t('borrowed') },
+              { value: 'overdue', label: t('overdue') },
+              { value: 'returned', label: t('returned') },
             ]}
           />
           <FilterDropdown
-            label="All Books"
+            label={t('allBooks')}
             value={bookFilter}
             onChange={resetToFirstPage(setBookFilter)}
             options={books.map((b) => ({ value: b.id, label: b.title }))}
@@ -257,7 +260,7 @@ export default function BorrowingHistory() {
               type="date"
               value={dateFrom}
               onChange={(e) => resetToFirstPage(setDateFrom)(e.target.value)}
-              aria-label="From date"
+              aria-label={t('fromDate')}
               className="text-sm text-[var(--color-dark-gray)] bg-transparent focus:outline-none"
             />
             <span className="text-[var(--color-mid-gray)] text-sm">–</span>
@@ -265,13 +268,13 @@ export default function BorrowingHistory() {
               type="date"
               value={dateTo}
               onChange={(e) => resetToFirstPage(setDateTo)(e.target.value)}
-              aria-label="To date"
+              aria-label={t('toDate')}
               className="text-sm text-[var(--color-dark-gray)] bg-transparent focus:outline-none"
             />
           </div>
           {hasActiveFilters && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>
-              Clear filters
+              {t('clearFilters')}
             </Button>
           )}
         </div>
@@ -280,10 +283,9 @@ export default function BorrowingHistory() {
       {/* Table */}
       <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border-gray)]">
-          <h2 className="font-display text-sm font-semibold text-[var(--color-dark-gray)]">Loan Records</h2>
+          <h2 className="font-display text-sm font-semibold text-[var(--color-dark-gray)]">{t('loanRecords')}</h2>
           <p className="text-xs text-[var(--color-mid-gray)]">
-            Showing {filtered.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of{' '}
-            {filtered.length}
+            {t('showingItems', { from: filtered.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1, to: Math.min(safePage * PAGE_SIZE, filtered.length), total: filtered.length })}
           </p>
         </div>
         <DataTable
@@ -291,9 +293,9 @@ export default function BorrowingHistory() {
           data={paged}
           emptyState={
             <EmptyState
-              title="No loan records found"
-              message="Try a different search term, or adjust your filters."
-              actionLabel={hasActiveFilters ? 'Clear filters' : undefined}
+              title={t('noLoanRecords')}
+              message={t('adjustLoanFilters')}
+              actionLabel={hasActiveFilters ? t('clearFilters') : undefined}
               onAction={hasActiveFilters ? clearFilters : undefined}
             />
           }
@@ -302,7 +304,7 @@ export default function BorrowingHistory() {
       </div>
 
       {/* View details modal */}
-      <Modal open={!!viewLoan} onClose={() => setViewLoan(null)} title="Loan Details" size="md">
+      <Modal open={!!viewLoan} onClose={() => setViewLoan(null)} title={t('loanDetails')} size="md">
         {viewLoan && (
           <div className="space-y-5">
             <div className="flex items-center gap-3">
@@ -315,31 +317,31 @@ export default function BorrowingHistory() {
             </div>
             <div className="border-t border-[var(--color-border-gray)] pt-4 space-y-3 text-sm">
               <div className="flex justify-between gap-4">
-                <span className="text-[var(--color-mid-gray)]">Book</span>
+                <span className="text-[var(--color-mid-gray)]">{t('bookTitle')}</span>
                 <span className="font-medium text-[var(--color-dark-gray)] text-right">{viewLoan.bookTitle}</span>
               </div>
               {bookById[viewLoan.bookId] && (
                 <div className="flex justify-between gap-4">
-                  <span className="text-[var(--color-mid-gray)]">Book Code</span>
+                  <span className="text-[var(--color-mid-gray)]">{t('bookCode')}</span>
                   <span className="font-medium text-[var(--color-dark-gray)]">{bookById[viewLoan.bookId].bookCode}</span>
                 </div>
               )}
               <div className="flex justify-between gap-4">
-                <span className="text-[var(--color-mid-gray)]">Borrowed On</span>
-                <span className="font-medium text-[var(--color-dark-gray)]">{formatDate(viewLoan.borrowDate)}</span>
+                <span className="text-[var(--color-mid-gray)]">{t('borrowedOn')}</span>
+                <span className="font-medium text-[var(--color-dark-gray)]">{formatDate(viewLoan.borrowDate, language)}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-[var(--color-mid-gray)]">Due Date</span>
-                <span className="font-medium text-[var(--color-dark-gray)]">{formatDate(viewLoan.dueDate)}</span>
+                <span className="text-[var(--color-mid-gray)]">{t('dueDate')}</span>
+                <span className="font-medium text-[var(--color-dark-gray)]">{formatDate(viewLoan.dueDate, language)}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-[var(--color-mid-gray)]">Returned On</span>
-                <span className="font-medium text-[var(--color-dark-gray)]">{formatDate(viewLoan.returnDate)}</span>
+                <span className="text-[var(--color-mid-gray)]">{t('returnedOn')}</span>
+                <span className="font-medium text-[var(--color-dark-gray)]">{formatDate(viewLoan.returnDate, language)}</span>
               </div>
               {viewLoan.effectiveStatus === 'overdue' && (
                 <div className="flex justify-between gap-4">
-                  <span className="text-[var(--color-mid-gray)]">Days Overdue</span>
-                  <span className="font-medium text-[var(--color-status-red)]">{daysOverdue(viewLoan.dueDate)} days</span>
+                  <span className="text-[var(--color-mid-gray)]">{t('daysOverdue')}</span>
+                  <span className="font-medium text-[var(--color-status-red)]">{t('daysCount', { count: daysOverdue(viewLoan.dueDate) })}</span>
                 </div>
               )}
             </div>
@@ -352,9 +354,9 @@ export default function BorrowingHistory() {
         onClose={() => setConfirmReturn(null)}
         onConfirm={handleReturn}
         loading={processing}
-        title="Return book"
-        message={confirmReturn ? `Confirm that "${confirmReturn.bookTitle}" has been returned by ${confirmReturn.borrower}.` : ''}
-        confirmLabel="Confirm Return"
+        title={t('returnBook')}
+        message={confirmReturn ? t('confirmReturnBook', { bookTitle: confirmReturn.bookTitle, borrower: confirmReturn.borrower }) : ''}
+        confirmLabel={t('confirmReturn')}
       />
     </div>
   );

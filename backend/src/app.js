@@ -23,6 +23,7 @@ import { publicRouter, adminRouter, applicationRouter } from './routes/contentRo
 import notificationRoutes from './routes/notificationRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import { notFound, errorHandler } from './middleware/error.js';
+import { requireDatabase } from './middleware/database.js';
 import { ok } from './utils/api.js';
 
 const app = express();
@@ -38,7 +39,9 @@ app.use(cors({
 	},
 	credentials: true,
 }));
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draft-8' }));
+if (env.nodeEnv === 'production') {
+  app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 1000, standardHeaders: 'draft-8' }));
+}
 // Locally-stored images (replaces Cloudinary). Served before the JSON body
 // parser since these are plain static files. The CORP header is relaxed so
 // the Vite dev server (a different origin/port) can load these <img> URLs.
@@ -53,8 +56,14 @@ app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 app.get('/api/health', (_req, res) => {
 	const database = databaseStatus();
 	const status = database === 'connected' ? 200 : 503;
-	return ok(res, { database }, database === 'connected' ? 'Rambura Garçons API is running' : 'Database unavailable', status);
+	return ok(res, { status: status === 200 ? 'ok' : 'degraded', database, uptimeSeconds: Math.round(process.uptime()), node: process.version, timestamp: new Date().toISOString() }, database === 'connected' ? 'Rambura Garçons API is running' : 'Database unavailable', status);
 });
+app.get('/api/health/live', (_req, res) => ok(res, { status: 'ok', uptimeSeconds: Math.round(process.uptime()) }));
+app.get('/api/health/ready', (_req, res) => {
+	const ready = databaseStatus() === 'connected';
+	return ok(res, { ready, database: databaseStatus() }, ready ? 'Ready' : 'Database not ready', ready ? 200 : 503);
+});
+app.use('/api', requireDatabase);
 app.use('/api/auth', authRoutes);
 app.use('/api/audit-logs', auditRoutes);
 app.use('/api/users', userRoutes);

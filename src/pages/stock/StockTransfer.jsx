@@ -14,6 +14,7 @@ import { logActivity } from '../../services/activityService';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
+import { useApp } from '../../context/AppContext';
 
 export default function StockTransfer() {
   const [searchParams] = useSearchParams();
@@ -22,6 +23,7 @@ export default function StockTransfer() {
   const { addNotification } = useNotifications();
   const { user } = useAuth();
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
+  const { t } = useApp();
 
   const [items, setItems] = useState(() => getItems());
   useEffect(() => {
@@ -62,15 +64,15 @@ export default function StockTransfer() {
 
   const validate = () => {
     const next = {};
-    if (!form.itemId) next.itemId = 'Select an item.';
+    if (!form.itemId) next.itemId = t('selectAnItem');
     const qty = Number(form.quantity);
-    if (!form.quantity || Number.isNaN(qty) || qty <= 0) next.quantity = 'Enter a positive quantity.';
-    else if (selectedItem && qty > selectedItem.quantity) next.quantity = `Insufficient Stock — only ${selectedItem.quantity} ${selectedItem.unit} available.`;
-    if (!form.fromLocation) next.fromLocation = 'Select the source location.';
-    if (!form.toLocation) next.toLocation = 'Select the destination location.';
-    if (form.fromLocation && form.toLocation && form.fromLocation === form.toLocation) next.toLocation = 'Destination must differ from source.';
-    if (!form.date) next.date = 'Date is required.';
-    if (!form.responsibleUser?.trim()) next.responsibleUser = 'Responsible user is required.';
+    if (!form.quantity || Number.isNaN(qty) || qty <= 0) next.quantity = t('positiveQuantityRequired');
+    else if (selectedItem && qty > selectedItem.quantity) next.quantity = t('insufficientStock', { quantity: selectedItem.quantity, unit: selectedItem.unit });
+    if (!form.fromLocation) next.fromLocation = t('sourceLocationRequired');
+    if (!form.toLocation) next.toLocation = t('destinationLocationRequired');
+    if (form.fromLocation && form.toLocation && form.fromLocation === form.toLocation) next.toLocation = t('destinationMustDiffer');
+    if (!form.date) next.date = t('dateRequired');
+    if (!form.responsibleUser?.trim()) next.responsibleUser = t('responsibleUserRequired');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -91,15 +93,15 @@ export default function StockTransfer() {
       return;
     }
       setStep('success');
-      showToast(`Stock Transfer recorded for "${selectedItem.name}".`, 'success');
+      showToast(t('transferRecordedFor', { name: selectedItem.name }), 'success');
       addNotification({
         type: 'stock',
-        message: `Stock Transfer: ${form.quantity} ${selectedItem.unit} of ${selectedItem.name} moved from ${form.fromLocation} to ${form.toLocation}.`,
+        message: t('transferNotification', { quantity: form.quantity, unit: selectedItem.unit, name: selectedItem.name, from: form.fromLocation, to: form.toLocation }),
         to: '/stock/transactions',
       });
       logActivity({
         user: user?.fullName || 'Stock Manager',
-        action: `Recorded Stock Transfer: ${selectedItem.name} (${form.quantity}${selectedItem.unit}) ${form.fromLocation} → ${form.toLocation}`,
+        action: t('recordedTransferActivity', { name: selectedItem.name, quantity: form.quantity, unit: selectedItem.unit, from: form.fromLocation, to: form.toLocation }),
         module: 'Stock',
         status: 'success',
       });
@@ -117,11 +119,11 @@ export default function StockTransfer() {
   if (viewOnly) {
     return (
       <div>
-        <PageHeader title="Stock Transfer" description="Move stock between storage locations." breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock Transfer' }]} />
+        <PageHeader title={t('stockTransfer')} description={t('transferDescription')} breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('stockTransfer') }]} />
         <ViewOnlyBanner module="Stock MIS" />
-        <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
-          <p className="text-sm text-[var(--color-mid-gray)]">Recording Stock Transfers is reserved for the Stock Manager account.</p>
-          <Button variant="secondary" className="mt-4" onClick={() => navigate('/stock')}>Back to Stock Dashboard</Button>
+        <div className="stock-success-state">
+          <p className="text-sm text-[var(--color-mid-gray)]">{t('transferReserved')}</p>
+          <Button variant="secondary" className="mt-4" onClick={() => navigate('/stock')}>{t('backToStockDashboard')}</Button>
         </div>
       </div>
     );
@@ -130,17 +132,17 @@ export default function StockTransfer() {
   if (step === 'success') {
     return (
       <div>
-        <PageHeader title="Stock Transfer" breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock Transfer' }]} />
+        <PageHeader title={t('stockTransfer')} breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('stockTransfer') }]} />
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-12 flex flex-col items-center text-center">
           <CheckCircle2 className="w-12 h-12 text-[var(--color-status-green)] mb-4" aria-hidden="true" />
-          <p className="font-display text-lg font-semibold text-[var(--color-dark-gray)]">Stock Transfer Recorded</p>
+          <p className="font-display text-lg font-semibold text-[var(--color-dark-gray)]">{t('transferRecorded')}</p>
           <p className="text-sm text-[var(--color-mid-gray)] mt-1">
-            {form.quantity} {selectedItem?.unit} of "{selectedItem?.name}" moved from {form.fromLocation} to {form.toLocation}.
+            {t('transferSuccessMessage', { quantity: form.quantity, unit: selectedItem?.unit, name: selectedItem?.name, from: form.fromLocation, to: form.toLocation })}
           </p>
           <div className="flex gap-3 mt-6">
-            <Button variant="secondary" onClick={() => navigate(`/stock/items/${form.itemId}`)}>View Item Details</Button>
-            <Button variant="outline" onClick={() => navigate('/stock/transactions')}>View Transactions</Button>
-            <Button variant="primary" onClick={startAnother}>Record Another</Button>
+            <Button variant="secondary" onClick={() => navigate(`/stock/items/${form.itemId}`)}>{t('viewItemDetails')}</Button>
+            <Button variant="outline" onClick={() => navigate('/stock/transactions')}>{t('viewTransactions')}</Button>
+            <Button variant="primary" onClick={startAnother}>{t('recordAnother')}</Button>
           </div>
         </div>
       </div>
@@ -149,9 +151,9 @@ export default function StockTransfer() {
 
   return (
     <div>
-      <PageHeader title="Stock Transfer" description="Move stock between storage locations." breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Stock Transfer' }]} />
+      <PageHeader title={t('stockTransfer')} description={t('transferDescription')} breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('stockTransfer') }]} />
 
-      <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6 max-w-2xl">
+      <div className="stock-form-container">
         {step === 'form' ? (
           <form onSubmit={handleContinue} noValidate className="space-y-4">
             {serverError && <Alert type="error">{serverError}</Alert>}

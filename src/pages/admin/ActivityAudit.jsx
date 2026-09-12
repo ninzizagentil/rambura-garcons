@@ -6,6 +6,7 @@ import { Badge } from '../../components/common/Badge';
 import { EmptyState } from '../../components/feedback/States';
 import { getActivity, refreshActivity, useActivityVersion } from '../../services/activityService';
 import { getActivityStatus, timeAgo } from '../../utils/activityStatus';
+import { useApp } from '../../context/AppContext';
 
 const STATUS_ICONS = {
   success: CheckCircle2,
@@ -26,6 +27,7 @@ const MODULE_ICONS = {
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 export default function ActivityAudit() {
+  const { t } = useApp();
   const activityVersion = useActivityVersion();
   const activity = useMemo(() => getActivity(), [activityVersion]);
   const [search, setSearch] = useState('');
@@ -75,7 +77,7 @@ export default function ActivityAudit() {
   const columns = [
     {
       key: 'user',
-      header: 'User',
+      header: t('user'),
       render: (a) => (
         <div className="flex items-center gap-2">
           <User className="w-4 h-4 text-[var(--color-mid-gray)]" />
@@ -85,12 +87,12 @@ export default function ActivityAudit() {
     },
     {
       key: 'action',
-      header: 'Action',
+      header: t('action'),
       render: (a) => <span className="text-[var(--color-dark-gray)]">{a.action}</span>,
     },
     {
       key: 'module',
-      header: 'Module',
+      header: t('module'),
       render: (a) => (
         <div className="flex items-center gap-2">
           <span className="text-lg">{MODULE_ICONS[a.module] || '📌'}</span>
@@ -100,7 +102,7 @@ export default function ActivityAudit() {
     },
     {
       key: 'date',
-      header: 'Timestamp',
+      header: t('timestamp'),
       render: (a) => (
         <div className="flex items-center gap-2" title={new Date(a.date).toLocaleString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}>
           <Calendar className="w-4 h-4 text-[var(--color-mid-gray)]" />
@@ -115,7 +117,7 @@ export default function ActivityAudit() {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('status'),
       render: (a) => {
         const status = getActivityStatus(a.status);
         const StatusIcon = STATUS_ICONS[a.status] || Info;
@@ -140,9 +142,9 @@ export default function ActivityAudit() {
   return (
     <div>
       <PageHeader
-        title="Activity & Audit Log"
-        description="Complete system-wide activity log with filtering and search capabilities."
-        breadcrumb={[{ label: 'Admin', to: '/admin' }, { label: 'Activity & Audit' }]}
+        title={t('activityAuditLog')}
+        description={t('activityAuditDescription')}
+        breadcrumb={[{ label: t('admin'), to: '/admin' }, { label: t('activityAudit') }]}
         actions={
           <button
             type="button"
@@ -151,7 +153,7 @@ export default function ActivityAudit() {
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[var(--color-border-gray)] bg-[var(--color-white)] text-sm font-semibold text-[var(--color-dark-gray)] hover:bg-[var(--color-off-white)] disabled:opacity-60 transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
-            {refreshing ? 'Refreshing…' : 'Refresh'}
+            {refreshing ? t('refreshing') : t('refresh')}
           </button>
         }
       />
@@ -166,7 +168,7 @@ export default function ActivityAudit() {
                 <ActivityIcon className="w-4 h-4" aria-hidden="true" />
               </span>
             </div>
-            <span className="text-xs font-bold text-[var(--color-mid-gray)] uppercase tracking-widest">Total Events</span>
+            <span className="text-xs font-bold text-[var(--color-mid-gray)] uppercase tracking-widest">{t('totalEvents')}</span>
             <div className="text-3xl font-bold text-[var(--color-dark-gray)] mt-1.5">{stats.total}</div>
           </div>
         </div>
@@ -178,7 +180,7 @@ export default function ActivityAudit() {
                 <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
               </span>
             </div>
-            <span className="text-xs font-bold text-[var(--color-mid-gray)] uppercase tracking-widest">Successful</span>
+            <span className="text-xs font-bold text-[var(--color-mid-gray)] uppercase tracking-widest">{t('successful')}</span>
             <div className="text-3xl font-bold text-[var(--color-status-green)] mt-1.5">{stats.success}</div>
           </div>
         </div>
@@ -190,7 +192,7 @@ export default function ActivityAudit() {
                 <AlertTriangle className="w-4 h-4" aria-hidden="true" />
               </span>
             </div>
-            <span className="text-xs font-bold text-[var(--color-mid-gray)] uppercase tracking-widest">Warnings</span>
+            <span className="text-xs font-bold text-[var(--color-mid-gray)] uppercase tracking-widest">{t('warnings')}</span>
             <div className="text-3xl font-bold text-[var(--color-status-amber)] mt-1.5">{stats.warnings}</div>
           </div>
         </div>
@@ -202,7 +204,7 @@ export default function ActivityAudit() {
                 <AlertCircle className="w-4 h-4" aria-hidden="true" />
               </span>
             </div>
-            <span className="text-xs font-bold text-[var(--color-mid-gray)] uppercase tracking-widest">Errors</span>
+            <span className="text-xs font-bold text-[var(--color-mid-gray)] uppercase tracking-widest">{t('errors')}</span>
             <div className="text-3xl font-bold text-[var(--color-status-red)] mt-1.5">{stats.errors}</div>
           </div>
         </div>
@@ -214,7 +216,7 @@ export default function ActivityAudit() {
         <div className="relative">
           <div className="flex items-center gap-2 mb-4 pb-4 border-b border-[var(--color-border-gray)]">
             <Filter className="w-5 h-5 text-[var(--color-medium-green)]" />
-            <h3 className="font-semibold text-[var(--color-dark-gray)]">Filters & Search</h3>
+            <h3 className="font-semibold text-[var(--color-dark-gray)]">{t('filtersSearch')}</h3>
           </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -223,7 +225,7 @@ export default function ActivityAudit() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-mid-gray)]" />
             <input
               type="text"
-              placeholder="Search by user or action…"
+              placeholder={t('searchUserAction')}
               value={search}
               onChange={(e) => updateFilter(setSearch)(e.target.value)}
               className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-[var(--color-border-gray)] text-sm text-[var(--color-dark-gray)] placeholder-[var(--color-mid-gray)] focus:outline-none focus:border-[var(--color-medium-green)] focus:ring-1 focus:ring-[var(--color-medium-green)]"
@@ -244,7 +246,7 @@ export default function ActivityAudit() {
                 paddingRight: '2.5rem',
               }}
             >
-              <option value="">All Modules</option>
+              <option value="">{t('allModules')}</option>
               {modules.map((m) => (
                 <option key={m} value={m}>
                   {MODULE_ICONS[m]} {m}
@@ -267,7 +269,7 @@ export default function ActivityAudit() {
                 paddingRight: '2.5rem',
               }}
             >
-              <option value="">All Statuses</option>
+              <option value="">{t('allStatuses')}</option>
               {statuses.map((s) => {
                 const status = getActivityStatus(s);
                 return (
@@ -291,7 +293,7 @@ export default function ActivityAudit() {
               }}
               className="px-4 py-2.5 rounded-lg bg-[var(--color-off-white)] text-sm font-medium text-[var(--color-dark-gray)] hover:bg-[var(--color-soft-gray)] transition-colors"
             >
-              Clear All Filters
+              {t('clearAllFilters')}
             </button>
           )}
         </div>
@@ -306,12 +308,11 @@ export default function ActivityAudit() {
             <div className="flex items-center gap-2 text-sm text-[var(--color-mid-gray)]">
               <ActivityIcon className="w-4 h-4 text-[var(--color-medium-green)]" />
               <span>
-                Showing <span className="font-semibold text-[var(--color-dark-gray)]">{filtered.length}</span> of{' '}
-                <span className="font-semibold text-[var(--color-dark-gray)]">{activity.length}</span> events
+                {t('showingEvents', { shown: filtered.length, total: activity.length })}
               </span>
             </div>
           </div>
-          <DataTable columns={columns} data={paginated} emptyState={<EmptyState title="No activity found" message="Try adjusting your filters or search terms." />} />
+          <DataTable columns={columns} data={paginated} emptyState={<EmptyState title={t('noActivityFound')} message={t('adjustActivityFilters')} />} />
           <TablePagination
             page={page}
             totalPages={totalPages}

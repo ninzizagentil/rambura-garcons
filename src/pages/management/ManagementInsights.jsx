@@ -6,9 +6,13 @@ import { InsightCard } from '../../components/cards/InsightChartCards';
 import { getBooks, getLoans, daysOverdue } from '../../services/bookService';
 import { getLowStockItems, getUsageByItem } from '../../services/stockService';
 import { useNotifications } from '../../context/NotificationContext';
+import { useApp } from '../../context/AppContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function ManagementInsights() {
   const navigate = useNavigate();
+  const { t } = useApp();
+  const { hasPermission } = useAuth();
   const books = useMemo(() => getBooks(), []);
   const loans = useMemo(() => getLoans(), []);
   const lowStock = useMemo(() => getLowStockItems(), []);
@@ -24,51 +28,51 @@ export default function ManagementInsights() {
   return (
     <div>
       <PageHeader
-        title="Management Insights"
-        description="Cross-department signals worth your attention."
-        breadcrumb={[{ label: 'Management', to: '/management' }, { label: 'Management Insights' }]}
+        title={t('managementInsights')}
+        description={t('managementInsightsDescription')}
+        breadcrumb={[{ label: t('schoolManagement'), to: '/management' }, { label: t('managementInsights') }]}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <InsightCard
+        {hasPermission('stock.reports') && <InsightCard
           icon={TrendingUp}
-          question="What is being used the most?"
-          answer={mostUsed ? `${mostUsed.name} (${mostUsed.used} ${mostUsed.unit} used)` : 'No usage recorded yet'}
+          question={t('mostUsedQuestion')}
+          answer={mostUsed ? t('usedItemAnswer', { name: mostUsed.name, count: mostUsed.used, unit: mostUsed.unit }) : t('noUsageRecorded')}
           onClick={() => navigate('/stock/analytics')}
-        />
-        <InsightCard
+        />}
+        {hasPermission('stock.reports') && <InsightCard
           icon={TrendingDown}
-          question="What is rarely used?"
-          answer={leastUsed ? `${leastUsed.name} (${leastUsed.used} ${leastUsed.unit} used)` : 'No usage recorded yet'}
+          question={t('leastUsedQuestion')}
+          answer={leastUsed ? t('usedItemAnswer', { name: leastUsed.name, count: leastUsed.used, unit: leastUsed.unit }) : t('noUsageRecorded')}
           onClick={() => navigate('/stock/analytics')}
-        />
-        <InsightCard
+        />}
+        {hasPermission('stock.reports') && <InsightCard
           icon={AlertTriangle}
-          question="What is running low?"
-          answer={lowStock.length ? `${lowStock.length} item(s) below minimum level` : 'All items above minimum level'}
+          question={t('runningLowQuestion')}
+          answer={lowStock.length ? t('itemsBelowMinimum', { count: lowStock.length }) : t('allItemsAboveMinimum')}
           tone={lowStock.length ? 'amber' : 'default'}
           onClick={() => navigate('/stock/low-stock')}
-        />
-        <InsightCard
+        />}
+        {hasPermission('library.reports') && <InsightCard
           icon={BookOpen}
-          question="Which books are borrowed most?"
-          answer={mostBorrowed ? `${mostBorrowed.title} (${mostBorrowed.borrowedCopies} borrowed)` : 'No loans recorded'}
+          question={t('mostBorrowedBooksQuestion')}
+          answer={mostBorrowed ? t('borrowedBookAnswer', { title: mostBorrowed.title, count: mostBorrowed.borrowedCopies }) : t('noLoansRecorded')}
           onClick={() => navigate('/library/reports')}
-        />
-        <InsightCard
+        />}
+        {hasPermission('library.reports') && <InsightCard
           icon={AlertTriangle}
-          question="Which books are overdue?"
-          answer={overdue.length ? `${overdue.length} loan(s) overdue` : 'No loans overdue'}
+          question={t('overdueBooksQuestion')}
+          answer={overdue.length ? t('overdueLoansAnswer', { count: overdue.length }) : t('noLoansOverdue')}
           tone={overdue.length ? 'red' : 'default'}
           onClick={() => navigate('/library/overdue')}
-        />
-        <InsightCard
+        />}
+        {hasPermission('reports.view') && <InsightCard
           icon={Bell}
-          question="What needs management attention?"
-          answer={openAlerts.length ? `${openAlerts.length} open alert(s)` : 'No open alerts'}
+          question={t('managementAttentionQuestion')}
+          answer={openAlerts.length ? t('openAlertsAnswer', { count: openAlerts.length }) : t('noOpenAlerts')}
           tone={openAlerts.length ? 'amber' : 'default'}
           onClick={() => navigate('/notifications')}
-        />
+        />}
       </div>
     </div>
   );

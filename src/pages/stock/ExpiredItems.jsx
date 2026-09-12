@@ -13,6 +13,7 @@ import DisposeStockModal from '../../components/modals/DisposeStockModal';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import { getItems } from '../../services/stockService';
+import { useApp } from '../../context/AppContext';
 
 const STATUS_OPTIONS = [
   { value: 'expired', label: 'Expired' },
@@ -23,6 +24,7 @@ const STATUS_OPTIONS = [
 export default function ExpiredItems() {
   const navigate = useNavigate();
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
+  const { t } = useApp();
   const [statusFilter, setStatusFilter] = useState('');
   const [disposeTarget, setDisposeTarget] = useState(null);
   const [refreshTick, setRefreshTick] = useState(0);
@@ -31,31 +33,31 @@ export default function ExpiredItems() {
   const filtered = statusFilter ? items.filter((i) => i.expiryStatus === statusFilter) : items;
 
   const columns = [
-    { key: 'name', header: 'Item' },
-    { key: 'batchNumber', header: 'Batch / Lot', render: (i) => <span className="font-mono text-xs">{i.batchNumber || '—'}</span> },
-    { key: 'expiryDate', header: 'Expiry Date' },
-    { key: 'quantity', header: 'Quantity', render: (i) => `${i.quantity} ${i.unit}` },
+    { key: 'name', header: t('item') },
+    { key: 'batchNumber', header: t('batchLot'), render: (i) => <span className="font-mono text-xs">{i.batchNumber || '—'}</span> },
+    { key: 'expiryDate', header: t('expiryDate') },
+    { key: 'quantity', header: t('quantity'), render: (i) => `${i.quantity} ${i.unit}` },
     {
       key: 'expiryDaysRemaining',
-      header: 'Days Remaining',
-      render: (i) => (i.expiryDaysRemaining < 0 ? `${Math.abs(i.expiryDaysRemaining)} days overdue` : `${i.expiryDaysRemaining} days`),
+      header: t('daysRemaining'),
+      render: (i) => (i.expiryDaysRemaining < 0 ? t('daysOverdueCount', { count: Math.abs(i.expiryDaysRemaining) }) : t('daysCount', { count: i.expiryDaysRemaining })),
     },
     {
       key: 'expiryStatus',
-      header: 'Status',
+      header: t('status'),
       render: (i) => <Badge tone={i.expiryStatus === 'expired' ? 'purple' : i.expiryStatus === 'expiring-soon' ? 'amber' : 'green'}>
-        {i.expiryStatus === 'expired' ? 'Expired' : i.expiryStatus === 'expiring-soon' ? 'Expiring Soon' : 'Valid'}
+        {t(i.expiryStatus === 'expired' ? 'itemExpired' : i.expiryStatus === 'expiring-soon' ? 'itemExpiringSoon' : 'valid')}
       </Badge>,
     },
   ];
   columns.push({
     key: 'actions',
-    header: 'Action',
+    header: t('action'),
     render: (i) => (
       <div className="flex items-center gap-1">
-        <IconButton icon={Eye} label={`View ${i.name}`} onClick={() => navigate(`/stock/items/${i.id}`)} />
+        <IconButton icon={Eye} label={`${t('view')} ${i.name}`} onClick={() => navigate(`/stock/items/${i.id}`)} />
         {!viewOnly && i.expiryStatus === 'expired' && (
-          <Button size="sm" variant="danger" icon={Trash2} onClick={() => setDisposeTarget(i)}>Dispose</Button>
+          <Button size="sm" variant="danger" icon={Trash2} onClick={() => setDisposeTarget(i)}>{t('dispose')}</Button>
         )}
       </div>
     ),
@@ -65,20 +67,20 @@ export default function ExpiredItems() {
     <div>
       <PageHeader
         title="Expiry Management"
-        description="Perishable stock tracked by batch and expiry date."
+        description={t('expiryManagementDescription')}
         breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Expired Items' }]}
       />
       {viewOnly && <ViewOnlyBanner module="Stock MIS" />}
 
       <div className="flex items-center gap-3 mb-4">
-        <FilterDropdown label="All Statuses" value={statusFilter} onChange={setStatusFilter} options={STATUS_OPTIONS} />
+        <FilterDropdown label={t('allStatuses')} value={statusFilter} onChange={setStatusFilter} options={STATUS_OPTIONS.map((option) => ({ ...option, label: t(option.label) }))} />
       </div>
 
       <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
         <DataTable
           columns={columns}
           data={filtered}
-          emptyState={<EmptyState icon={CalendarClock} title="No batches to show" message="No perishable items match this filter." />}
+          emptyState={<EmptyState icon={CalendarClock} title={t('noBatchesToShow')} message={t('noPerishableMatches')} />}
         />
       </div>
 

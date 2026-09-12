@@ -6,6 +6,69 @@ dotenv.config();
 // Initialize transporter (uses SMTP - configure in .env)
 let transporter = null;
 
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[character]);
+}
+
+function cleanHeader(value = '') {
+  return String(value).replace(/[\r\n]/g, ' ').trim();
+}
+
+export async function sendContactEmail({ name, email, subject, message }) {
+  if (!transporter) initEmailService();
+  const recipient = process.env.CONTACT_EMAIL || process.env.SMTP_FROM || 'info@rambura-garcons.rw';
+  const html = `<h2>Website contact message</h2><p><strong>From:</strong> ${escapeHtml(name)} &lt;${escapeHtml(email)}&gt;</p><p><strong>Subject:</strong> ${escapeHtml(subject)}</p><p>${escapeHtml(message).replace(/\n/g, '<br />')}</p>`;
+  if (!process.env.SMTP_HOST) {
+    console.log('[EMAIL] Contact message (SMTP not configured):', { recipient, name, email, subject, message });
+    return { success: false, reason: 'SMTP not configured' };
+  }
+  try {
+    const info = await transporter.sendMail({ from: process.env.SMTP_FROM || email, replyTo: email, to: recipient, subject: `[Website] ${cleanHeader(subject)}`, html });
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('[EMAIL] Contact message failed:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function sendSystemAlertEmail(userEmail, userName, title, message, link) {
+  if (!transporter) initEmailService();
+  const html = `<h2>${escapeHtml(title)}</h2><p>Hi ${escapeHtml(userName || 'there')},</p><p>${escapeHtml(message)}</p>${link ? `<p><a href="${escapeHtml(link)}">Open the school management system</a></p>` : ''}`;
+  if (!process.env.SMTP_HOST) {
+    console.log('[EMAIL] System alert (SMTP not configured):', { userEmail, title, message });
+    return { success: false, reason: 'SMTP not configured' };
+  }
+  try {
+    const info = await transporter.sendMail({ from: process.env.SMTP_FROM || 'noreply@rambura-garcons.com', to: userEmail, subject: cleanHeader(title), html });
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('[EMAIL] System alert failed:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function sendPasswordResetEmail(userEmail, userName, resetUrl) {
+  if (!transporter) initEmailService();
+  const html = `<h2>Reset your Rambura Garçons password</h2><p>Hi ${escapeHtml(userName || 'there')},</p><p>Use the secure link below to reset your password. It expires soon and can only be used once.</p><p><a href="${escapeHtml(resetUrl)}">Reset password</a></p><p>If you did not request this, you can ignore this email.</p>`;
+  if (!process.env.SMTP_HOST) {
+    console.log('[EMAIL] Password reset link (SMTP not configured):', resetUrl);
+    return { success: false, reason: 'SMTP not configured', resetUrl };
+  }
+  try {
+    const info = await transporter.sendMail({ from: process.env.SMTP_FROM || 'noreply@rambura-garcons.com', to: userEmail, subject: 'Reset your Rambura Garçons password', html });
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error('[EMAIL] Password reset failed:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export function initEmailService() {
   if (transporter) return transporter;
 
@@ -35,12 +98,12 @@ export async function sendLowStockAlert(userEmail, userName, items) {
   }
 
   const itemsList = items
-    .map((item) => `<tr><td>${item.name}</td><td>${item.quantity}</td><td>${item.minLevel}</td><td>${item.location}</td></tr>`)
+    .map((item) => `<tr><td>${escapeHtml(item.name)}</td><td>${escapeHtml(item.quantity)}</td><td>${escapeHtml(item.minLevel)}</td><td>${escapeHtml(item.location)}</td></tr>`)
     .join('');
 
   const html = `
     <h2>Low Stock Alert - Rambura Garcons</h2>
-    <p>Hi ${userName},</p>
+    <p>Hi ${escapeHtml(userName)},</p>
     <p>The following items are running low on stock and require immediate attention:</p>
     <table border="1" cellpadding="10" style="border-collapse: collapse;">
       <thead>
@@ -56,7 +119,7 @@ export async function sendLowStockAlert(userEmail, userName, items) {
     const info = await transporter.sendMail({
       from: process.env.SMTP_FROM || 'noreply@rambura-garcons.com',
       to: userEmail,
-      subject: `Low Stock Alert - ${items.length} item(s) below minimum level`,
+      subject: cleanHeader(`Low Stock Alert - ${items.length} item(s) below minimum level`),
       html
     });
 
@@ -80,12 +143,12 @@ export async function sendDisposalApprovalRequest(approverEmail, approverName, i
 
   const html = `
     <h2>Disposal Approval Required - Rambura Garcons</h2>
-    <p>Hi ${approverName},</p>
+    <p>Hi ${escapeHtml(approverName)},</p>
     <p>A disposal request requires your approval:</p>
     <ul>
-      <li><strong>Item:</strong> ${itemName}</li>
-      <li><strong>Quantity:</strong> ${quantity}</li>
-      <li><strong>Reason:</strong> ${reason}</li>
+      <li><strong>Item:</strong> ${escapeHtml(itemName)}</li>
+      <li><strong>Quantity:</strong> ${escapeHtml(quantity)}</li>
+      <li><strong>Reason:</strong> ${escapeHtml(reason)}</li>
     </ul>
     <p>Please review and approve/reject this request in the Stock Management System.</p>
     <p>Best regards,<br>Rambura Garcons Stock Management System</p>
@@ -95,7 +158,7 @@ export async function sendDisposalApprovalRequest(approverEmail, approverName, i
     const info = await transporter.sendMail({
       from: process.env.SMTP_FROM || 'noreply@rambura-garcons.com',
       to: approverEmail,
-      subject: `Disposal Approval Required: ${itemName}`,
+      subject: cleanHeader(`Disposal Approval Required: ${itemName}`),
       html
     });
 
@@ -118,12 +181,12 @@ export async function sendExpiryNotification(userEmail, userName, items) {
   }
 
   const itemsList = items
-    .map((item) => `<tr><td>${item.name}</td><td>${item.batchNumber || 'N/A'}</td><td>${new Date(item.expiryDate).toLocaleDateString()}</td></tr>`)
+    .map((item) => `<tr><td>${escapeHtml(item.name)}</td><td>${escapeHtml(item.batchNumber || 'N/A')}</td><td>${escapeHtml(new Date(item.expiryDate).toLocaleDateString())}</td></tr>`)
     .join('');
 
   const html = `
     <h2>Expiry Date Notification - Rambura Garcons</h2>
-    <p>Hi ${userName},</p>
+    <p>Hi ${escapeHtml(userName)},</p>
     <p>The following items are expiring soon or have already expired:</p>
     <table border="1" cellpadding="10" style="border-collapse: collapse;">
       <thead>
@@ -139,7 +202,7 @@ export async function sendExpiryNotification(userEmail, userName, items) {
     const info = await transporter.sendMail({
       from: process.env.SMTP_FROM || 'noreply@rambura-garcons.com',
       to: userEmail,
-      subject: `Expiry Notification - ${items.length} item(s) expiring soon`,
+      subject: cleanHeader(`Expiry Notification - ${items.length} item(s) expiring soon`),
       html
     });
 

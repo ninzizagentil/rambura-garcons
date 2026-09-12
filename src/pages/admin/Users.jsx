@@ -9,12 +9,14 @@ import IconButton from '../../components/common/IconButton';
 import ConfirmModal from '../../components/modals/ConfirmModal';
 import { EmptyState } from '../../components/feedback/States';
 import { useToast } from '../../context/ToastContext';
+import { useApp } from '../../context/AppContext';
 import { ROLE_LABELS } from '../../data/roles';
 import { getUsers, setUserStatus } from '../../services/userService';
 import UserFormModal from './UserFormModal';
 
 export default function Users() {
   const { showToast } = useToast();
+  const { t } = useApp();
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
@@ -46,31 +48,31 @@ export default function Users() {
     setConfirmTarget(null);
     const result = await setUserStatus(target.id, newStatus);
     if (!result.success) { showToast(result.error, 'error'); return; }
-    showToast(`${target.fullName} was ${newStatus === 'active' ? 'reactivated' : 'deactivated'}.`, 'success');
+    showToast(t(newStatus === 'active' ? 'userReactivated' : 'userDeactivated', { name: target.fullName }), 'success');
     refresh();
   };
 
   const columns = [
-    { key: 'fullName', header: 'Name' },
-    { key: 'username', header: 'Username / Email', render: (u) => (
+    { key: 'fullName', header: t('name') },
+    { key: 'username', header: t('usernameEmail'), render: (u) => (
         <div>
           <p className="font-medium">{u.username}</p>
           <p className="text-xs text-[var(--color-mid-gray)]">{u.email}</p>
         </div>
       ) },
-    { key: 'role', header: 'Role', render: (u) => ROLE_LABELS[u.role] },
-    { key: 'status', header: 'Status', render: (u) => <StatusBadge status={u.status} /> },
-    { key: 'lastActivity', header: 'Last Activity', render: (u) => new Date(u.lastActivity).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) },
+    { key: 'role', header: t('role'), render: (u) => ROLE_LABELS[u.role] },
+    { key: 'status', header: t('status'), render: (u) => <StatusBadge status={u.status} /> },
+    { key: 'lastActivity', header: t('lastActivity'), render: (u) => new Date(u.lastActivity).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t('actions'),
       render: (u) => (
         <div className="flex items-center gap-1">
-          <IconButton icon={Eye} label={`View ${u.fullName}`} onClick={() => { setEditingUser(u); setFormOpen(true); }} />
-          <IconButton icon={Pencil} label={`Edit ${u.fullName}`} onClick={() => { setEditingUser(u); setFormOpen(true); }} />
+          <IconButton icon={Eye} label={`${t('view')} ${u.fullName}`} onClick={() => { setEditingUser(u); setFormOpen(true); }} />
+          <IconButton icon={Pencil} label={`${t('edit')} ${u.fullName}`} onClick={() => { setEditingUser(u); setFormOpen(true); }} />
           <IconButton
             icon={u.status === 'active' ? UserX : UserCheck}
-            label={u.status === 'active' ? `Deactivate ${u.fullName}` : `Activate ${u.fullName}`}
+            label={`${t(u.status === 'active' ? 'deactivate' : 'activate')} ${u.fullName}`}
             variant={u.status === 'active' ? 'danger' : 'ghost'}
             onClick={() => setConfirmTarget(u)}
           />
@@ -82,29 +84,29 @@ export default function Users() {
   return (
     <div>
       <PageHeader
-        title="Users & Roles"
-        description="Manage staff accounts and role assignments."
-        breadcrumb={[{ label: 'Admin', to: '/admin' }, { label: 'Users' }]}
+        title={t('usersRoles')}
+        description={t('manageStaffAccounts')}
+        breadcrumb={[{ label: t('admin'), to: '/admin' }, { label: t('users') }]}
         actions={
           <Button icon={UserPlus} onClick={() => { setEditingUser(null); setFormOpen(true); }}>
-            Add User
+            {t('addUser')}
           </Button>
         }
       />
 
       <div className="flex flex-wrap gap-3 mb-4">
-        <SearchBar value={search} onChange={setSearch} placeholder="Search users…" className="flex-1 min-w-[220px]" />
+        <SearchBar value={search} onChange={setSearch} placeholder={t('searchUsers')} className="flex-1 min-w-[220px]" />
         <FilterDropdown
-          label="All Roles"
+          label={t('allRoles')}
           value={roleFilter}
           onChange={setRoleFilter}
           options={Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }))}
         />
         <FilterDropdown
-          label="All Status"
+          label={t('allStatus')}
           value={statusFilter}
           onChange={setStatusFilter}
-          options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }]}
+          options={[{ value: 'active', label: t('active') }, { value: 'inactive', label: t('inactive') }]}
         />
       </div>
 
@@ -114,9 +116,9 @@ export default function Users() {
           data={filtered}
           emptyState={
             <EmptyState
-              title="No users found"
-              message="Try adjusting your search or filters, or add a new user."
-              actionLabel="Add User"
+              title={t('noUsersFound')}
+              message={t('adjustUsersSearch')}
+              actionLabel={t('addUser')}
               onAction={() => { setEditingUser(null); setFormOpen(true); }}
             />
           }
@@ -134,9 +136,9 @@ export default function Users() {
         open={!!confirmTarget}
         onClose={() => setConfirmTarget(null)}
         onConfirm={handleToggleStatus}
-        title={confirmTarget?.status === 'active' ? 'Deactivate user' : 'Activate user'}
-        message={`Are you sure you want to ${confirmTarget?.status === 'active' ? 'deactivate' : 'activate'} ${confirmTarget?.fullName}?`}
-        confirmLabel={confirmTarget?.status === 'active' ? 'Deactivate' : 'Activate'}
+        title={t(confirmTarget?.status === 'active' ? 'deactivateUser' : 'activateUser')}
+        message={t(confirmTarget?.status === 'active' ? 'confirmDeactivateUser' : 'confirmActivateUser', { name: confirmTarget?.fullName || '' })}
+        confirmLabel={t(confirmTarget?.status === 'active' ? 'deactivate' : 'activate')}
         variant={confirmTarget?.status === 'active' ? 'danger' : 'primary'}
       />
     </div>

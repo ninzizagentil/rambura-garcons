@@ -26,7 +26,7 @@ export default function BrandMark({ containerClassName, imgClassName, fallback }
   return (
     <span
       className={cn(
-        'brand-mark inline-flex items-center justify-center overflow-hidden shrink-0 rounded-full border border-[var(--border)] bg-white/95 shadow-[0_12px_28px_rgba(15,108,255,0.08)] ring-1 ring-white/80',
+        'brand-mark inline-flex items-center justify-center overflow-hidden shrink-0 rounded-full border border-[var(--border)] bg-white/95 shadow-[0_12px_28px_rgba(23,59,49,0.08)] ring-1 ring-white/80',
         containerClassName
       )}
     >

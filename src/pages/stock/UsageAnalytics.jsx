@@ -5,6 +5,7 @@ import { ChartCard } from '../../components/cards/InsightChartCards';
 import { FilterDropdown } from '../../components/common/SearchBar';
 import { getUsageByItem, getTransactions, getStockValueByCategory } from '../../services/stockService';
 import { STOCK_CATEGORIES } from '../../data/stock';
+import { useApp } from '../../context/AppContext';
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -27,6 +28,7 @@ function buildMonthlyTrend(transactions, category) {
 }
 
 export default function UsageAnalytics() {
+  const { t } = useApp();
   const [category, setCategory] = useState('');
   const usage = useMemo(() => getUsageByItem(), []);
   const transactions = useMemo(() => getTransactions(), []);
@@ -44,19 +46,19 @@ export default function UsageAnalytics() {
   return (
     <div>
       <PageHeader
-        title="Usage Analytics"
-        description="Fast-moving, slow-moving items, and real stock movement trends."
-        breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'Usage Analytics' }]}
+        title={t('usageAnalytics')}
+        description={t('usageAnalyticsDescription')}
+        breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('usageAnalytics') }]}
       />
 
       <div className="flex flex-wrap gap-3 mb-5">
-        <FilterDropdown label="All Categories" value={category} onChange={setCategory} options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))} />
+        <FilterDropdown label={t('allCategories')} value={category} onChange={setCategory} options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-5 mb-5">
-        <ChartCard title="Fast Moving Items" description="Ranked by total quantity issued (Stock Out)">
+        <ChartCard title={t('fastMovingItems')} description={t('fastMovingDescription')}>
           {fastMoving.length === 0 ? (
-            <p className="text-sm text-[var(--color-mid-gray)] py-6 text-center">No Stock Out activity recorded yet.</p>
+            <p className="text-sm text-[var(--color-mid-gray)] py-6 text-center">{t('noStockOutActivity')}</p>
           ) : (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={fastMoving} layout="vertical" margin={{ left: 24 }}>
@@ -70,7 +72,7 @@ export default function UsageAnalytics() {
           )}
         </ChartCard>
 
-        <ChartCard title="Slow Moving Items" description="Lowest quantity issued (Stock Out), including never-issued items">
+        <ChartCard title={t('slowMovingItems')} description={t('slowMovingDescription')}>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={slowMoving} layout="vertical" margin={{ left: 24 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-gray)" />
@@ -83,9 +85,9 @@ export default function UsageAnalytics() {
         </ChartCard>
       </div>
 
-      <ChartCard title="Stock Movement Trends" description="Stock In, Stock Out, Adjustments, and Removed Stock, by month" className="mb-5">
+      <ChartCard title={t('stockMovementTrends')} description={t('stockMovementDescription')} className="mb-5">
         {trendData.length === 0 ? (
-          <p className="text-sm text-[var(--color-mid-gray)] py-6 text-center">No transaction history yet for this filter.</p>
+          <p className="text-sm text-[var(--color-mid-gray)] py-6 text-center">{t('noTransactionHistoryFilter')}</p>
         ) : (
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={trendData}>
@@ -103,7 +105,7 @@ export default function UsageAnalytics() {
         )}
       </ChartCard>
 
-      <ChartCard title="Stock Value by Category" description="Current inventory value, Foods vs. Electronic Devices">
+      <ChartCard title={t('stockValueByCategory')} description={t('stockValueCategoryDescription')}>
         <div className="grid sm:grid-cols-2 gap-4">
           {valueByCategory.map((c) => (
             <div key={c.category} className="rounded-[var(--radius-control)] bg-[var(--color-off-white)] p-4">

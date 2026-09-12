@@ -14,12 +14,21 @@ import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import { useToast } from '../../context/ToastContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useApp } from '../../context/AppContext';
 import { getLoans, refreshLibrary, returnBook, daysOverdue, getLibraryError } from '../../services/bookService';
+
+function formatDateOnly(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
+}
 
 export default function BorrowedBooks() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { addNotification } = useNotifications();
+  const { t } = useApp();
   const { viewOnly } = useModuleAccess(ROLES.LIBRARIAN);
   const [loans, setLoans] = useState(() => getLoans().filter((l) => l.status !== 'returned'));
   const [search, setSearch] = useState('');
@@ -52,10 +61,10 @@ export default function BorrowedBooks() {
       const result = await returnBook(confirmLoan.id);
       setProcessing(false);
       if (!result.success) { showToast(result.error, 'error'); return; }
-      showToast(`"${confirmLoan.bookTitle}" returned successfully.`, 'success');
+      showToast(t('bookReturnedSuccess', { bookTitle: confirmLoan.bookTitle }), 'success');
       addNotification({
         type: 'borrow',
-        message: `"${confirmLoan.bookTitle}" was returned by ${confirmLoan.borrower}.`,
+        message: t('confirmReturnBook', { bookTitle: confirmLoan.bookTitle, borrower: confirmLoan.borrower }),
         to: '/library/history',
       });
       refresh();
@@ -64,35 +73,35 @@ export default function BorrowedBooks() {
   };
 
   const columns = [
-    { key: 'borrower', header: 'Borrower' },
-    { key: 'bookTitle', header: 'Book' },
-    { key: 'borrowDate', header: 'Borrowed' },
-    { key: 'dueDate', header: 'Due Date' },
-    { key: 'status', header: 'Status', render: (l) => <StatusBadge status={daysOverdue(l.dueDate) > 0 ? 'overdue' : 'borrowed'} /> },
+    { key: 'borrower', header: t('borrowedBy') },
+    { key: 'bookTitle', header: t('bookTitle') },
+    { key: 'borrowDate', header: t('borrowDate'), render: (l) => formatDateOnly(l.borrowDate) },
+    { key: 'dueDate', header: t('dueDate'), render: (l) => formatDateOnly(l.dueDate) },
+    { key: 'status', header: t('status'), render: (l) => <StatusBadge status={daysOverdue(l.dueDate) > 0 ? 'overdue' : 'borrowed'} /> },
   ];
   if (!viewOnly) {
     columns.push({
       key: 'actions',
-      header: 'Actions',
-      render: (l) => <IconButton icon={RotateCcw} label={`Return ${l.bookTitle}`} onClick={() => setConfirmLoan(l)} />,
+      header: t('actions'),
+      render: (l) => <IconButton icon={RotateCcw} label={`${t('returnButton')} ${l.bookTitle}`} onClick={() => setConfirmLoan(l)} />,
     });
   }
 
   return (
     <div>
       <PageHeader
-        title="Borrowed Books"
-        description="Books currently out on loan."
-        breadcrumb={[{ label: 'Library', to: '/library' }, { label: 'Borrowed Books' }]}
+        title={t('borrowedBooks')}
+        description={t('borrowedBooksDescription')}
+        breadcrumb={[{ label: t('library'), to: '/library' }, { label: t('borrowedBooks') }]}
       />
       {viewOnly && <ViewOnlyBanner module="Library MIS" />}
-      {loadError && <Alert type="error" title="Couldn't load borrowed books" className="mb-4">{loadError}</Alert>}
-      <SearchBar value={search} onChange={setSearch} placeholder="Search by borrower or book…" className="mb-4 max-w-sm" />
+      {loadError && <Alert type="error" title={t('couldNotLoadBorrowedBooks')} className="mb-4">{loadError}</Alert>}
+      <SearchBar value={search} onChange={setSearch} placeholder={t('searchBorrowerBook')} className="mb-4 max-w-sm" />
       <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
         <DataTable
           columns={columns}
           data={filtered}
-          emptyState={<EmptyState title="No borrowed books" message="All copies are currently available." actionLabel="View Books" onAction={() => navigate('/library/books')} />}
+          emptyState={<EmptyState title={t('noBorrowedBooks')} message={t('allCopiesAvailable')} actionLabel={t('viewBooks')} onAction={() => navigate('/library/books')} />}
         />
       </div>
 
@@ -101,9 +110,9 @@ export default function BorrowedBooks() {
         onClose={() => setConfirmLoan(null)}
         onConfirm={handleReturn}
         loading={processing}
-        title="Return book"
-        message={confirmLoan ? `Confirm that "${confirmLoan.bookTitle}" has been returned by ${confirmLoan.borrower}.` : ''}
-        confirmLabel="Confirm Return"
+        title={t('returnBook')}
+        message={confirmLoan ? t('confirmReturnBook', { bookTitle: confirmLoan.bookTitle, borrower: confirmLoan.borrower }) : ''}
+        confirmLabel={t('confirmReturn')}
       />
     </div>
   );

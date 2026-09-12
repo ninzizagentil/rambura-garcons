@@ -1,4 +1,4 @@
-import { getStaff, useContentVersion } from '../../services/contentService';
+import { getStaff, getStaffPage, useContentVersion } from '../../services/contentService';
 import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 import PageHero from '../../components/common/PageHero';
 
@@ -6,10 +6,11 @@ export default function Staff() {
   useContentVersion();
   useSiteImageVersion();
   const staff = getStaff();
+  const page = getStaffPage();
   return (
     <div>
-      <PageHero title="Our Staff" image={getSiteImage('pageHeroes.staff')}>
-        <p className="text-[var(--text-secondary)] mt-3">The instructors and leaders behind Rambura Garçons.</p>
+      <PageHero title={page.title} image={getSiteImage('pageHeroes.staff')}>
+        <p className="text-[var(--text-secondary)] mt-3">{page.intro}</p>
       </PageHero>
 
       <section className="max-w-6xl mx-auto px-4 md:px-6 py-14">
