@@ -2,16 +2,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Boxes, PackageCheck, PackageMinus, PackagePlus, TrendingDown,
-  AlertTriangle, PackageX, Wallet, ShieldAlert, Archive, Plus,
-  ArrowRight,
+  ShieldAlert, Plus, ArrowRight,
+  PackageX, Wallet,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import StatCard from '../../components/cards/StatCard';
 import Button from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import {
-  getItems, getTransactions, getLowStockItems, getOutOfStockItems, getExpiredItems,
-  getExpiringSoonItems, getDamagedItems, getRemovedItems, getTotalStockValue,
+  getItems, getLowStockItems, getOutOfStockItems, getExpiredItems,
+  getExpiringSoonItems, getDamagedItems, getTotalStockValue,
   refreshStock,
 } from '../../services/stockService';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
@@ -37,24 +37,20 @@ export default function StockDashboard() {
   const { t, language } = useApp();
 
   const [items, setItems] = useState(() => getItems());
-  const [transactions, setTransactions] = useState(() => getTransactions());
   const [lowStock, setLowStock] = useState(() => getLowStockItems());
   const [outOfStock, setOutOfStock] = useState(() => getOutOfStockItems());
   const [expired, setExpired] = useState(() => getExpiredItems());
   const [expiringSoon, setExpiringSoon] = useState(() => getExpiringSoonItems());
   const [damaged, setDamaged] = useState(() => getDamagedItems());
-  const [removed, setRemoved] = useState(() => getRemovedItems());
   const [totalValue, setTotalValue] = useState(() => getTotalStockValue());
 
   const refresh = () => {
     setItems(getItems());
-    setTransactions(getTransactions());
     setLowStock(getLowStockItems());
     setOutOfStock(getOutOfStockItems());
     setExpired(getExpiredItems());
     setExpiringSoon(getExpiringSoonItems());
     setDamaged(getDamagedItems());
-    setRemoved(getRemovedItems());
     setTotalValue(getTotalStockValue());
   };
 
@@ -72,9 +68,9 @@ export default function StockDashboard() {
   const attention = useMemo(() => [
     ...outOfStock.map((i) => ({ key: `oos-${i.id}`, name: i.name, sub: `0 ${i.unit}`, badge: 'out-of-stock', label: t('itemOutOfStock'), action: 'restock', to: `/stock/stock-in?item=${i.id}` })),
     ...lowStock.filter((i) => i.quantity > 0).map((i) => ({ key: `low-${i.id}`, name: i.name, sub: `${i.quantity} ${i.unit}`, badge: 'low-stock', label: t('itemLowStock'), action: 'restock', to: `/stock/stock-in?item=${i.id}` })),
-    ...expired.map((i) => ({ key: `exp-${i.id}`, name: i.name, sub: t('expiredDaysAgo', { days: Math.abs(i.expiryDaysRemaining) }), badge: 'expired', label: t('itemExpired'), action: 'review', to: '/stock/expired' })),
-    ...expiringSoon.map((i) => ({ key: `soon-${i.id}`, name: i.name, sub: t('expiringDaysLeft', { days: i.expiryDaysRemaining }), badge: 'expiring-soon', label: t('itemExpiringSoon'), action: 'review', to: '/stock/expired' })),
-    ...damaged.map((d) => ({ key: `dmg-${d.id}`, name: d.itemName, sub: `${d.quantity} ${d.unit} — ${d.reason}`, badge: 'damaged', label: t('itemDamaged'), action: 'review', to: '/stock/damaged' })),
+    ...expired.map((i) => ({ key: `exp-${i.id}`, name: i.name, sub: t('expiredDaysAgo', { days: Math.abs(i.expiryDaysRemaining) }), badge: 'expired', label: t('itemExpired'), action: 'review', to: '/stock/alerts?tab=expiring' })),
+    ...expiringSoon.map((i) => ({ key: `soon-${i.id}`, name: i.name, sub: t('expiringDaysLeft', { days: i.expiryDaysRemaining }), badge: 'expiring-soon', label: t('itemExpiringSoon'), action: 'review', to: '/stock/alerts?tab=expiring' })),
+    ...damaged.map((d) => ({ key: `dmg-${d.id}`, name: d.itemName, sub: `${d.quantity} ${d.unit} — ${d.reason}`, badge: 'damaged', label: t('itemDamaged'), action: 'review', to: '/stock/activity?tab=damaged' })),
   ].slice(0, 8), [outOfStock, lowStock, expired, expiringSoon, damaged, t]);
 
   return (
@@ -100,8 +96,8 @@ export default function StockDashboard() {
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard className="stock-metric-card" label={t('totalItems')} value={totalItems} icon={Boxes} onClick={() => navigate('/stock/items')} />
         <StatCard className="stock-metric-card" label={t('itemsInStock')} value={inStock} icon={PackageCheck} onClick={() => navigate('/stock/items')} />
-        <StatCard className="stock-metric-card" label={t('lowStock')} value={lowStock.length} icon={TrendingDown} tone="amber" onClick={() => navigate('/stock/low-stock')} />
-        <StatCard className="stock-metric-card" label={t('outOfStock')} value={outOfStock.length} icon={PackageX} tone="red" onClick={() => navigate('/stock/out-of-stock')} />
+        <StatCard className="stock-metric-card" label={t('lowStock')} value={lowStock.length} icon={TrendingDown} tone="amber" onClick={() => navigate('/stock/alerts?tab=low-stock')} />
+        <StatCard className="stock-metric-card" label={t('outOfStock')} value={outOfStock.length} icon={PackageX} tone="red" onClick={() => navigate('/stock/alerts?tab=out-of-stock')} />
         <StatCard className="stock-metric-card" label={t('stockValue')} value={formatRWF(totalValue, language)} icon={Wallet} tone="gold" onClick={() => navigate('/stock/reports')} />
       </section>
 
@@ -188,9 +184,9 @@ export default function StockDashboard() {
             <p className="text-xs text-[var(--color-mid-gray)] mt-1">{t('expiredLabel')}, {t('damagedLabel')} and {t('disposedLabel')} watch</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/stock/expired')}>{t('expiredLabel')}</Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/stock/damaged')}>{t('damagedLabel')}</Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/stock/removed')}>{t('disposedLabel')}</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/stock/alerts?tab=expiring')}>{t('expiredLabel')}</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/stock/activity?tab=damaged')}>{t('damagedLabel')}</Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/stock/activity?tab=disposed')}>{t('disposedLabel')}</Button>
           </div>
         </div>
       </section>

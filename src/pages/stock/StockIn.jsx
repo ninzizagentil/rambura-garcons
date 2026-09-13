@@ -8,7 +8,7 @@ import Alert from '../../components/feedback/Alert';
 import { useToast } from '../../context/ToastContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
-import { getItems, stockIn, refreshStock } from '../../services/stockService';
+import { getItems, getSuppliers, stockIn, refreshStock } from '../../services/stockService';
 import { STOCK_TODAY as TODAY } from '../../data/stock';
 import { logActivity } from '../../services/activityService';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
@@ -27,9 +27,10 @@ export default function StockIn() {
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
   const { t, language } = useApp();
   const [items, setItems] = useState(() => getItems());
+  const [suppliers, setSuppliers] = useState(() => getSuppliers());
 
   useEffect(() => {
-    const refresh = () => setItems(getItems());
+    const refresh = () => { setItems(getItems()); setSuppliers(getSuppliers()); };
     window.addEventListener('rg:stock-updated', refresh);
     refreshStock().catch(() => {});
     return () => window.removeEventListener('rg:stock-updated', refresh);
@@ -38,6 +39,7 @@ export default function StockIn() {
   const [step, setStep] = useState('form'); // form | confirm | success
   const [form, setForm] = useState({
     itemId: searchParams.get('item') || '',
+    supplierId: '',
     quantity: '',
     date: TODAY,
     party: '',
@@ -49,8 +51,32 @@ export default function StockIn() {
   const [saving, setSaving] = useState(false);
   const [result, setResult] = useState(null);
 
-  const selectedItem = items.find((i) => i.id === form.itemId) || null;
+  const selectedItem     = items.find((i) => i.id === form.itemId) || null;
+  const selectedSupplier = suppliers.find((s) => s.id === form.supplierId) || null;
+
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  // When supplier is chosen from the list, auto-fill the party (source) field
+  const handleSupplierChange = (e) => {
+    const id = e.target.value;
+    const sup = suppliers.find((s) => s.id === id);
+    setForm((f) => ({ ...f, supplierId: id, party: sup ? sup.name : f.party }));
+  };
+
+  // When item is selected, pre-fill supplier if the item has a default supplierId
+  const handleItemChange = (e) => {
+    const id = e.target.value;
+    const itm = items.find((i) => i.id === id);
+    const defaultSup = itm?.supplierId
+      ? suppliers.find((s) => s.id === itm.supplierId || s._id === itm.supplierId)
+      : null;
+    setForm((f) => ({
+      ...f,
+      itemId: id,
+      supplierId: defaultSup ? defaultSup.id : f.supplierId,
+      party: defaultSup ? defaultSup.name : f.party,
+    }));
+  };
 
   const validate = () => {
     const next = {};
@@ -97,7 +123,7 @@ export default function StockIn() {
   };
 
   const startAnother = () => {
-    setForm({ itemId: '', quantity: '', date: TODAY, party: '', responsibleUser: user?.fullName || '', notes: '' });
+    setForm({ itemId: '', supplierId: '', quantity: '', date: TODAY, party: '', responsibleUser: user?.fullName || '', notes: '' });
     setErrors({});
     setServerError('');
     setResult(null);
@@ -172,7 +198,7 @@ export default function StockIn() {
                   label={t('item')}
                   required
                   value={form.itemId}
-                  onChange={update('itemId')}
+                  onChange={handleItemChange}
                   error={errors.itemId}
                   options={items.map((i) => ({ value: i.id, label: `${i.name} (${i.quantity} ${i.unit} in stock)` }))}
                 />
@@ -185,8 +211,31 @@ export default function StockIn() {
                 <Input label={t('quantity')} type="number" min="1" required value={form.quantity} onChange={update('quantity')} error={errors.quantity} />
                 <Input label={t('date')} type="date" required value={form.date} onChange={update('date')} error={errors.date} />
               </div>
+
+              {/* Supplier select — auto-fills party; falls back to free text */}
               <div className="stock-form-grid full">
-                <Input label={t('sourceSupplier')} required value={form.party} onChange={update('party')} error={errors.party} placeholder={t('sourceSupplierPlaceholder')} />
+                <Select
+                  label="Supplier"
+                  value={form.supplierId}
+                  onChange={handleSupplierChange}
+                  hint="Select a registered supplier, or leave blank and type the source manually below."
+                  options={[
+                    { value: '', label: '— Select supplier (optional) —' },
+                    ...suppliers.map((s) => ({ value: s.id, label: s.name })),
+                  ]}
+                />
+              </div>
+
+              <div className="stock-form-grid full">
+                <Input
+                  label={t('sourceSupplier')}
+                  required
+                  value={form.party}
+                  onChange={update('party')}
+                  error={errors.party}
+                  placeholder={t('sourceSupplierPlaceholder')}
+                  hint={selectedSupplier ? `Auto-filled from supplier "${selectedSupplier.name}". You can edit if needed.` : 'Type the supplier or source name.'}
+                />
               </div>
               <div className="stock-form-grid full">
                 <Input label={t('responsibleUser')} required value={form.responsibleUser} onChange={update('responsibleUser')} error={errors.responsibleUser} />
@@ -210,6 +259,7 @@ export default function StockIn() {
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('item')}</dt><dd className="font-medium">{selectedItem?.name}</dd></div>
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('quantity')}</dt><dd className="font-medium">+{form.quantity} {selectedItem?.unit}</dd></div>
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('date')}</dt><dd className="font-medium">{form.date}</dd></div>
+              {selectedSupplier && <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Supplier</dt><dd className="font-medium">{selectedSupplier.name}</dd></div>}
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('sourceSupplier')}</dt><dd className="font-medium">{form.party}</dd></div>
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('responsibleUser')}</dt><dd className="font-medium">{form.responsibleUser}</dd></div>
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('newQuantity')}</dt><dd className="font-medium">{(selectedItem?.quantity || 0) + Number(form.quantity)} {selectedItem?.unit}</dd></div>

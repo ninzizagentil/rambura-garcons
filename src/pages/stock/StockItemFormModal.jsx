@@ -7,11 +7,11 @@ import { useToast } from '../../context/ToastContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
 import { STOCK_CATEGORIES, STOCK_UNITS } from '../../data/stock';
-import { createItem, updateItem } from '../../services/stockService';
+import { createItem, updateItem, getSuppliers } from '../../services/stockService';
 import { logActivity } from '../../services/activityService';
 import { useApp } from '../../context/AppContext';
 
-const EMPTY_FORM = { name: '', category: '', unit: '', quantity: '', minLevel: '', unitPrice: '', description: '', batchNumber: '', serialNumber: '', expiryDate: '' };
+const EMPTY_FORM = { name: '', category: '', unit: '', quantity: '', minLevel: '', unitPrice: '', description: '', batchNumber: '', serialNumber: '', expiryDate: '', supplierId: '', location: '' };
 
 export default function StockItemFormModal({ open, onClose, item, onSaved }) {
   const { showToast } = useToast();
@@ -22,13 +22,15 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [suppliers, setSuppliers] = useState(() => getSuppliers());
   const isEdit = !!item;
 
   useEffect(() => {
     if (open) {
+      setSuppliers(getSuppliers());
       setForm(
         item
-          ? { ...item, quantity: String(item.quantity), minLevel: String(item.minLevel), unitPrice: String(item.unitPrice ?? ''), expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString().split('T')[0] : '' }
+          ? { ...EMPTY_FORM, ...item, quantity: String(item.quantity), minLevel: String(item.minLevel), unitPrice: String(item.unitPrice ?? ''), supplierId: item.supplierId || '', location: item.location || '', expiryDate: item.expiryDate ? new Date(item.expiryDate).toISOString().split('T')[0] : '' }
           : EMPTY_FORM
       );
       setErrors({});
@@ -74,7 +76,9 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
       unitPrice: Number(form.unitPrice),
       expiryDate: form.expiryDate ? new Date(form.expiryDate) : null,
       batchNumber: form.batchNumber?.trim() || null,
-      serialNumber: form.serialNumber?.trim() || null
+      serialNumber: form.serialNumber?.trim() || null,
+      supplierId: form.supplierId || null,
+      location: form.location || null,
     };
     const result = isEdit ? await updateItem(item.id, payload) : await createItem(payload);
     setSaving(false);
@@ -200,6 +204,32 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
           />
         )}
         <Textarea label={t('descriptionNotes')} value={form.description} onChange={update('description')} rows={3} />
+
+        {/* Supplier & Location */}
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Select
+            label="Default Supplier"
+            value={form.supplierId}
+            onChange={update('supplierId')}
+            hint="The supplier who usually provides this item."
+            options={[
+              { value: '', label: '— No supplier —' },
+              ...suppliers.map((s) => ({ value: s.id, label: s.name })),
+            ]}
+          />
+          <Select
+            label="Storage Location"
+            value={form.location}
+            onChange={update('location')}
+            options={[
+              { value: '', label: '— Select location —' },
+              { value: 'Main Store',    label: 'Main Store'    },
+              { value: 'Kitchen Store', label: 'Kitchen Store' },
+              { value: 'ICT Lab Store', label: 'ICT Lab Store' },
+              { value: 'Admin Store',   label: 'Admin Store'   },
+            ]}
+          />
+        </div>
       </form>
     </Modal>
   );

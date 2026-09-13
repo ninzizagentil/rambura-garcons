@@ -91,7 +91,7 @@ export default function StockAdjustment() {
         addNotification({
           type: 'low-stock',
           message: t('belowMinimumAfterAdjustment', { name: selectedItem.name, quantity: res.newQuantity, unit: selectedItem.unit }),
-          to: '/stock/low-stock',
+          to: '/stock/alerts?tab=low-stock',
         });
       }
       logActivity({

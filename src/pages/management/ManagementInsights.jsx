@@ -38,20 +38,20 @@ export default function ManagementInsights() {
           icon={TrendingUp}
           question={t('mostUsedQuestion')}
           answer={mostUsed ? t('usedItemAnswer', { name: mostUsed.name, count: mostUsed.used, unit: mostUsed.unit }) : t('noUsageRecorded')}
-          onClick={() => navigate('/stock/analytics')}
+          onClick={() => navigate('/stock/reports?tab=analytics')}
         />}
         {hasPermission('stock.reports') && <InsightCard
           icon={TrendingDown}
           question={t('leastUsedQuestion')}
           answer={leastUsed ? t('usedItemAnswer', { name: leastUsed.name, count: leastUsed.used, unit: leastUsed.unit }) : t('noUsageRecorded')}
-          onClick={() => navigate('/stock/analytics')}
+          onClick={() => navigate('/stock/reports?tab=analytics')}
         />}
         {hasPermission('stock.reports') && <InsightCard
           icon={AlertTriangle}
           question={t('runningLowQuestion')}
           answer={lowStock.length ? t('itemsBelowMinimum', { count: lowStock.length }) : t('allItemsAboveMinimum')}
           tone={lowStock.length ? 'amber' : 'default'}
-          onClick={() => navigate('/stock/low-stock')}
+          onClick={() => navigate('/stock/alerts?tab=low-stock')}
         />}
         {hasPermission('library.reports') && <InsightCard
           icon={BookOpen}

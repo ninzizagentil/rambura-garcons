@@ -327,14 +327,14 @@ export default function StockItems() {
               value={stats.lowStock}
               icon={TrendingDown}
               tone="amber"
-              onClick={() => setStatusFilter('low-stock')}
+              onClick={() => navigate('/stock/alerts?tab=low-stock')}
             />
             <StatCard
               label={t('outOfStock')}
               value={stats.outOfStock}
               icon={PackageX}
               tone="red"
-              onClick={() => setStatusFilter('out-of-stock')}
+              onClick={() => navigate('/stock/alerts?tab=out-of-stock')}
             />
             <StatCard label={t('totalValue')} value={formatRWF(stats.totalValue, language)} icon={Wallet} tone="blue" />
           </div>

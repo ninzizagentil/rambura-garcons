@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 import PublicLayout from './layouts/PublicLayout';
 import DashboardLayout from './layouts/DashboardLayout';
@@ -47,12 +47,8 @@ const StockAdjustment = lazyPage(() => import('./pages/stock/StockAdjustment'));
 const StockTransfer = lazyPage(() => import('./pages/stock/StockTransfer'));
 const Suppliers = lazyPage(() => import('./pages/stock/Suppliers'));
 const Transactions = lazyPage(() => import('./pages/stock/Transactions'));
-const LowStock = lazyPage(() => import('./pages/stock/LowStock'));
-const OutOfStock = lazyPage(() => import('./pages/stock/OutOfStock'));
-const DamagedItems = lazyPage(() => import('./pages/stock/DamagedItems'));
-const ExpiredItems = lazyPage(() => import('./pages/stock/ExpiredItems'));
-const RemovedDisposed = lazyPage(() => import('./pages/stock/RemovedDisposed'));
-const UsageAnalytics = lazyPage(() => import('./pages/stock/UsageAnalytics'));
+const StockAlerts = lazyPage(() => import('./pages/stock/StockAlerts'));
+const DamageDisposal = lazyPage(() => import('./pages/stock/DamageDisposal'));
 const StockReports = lazyPage(() => import('./pages/stock/StockReports'));
 const ManagementLibraryReports = lazyPage(() => import('./pages/management/LibraryReports'));
 const ManagementStockReports = lazyPage(() => import('./pages/management/StockReports'));
@@ -129,22 +125,37 @@ export default function App() {
 
       <Route element={<PermissionProtectedRoute allow={[ROLES.STOCK_MANAGER, ROLES.ADMIN]} permissions={['stock.view']} />}>
         <Route element={<DashboardLayout />}>
-          <Route path="/stock" element={<StockDashboard />} />
-          <Route path="/stock/items" element={<StockItems />} />
-          <Route path="/stock/items/:id" element={<StockItemDetails />} />
-          <Route path="/stock/low-stock" element={<LowStock />} />
-          <Route path="/stock/out-of-stock" element={<OutOfStock />} />
-          <Route path="/stock/damaged" element={<DamagedItems />} />
-          <Route path="/stock/expired" element={<ExpiredItems />} />
-          <Route path="/stock/removed" element={<RemovedDisposed />} />
-          <Route path="/stock/stock-in" element={<StockIn />} />
-          <Route path="/stock/stock-out" element={<StockOut />} />
-          <Route path="/stock/adjustment" element={<StockAdjustment />} />
-          <Route path="/stock/transfer" element={<StockTransfer />} />
-          <Route path="/stock/suppliers" element={<Suppliers />} />
+          {/* ── Core pages ───────────────────────────────────────────── */}
+          <Route path="/stock"              element={<StockDashboard />} />
+          <Route path="/stock/items"        element={<StockItems />} />
+          <Route path="/stock/items/:id"    element={<StockItemDetails />} />
+
+          {/* ── Inventory: Alerts (Low Stock + Out of Stock + Expiry) ── */}
+          <Route path="/stock/alerts"       element={<StockAlerts />} />
+
+          {/* ── Operations ───────────────────────────────────────────── */}
+          <Route path="/stock/stock-in"     element={<StockIn />} />
+          <Route path="/stock/stock-out"    element={<StockOut />} />
+          <Route path="/stock/adjustment"   element={<StockAdjustment />} />
+          <Route path="/stock/transfer"     element={<StockTransfer />} />
+
+          {/* ── Suppliers ────────────────────────────────────────────── */}
+          <Route path="/stock/suppliers"    element={<Suppliers />} />
+
+          {/* ── Activity ─────────────────────────────────────────────── */}
           <Route path="/stock/transactions" element={<Transactions />} />
-          <Route path="/stock/analytics" element={<UsageAnalytics />} />
-          <Route path="/stock/reports" element={<StockReports />} />
+          <Route path="/stock/activity"     element={<DamageDisposal />} />
+
+          {/* ── Reports (Overview + Analytics + ABC) ─────────────────── */}
+          <Route path="/stock/reports"      element={<StockReports />} />
+
+          {/* ── Backward-compat redirects (old URLs → new locations) ─── */}
+          <Route path="/stock/low-stock"    element={<Navigate to="/stock/alerts?tab=low-stock"    replace />} />
+          <Route path="/stock/out-of-stock" element={<Navigate to="/stock/alerts?tab=out-of-stock" replace />} />
+          <Route path="/stock/expired"      element={<Navigate to="/stock/alerts?tab=expiring"     replace />} />
+          <Route path="/stock/damaged"      element={<Navigate to="/stock/activity?tab=damaged"    replace />} />
+          <Route path="/stock/removed"      element={<Navigate to="/stock/activity?tab=disposed"   replace />} />
+          <Route path="/stock/analytics"    element={<Navigate to="/stock/reports?tab=analytics"   replace />} />
         </Route>
       </Route>
 

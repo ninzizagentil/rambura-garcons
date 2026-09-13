@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Truck, Boxes, CalendarClock, Pencil, Trash2, History, Phone, Mail } from 'lucide-react';
+import { Plus, Truck, Boxes, CalendarClock, Pencil, Trash2, History, Phone, Mail, Tag } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { TablePagination } from '../../components/tables/DataTable';
 import RowActionMenu from '../../components/tables/RowActionMenu';
@@ -13,7 +13,7 @@ import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { useToast } from '../../context/ToastContext';
 import { ROLES } from '../../data/roles';
-import { getSuppliers, refreshStock, deleteSupplier, getSupplyHistoryForSupplier } from '../../services/stockService';
+import { getSuppliers, refreshStock, deleteSupplier, getSupplyHistoryForSupplier, getItems } from '../../services/stockService';
 import { logActivity } from '../../services/activityService';
 import { useAuth } from '../../context/AuthContext';
 import SupplierFormModal from './SupplierFormModal';
@@ -26,6 +26,7 @@ export default function Suppliers() {
   const { t } = useApp();
 
   const [suppliers, setSuppliers] = useState([]);
+  const [allItems, setAllItems]   = useState(() => getItems());
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
@@ -35,14 +36,26 @@ export default function Suppliers() {
   const [historyTarget, setHistoryTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [supplierItemsTarget, setSupplierItemsTarget] = useState(null);
 
-  const refresh = () => setSuppliers([...getSuppliers()]);
+  const refresh = () => { setSuppliers([...getSuppliers()]); setAllItems(getItems()); };
   useEffect(() => {
     window.addEventListener('rg:stock-updated', refresh);
     refreshStock().catch(() => {});
     return () => window.removeEventListener('rg:stock-updated', refresh);
   }, []);
   useEffect(() => { setPage(1); }, [search]);
+
+  // Items linked to a supplier via supplierId, grouped by category
+  const getSupplierItems = (supplierId) =>
+    allItems.filter((i) => i.supplierId === supplierId || i.supplierId?._id === supplierId || i.supplierId === supplierId?.toString());
+
+  const getCategoryBadges = (supplierId) => {
+    const items = getSupplierItems(supplierId);
+    if (items.length === 0) return null;
+    const cats = [...new Set(items.map((i) => i.category))];
+    return { items, cats };
+  };
 
   const filtered = useMemo(() => {
     if (!search) return suppliers;
@@ -56,8 +69,8 @@ export default function Suppliers() {
   const stats = useMemo(() => ({
     total: suppliers.length,
     active: suppliers.filter((s) => s.status === 'active').length,
-    itemsSupplied: suppliers.reduce((sum, s) => sum + s.itemsSupplied, 0),
-  }), [suppliers]);
+    itemsLinked: allItems.filter((i) => !!i.supplierId).length,
+  }), [suppliers, allItems]);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -75,7 +88,34 @@ export default function Suppliers() {
     { key: 'contactPerson', header: 'Contact Person' },
     { key: 'phone', header: 'Phone', render: (s) => <span className="inline-flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-[var(--color-mid-gray)]" aria-hidden="true" />{s.phone || '—'}</span> },
     { key: 'email', header: 'Email', render: (s) => s.email ? <span className="inline-flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-[var(--color-mid-gray)]" aria-hidden="true" />{s.email}</span> : '—' },
-    { key: 'itemsSupplied', header: 'Items Supplied' },
+    {
+      key: 'itemsSupplied',
+      header: 'Items Currently Supplied',
+      render: (s) => {
+        const info = getCategoryBadges(s.id);
+        if (!info) return <span className="text-xs text-[var(--color-mid-gray)]">—</span>;
+        return (
+          <button
+            className="flex flex-wrap gap-1 text-left"
+            onClick={() => setSupplierItemsTarget(s)}
+            title={`${info.items.length} item(s) — click to view`}
+          >
+            {info.cats.map((cat) => {
+              const count = info.items.filter((i) => i.category === cat).length;
+              const tone = cat === 'Foods' ? 'bg-[var(--color-status-green-bg)] text-[var(--color-status-green)]'
+                : cat === 'Electronic Devices' ? 'bg-[var(--color-status-blue-bg)] text-[var(--color-status-blue)]'
+                : 'bg-[var(--color-soft-gray)] text-[var(--color-mid-gray)]';
+              return (
+                <span key={cat} className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${tone}`}>
+                  <Tag className="w-2.5 h-2.5" aria-hidden="true" />
+                  {cat === 'Other School Materials' ? 'Materials' : cat} ({count})
+                </span>
+              );
+            })}
+          </button>
+        );
+      },
+    },
     { key: 'lastSupply', header: 'Last Supply', render: (s) => s.lastSupply || 'No deliveries yet' },
     {
       key: 'actions',
@@ -112,7 +152,7 @@ export default function Suppliers() {
       <div className="grid sm:grid-cols-3 gap-4 mb-6">
         <StatCard label={t('totalSuppliers')} value={stats.total} icon={Truck} />
         <StatCard label={t('activeSuppliers')} value={stats.active} icon={CalendarClock} tone="default" />
-        <StatCard label={t('itemsCurrentlySupplied')} value={stats.itemsSupplied} icon={Boxes} />
+        <StatCard label={t('itemsCurrentlySupplied')} value={stats.itemsLinked} icon={Boxes} />
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4">
@@ -168,6 +208,66 @@ export default function Suppliers() {
             </table>
           </div>
         )}
+      </Modal>
+
+      {/* Items currently supplied by this supplier */}
+      <Modal
+        open={!!supplierItemsTarget}
+        onClose={() => setSupplierItemsTarget(null)}
+        title={`Items Supplied — ${supplierItemsTarget?.name || ''}`}
+        size="lg"
+      >
+        {(() => {
+          const info = supplierItemsTarget ? getCategoryBadges(supplierItemsTarget.id) : null;
+          if (!info) return <EmptyState title="No items linked" message="No stock items have this supplier set as their default supplier yet." />;
+
+          // Group items by category for the modal
+          const byCategory = info.cats.map((cat) => ({
+            cat,
+            items: info.items.filter((i) => i.category === cat),
+          }));
+
+          return (
+            <div className="space-y-5">
+              {/* Summary badges */}
+              <div className="flex flex-wrap gap-2 pb-3 border-b border-[var(--color-border-gray)]">
+                <span className="text-sm font-semibold text-[var(--color-dark-gray)]">
+                  {info.items.length} item{info.items.length !== 1 ? 's' : ''} across {info.cats.length} categor{info.cats.length !== 1 ? 'ies' : 'y'}
+                </span>
+              </div>
+
+              {byCategory.map(({ cat, items: catItems }) => (
+                <div key={cat}>
+                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--color-mid-gray)] mb-2">{cat}</p>
+                  <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] text-xs uppercase text-[var(--color-mid-gray)]">
+                          <th className="text-left py-2 px-3">Item Name</th>
+                          <th className="text-left py-2 px-3">Code</th>
+                          <th className="text-left py-2 px-3">Quantity</th>
+                          <th className="text-left py-2 px-3">Unit</th>
+                          <th className="text-left py-2 px-3">Location</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--color-border-gray)]">
+                        {catItems.map((item) => (
+                          <tr key={item.id} className="hover:bg-[var(--color-soft-gray)]">
+                            <td className="py-2.5 px-3 font-medium">{item.name}</td>
+                            <td className="py-2.5 px-3 font-mono text-xs text-[var(--color-mid-gray)]">{item.code}</td>
+                            <td className="py-2.5 px-3">{item.quantity}</td>
+                            <td className="py-2.5 px-3 text-[var(--color-mid-gray)]">{item.unit}</td>
+                            <td className="py-2.5 px-3 text-[var(--color-mid-gray)]">{item.location || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );

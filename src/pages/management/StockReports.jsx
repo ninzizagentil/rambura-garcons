@@ -98,7 +98,7 @@ export default function ManagementStockReports() {
         <ChartCard
           title={t('lowStockItems')}
           description={t('itemsAtOrBelowMinimum')}
-          actions={hasPermission('stock.view') ? <Button variant="ghost" size="sm" icon={ArrowRight} iconPosition="right" onClick={() => navigate('/stock/low-stock')}>{t('viewInStockMis')}</Button> : null}
+          actions={hasPermission('stock.view') ? <Button variant="ghost" size="sm" icon={ArrowRight} iconPosition="right" onClick={() => navigate('/stock/alerts?tab=low-stock')}>{t('viewInStockMis')}</Button> : null}
         >
           {lowStock.length === 0 ? (
             <p className="text-sm text-[var(--color-mid-gray)] py-4">{t('noItemsBelowMinimum')}</p>

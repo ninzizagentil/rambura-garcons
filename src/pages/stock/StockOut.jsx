@@ -88,7 +88,7 @@ export default function StockOut() {
         addNotification({
           type: 'low-stock',
           message: t('belowMinimumStock', { name: selectedItem.name, quantity: res.newQuantity, unit: selectedItem.unit }),
-          to: '/stock/low-stock',
+          to: '/stock/alerts?tab=low-stock',
         });
       }
       logActivity({
