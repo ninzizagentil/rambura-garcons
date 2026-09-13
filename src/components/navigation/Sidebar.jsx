@@ -19,6 +19,8 @@ function translateLabel(label, t) {
     'Settings': 'settings',
     'Library MIS': 'libraryMis',
     'Stock MIS': 'stockMis',
+    'School Modules': 'schoolModules',
+    Administration: 'administration',
     Inventory: 'inventory',
     Operations: 'operations',
     'Transfer Stock': 'transferStock',
