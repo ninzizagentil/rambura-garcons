@@ -78,7 +78,7 @@ export default function Suppliers() {
     setDeleting(false);
     setDeleteTarget(null);
     if (!res.success) { showToast(res.error, 'error'); return; }
-    showToast(`"${deleteTarget.name}" removed from suppliers.`, 'success');
+    showToast(t('removeSupplier'), 'success');
     logActivity({ user: user?.fullName || 'Stock Manager', action: `Removed supplier: ${deleteTarget.name}`, module: 'Stock', status: 'success' });
     refresh();
   };
@@ -123,9 +123,9 @@ export default function Suppliers() {
       render: (s) => (
         <RowActionMenu
           items={[
-            { label: 'Supply History', icon: History, onClick: () => setHistoryTarget(s) },
-            !viewOnly && { label: 'Edit', icon: Pencil, onClick: () => { setEditTarget(s); setFormOpen(true); } },
-            !viewOnly && { label: 'Delete', icon: Trash2, tone: 'danger', onClick: () => setDeleteTarget(s) },
+            { label: t('fullHistory'), icon: History, onClick: () => setHistoryTarget(s) },
+            !viewOnly && { label: t('edit'), icon: Pencil, onClick: () => { setEditTarget(s); setFormOpen(true); } },
+            !viewOnly && { label: t('delete'), icon: Trash2, tone: 'danger', onClick: () => setDeleteTarget(s) },
           ]}
         />
       ),
@@ -183,16 +183,16 @@ export default function Suppliers() {
 
       <Modal open={!!historyTarget} onClose={() => setHistoryTarget(null)} title={`Supply History — ${historyTarget?.name || ''}`} size="lg">
         {historyRows.length === 0 ? (
-          <EmptyState title="No deliveries recorded" message="This supplier has no Stock In history yet." />
+          <EmptyState title={t('noTransactionsFound')} message={t('tryDifferentSearchFilter')} />
         ) : (
           <div className="table-scroll">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--color-border-gray)] text-xs uppercase text-[var(--color-mid-gray)]">
-                  <th className="text-left py-2 pr-4">Date</th>
-                  <th className="text-left py-2 pr-4">Item</th>
-                  <th className="text-left py-2 pr-4">Quantity</th>
-                  <th className="text-left py-2">Responsible User</th>
+                  <th className="text-left py-2 pr-4">{t('date')}</th>
+                  <th className="text-left py-2 pr-4">{t('item')}</th>
+                  <th className="text-left py-2 pr-4">{t('quantity')}</th>
+                  <th className="text-left py-2">{t('responsibleUser')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--color-border-gray)]">
@@ -219,7 +219,7 @@ export default function Suppliers() {
       >
         {(() => {
           const info = supplierItemsTarget ? getCategoryBadges(supplierItemsTarget.id) : null;
-          if (!info) return <EmptyState title="No items linked" message="No stock items have this supplier set as their default supplier yet." />;
+          if (!info) return <EmptyState title={t('noStockItemsFound')} message={t('tryDifferentStockSearch')} />;
 
           // Group items by category for the modal
           const byCategory = info.cats.map((cat) => ({
@@ -243,11 +243,11 @@ export default function Suppliers() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] text-xs uppercase text-[var(--color-mid-gray)]">
-                          <th className="text-left py-2 px-3">Item Name</th>
-                          <th className="text-left py-2 px-3">Code</th>
-                          <th className="text-left py-2 px-3">Quantity</th>
-                          <th className="text-left py-2 px-3">Unit</th>
-                          <th className="text-left py-2 px-3">Location</th>
+                          <th className="text-left py-2 px-3">{t('itemName')}</th>
+                          <th className="text-left py-2 px-3">{t('code')}</th>
+                          <th className="text-left py-2 px-3">{t('quantity')}</th>
+                          <th className="text-left py-2 px-3">{t('unit')}</th>
+                          <th className="text-left py-2 px-3">{t('location')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[var(--color-border-gray)]">

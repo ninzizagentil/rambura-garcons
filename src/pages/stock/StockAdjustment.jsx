@@ -153,22 +153,22 @@ export default function StockAdjustment() {
           <form onSubmit={handleContinue} noValidate className="space-y-4">
             {serverError && <Alert type="error">{serverError}</Alert>}
             <Select
-              label="Item"
+              label={t('item')}
               required
               value={form.itemId}
               onChange={update('itemId')}
               error={errors.itemId}
-              options={items.map((i) => ({ value: i.id, label: `${i.name} (${i.quantity} ${i.unit} in system)` }))}
+              options={items.map((i) => ({ value: i.id, label: t('itemOptionSystem', { name: i.name, quantity: i.quantity, unit: i.unit }) }))}
             />
             {selectedItem && (
               <div className="grid sm:grid-cols-2 gap-4 -mt-1">
                 <div className="rounded-[var(--radius-control)] bg-[var(--color-off-white)] px-3.5 py-2.5 text-sm">
-                  <span className="text-[var(--color-mid-gray)]">System Quantity: </span>
+                  <span className="text-[var(--color-mid-gray)]">{t('systemQuantity')}: </span>
                   <span className="font-semibold text-[var(--color-dark-gray)]">{selectedItem.quantity} {selectedItem.unit}</span>
                 </div>
                 {difference !== null && (
                   <div className="rounded-[var(--radius-control)] bg-[var(--color-off-white)] px-3.5 py-2.5 text-sm">
-                    <span className="text-[var(--color-mid-gray)]">Difference: </span>
+                    <span className="text-[var(--color-mid-gray)]">{t('difference')}: </span>
                     <span className={`font-semibold ${difference > 0 ? 'text-[var(--color-status-green)]' : difference < 0 ? 'text-[var(--color-status-red)]' : 'text-[var(--color-dark-gray)]'}`}>
                       {difference > 0 ? '+' : ''}{difference} {selectedItem.unit}
                     </span>
@@ -176,33 +176,33 @@ export default function StockAdjustment() {
                 )}
               </div>
             )}
-            <Input label="Physical Quantity (Counted)" type="number" min="0" required value={form.physicalQuantity} onChange={update('physicalQuantity')} error={errors.physicalQuantity} />
+            <Input label={t('physicalQuantityCounted')} type="number" min="0" required value={form.physicalQuantity} onChange={update('physicalQuantity')} error={errors.physicalQuantity} />
             <div className="grid sm:grid-cols-2 gap-4">
-              <Select label="Reason" required value={form.reason} onChange={update('reason')} error={errors.reason} options={ADJUSTMENT_REASONS.map((r) => ({ value: r, label: r }))} />
-              <Input label="Date" type="date" required value={form.date} onChange={update('date')} error={errors.date} />
+              <Select label={t('reason')} required value={form.reason} onChange={update('reason')} error={errors.reason} options={ADJUSTMENT_REASONS.map((r) => ({ value: r, label: t(`adjustmentReason.${r}`) }))} />
+              <Input label={t('date')} type="date" required value={form.date} onChange={update('date')} error={errors.date} />
             </div>
-            <Input label="Responsible User" required value={form.responsibleUser} onChange={update('responsibleUser')} error={errors.responsibleUser} />
-            <Textarea label="Notes" value={form.notes} onChange={update('notes')} rows={3} />
+            <Input label={t('responsibleUser')} required value={form.responsibleUser} onChange={update('responsibleUser')} error={errors.responsibleUser} />
+            <Textarea label={t('notes')} value={form.notes} onChange={update('notes')} rows={3} />
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="ghost" onClick={() => navigate('/stock')}>Cancel</Button>
-              <Button type="submit" variant="primary" icon={ClipboardEdit}>Continue</Button>
+              <Button type="button" variant="ghost" onClick={() => navigate('/stock')}>{t('cancel')}</Button>
+              <Button type="submit" variant="primary" icon={ClipboardEdit}>{t('continue')}</Button>
             </div>
           </form>
         ) : (
           <div className="space-y-4">
             {serverError && <Alert type="error">{serverError}</Alert>}
-            <p className="text-sm text-[var(--color-dark-gray)]">Please confirm the details below:</p>
+            <p className="text-sm text-[var(--color-dark-gray)]">{t('confirmDetailsBelow')}</p>
             <dl className="text-sm bg-[var(--color-off-white)] rounded-[var(--radius-control)] p-4 space-y-1.5">
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Item</dt><dd className="font-medium">{selectedItem?.name}</dd></div>
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">System Quantity</dt><dd className="font-medium">{selectedItem?.quantity} {selectedItem?.unit}</dd></div>
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Physical Quantity</dt><dd className="font-medium">{form.physicalQuantity} {selectedItem?.unit}</dd></div>
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Difference</dt><dd className={`font-medium ${difference > 0 ? 'text-[var(--color-status-green)]' : 'text-[var(--color-status-red)]'}`}>{difference > 0 ? '+' : ''}{difference} {selectedItem?.unit}</dd></div>
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Reason</dt><dd className="font-medium">{form.reason}</dd></div>
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Responsible User</dt><dd className="font-medium">{form.responsibleUser}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('item')}</dt><dd className="font-medium">{selectedItem?.name}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('systemQuantity')}</dt><dd className="font-medium">{selectedItem?.quantity} {selectedItem?.unit}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('physicalQuantity')}</dt><dd className="font-medium">{form.physicalQuantity} {selectedItem?.unit}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('difference')}</dt><dd className={`font-medium ${difference > 0 ? 'text-[var(--color-status-green)]' : 'text-[var(--color-status-red)]'}`}>{difference > 0 ? '+' : ''}{difference} {selectedItem?.unit}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('reason')}</dt><dd className="font-medium">{t(`adjustmentReason.${form.reason}`)}</dd></div>
+              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('responsibleUser')}</dt><dd className="font-medium">{form.responsibleUser}</dd></div>
             </dl>
             <div className="flex justify-end gap-3">
-              <Button variant="ghost" onClick={() => setStep('form')} disabled={saving}>Back</Button>
-              <Button variant="primary" onClick={handleConfirm} loading={saving}>Confirm Adjustment</Button>
+              <Button variant="ghost" onClick={() => setStep('form')} disabled={saving}>{t('back')}</Button>
+              <Button variant="primary" onClick={handleConfirm} loading={saving}>{t('confirmAdjustment')}</Button>
             </div>
           </div>
         )}

@@ -38,9 +38,9 @@ const ABC_COLORS   = ['#10b981', '#f59e0b', '#ef4444'];
 const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 const TABS = [
-  { id: 'overview',  label: 'Overview'           },
-  { id: 'analytics', label: 'Usage Analytics'    },
-  { id: 'abc',       label: 'ABC Classification' },
+  { id: 'overview',  label: 'overview'          },
+  { id: 'analytics', label: 'usageAnalytics'    },
+  { id: 'abc',       label: 'abcClassification' },
 ];
 
 // ── helpers ────────────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ export default function StockReports() {
     <div className="space-y-5">
       <PageHeader
         title={t('stockReports')}
-        description="Inventory reports, usage analytics and ABC classification in one place."
+        description={`${t('stockReports')} — ${t('usageAnalytics')} — ${t('abcClassification')}`}
         breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('reports') }]}
       />
 
@@ -106,7 +106,7 @@ export default function StockReports() {
                   : 'border-transparent text-[var(--color-mid-gray)] hover:text-[var(--color-dark-gray)]',
               ].join(' ')}
             >
-              {label}
+              {t(label)}
             </button>
           );
         })}
@@ -166,8 +166,8 @@ function OverviewTab({ t }) {
 
   const REPORTS = [
     {
-      id: 'inventory', title: 'Inventory Report',
-      description: 'Every catalogued item with quantity, minimum level, and status.',
+      id: 'inventory', title: t('inventory'),
+      description: t('manageStockCatalogue'),
       data: filteredItems,
       columns: [
         { key: 'code', header: 'Item Code' }, { key: 'name', header: 'Item Name' },
@@ -178,8 +178,8 @@ function OverviewTab({ t }) {
       viewTo: '/stock/items',
     },
     {
-      id: 'movement', title: 'Stock Movement Report',
-      description: 'Received, issued, adjusted, transferred, and removed totals by category.',
+      id: 'movement', title: t('stockTransactions'),
+      description: t('stockTransactionsDescription'),
       data: movementSummary,
       columns: [
         { key: 'category', header: 'Category' }, { key: 'in', header: 'Stock In' },
@@ -189,8 +189,8 @@ function OverviewTab({ t }) {
       viewTo: '/stock/transactions',
     },
     {
-      id: 'low-stock', title: 'Low Stock Report',
-      description: 'Items at or below their minimum stock level.',
+      id: 'low-stock', title: t('lowStock'),
+      description: t('lowStockDescription'),
       data: lowStock,
       columns: [
         { key: 'name', header: 'Item' }, { key: 'category', header: 'Category' },
@@ -200,8 +200,8 @@ function OverviewTab({ t }) {
       viewTo: '/stock/alerts?tab=low-stock',
     },
     {
-      id: 'out-of-stock', title: 'Out of Stock Report',
-      description: 'Items with zero quantity currently on hand.',
+      id: 'out-of-stock', title: t('outOfStock'),
+      description: t('outOfStockDescription'),
       data: outOfStock,
       columns: [
         { key: 'name', header: 'Item' }, { key: 'category', header: 'Category' },
@@ -211,8 +211,8 @@ function OverviewTab({ t }) {
       viewTo: '/stock/alerts?tab=out-of-stock',
     },
     {
-      id: 'damaged', title: 'Damaged Stock Report',
-      description: 'Reported damage incidents pending or resolved.',
+      id: 'damaged', title: t('damagedItems'),
+      description: t('damagedItemsDescription'),
       data: damaged,
       columns: [
         { key: 'itemName', header: 'Item' }, { key: 'quantity', header: 'Quantity' },
@@ -222,8 +222,8 @@ function OverviewTab({ t }) {
       viewTo: '/stock/activity?tab=damaged',
     },
     {
-      id: 'expired', title: 'Expired Stock Report',
-      description: 'Perishable items by batch, expiry date, and status.',
+      id: 'expired', title: t('expiredItems'),
+      description: t('expiryManagementDescription'),
       data: expiring,
       columns: [
         { key: 'name', header: 'Item' }, { key: 'batchNumber', header: 'Batch / Lot' },
@@ -234,8 +234,8 @@ function OverviewTab({ t }) {
       viewTo: '/stock/alerts?tab=expiring',
     },
     {
-      id: 'removed', title: 'Removed / Disposed Report',
-      description: 'Permanent record of stock written off or disposed.',
+      id: 'removed', title: t('removedDisposed'),
+      description: t('removedDisposedDescription'),
       data: removed,
       columns: [
         { key: 'itemName', header: 'Item' },
@@ -248,8 +248,8 @@ function OverviewTab({ t }) {
       viewTo: '/stock/activity?tab=disposed',
     },
     {
-      id: 'valuation', title: 'Stock Valuation Report',
-      description: 'Current quantity, unit price, and total value per item.',
+      id: 'valuation', title: t('totalValue'),
+      description: t('managementStockReportsDescription'),
       data: filteredItems,
       columns: [
         { key: 'name', header: 'Item' }, { key: 'category', header: 'Category' },
@@ -260,8 +260,8 @@ function OverviewTab({ t }) {
       viewTo: '/stock/items',
     },
     {
-      id: 'transactions', title: 'Transaction Report',
-      description: 'Full chronological log of every stock-changing action.',
+      id: 'transactions', title: t('transactions'),
+      description: t('stockTransactionsAuditDescription'),
       data: filteredTx,
       columns: [
         { key: 'date', header: 'Date' }, { key: 'itemName', header: 'Item' },
@@ -275,11 +275,11 @@ function OverviewTab({ t }) {
 
   const handleExport = (report) => {
     exportToCSV(`stock-${report.id}`, report.columns, report.data);
-    showToast(`${report.title} downloaded as CSV.`, 'success');
+    showToast(t('stockReportDownloaded'), 'success');
   };
   const handlePrint = (report) => {
     const ok = printReport(report.title, report.columns, report.data);
-    if (!ok) showToast('Enable pop-ups to print this report.', 'error');
+    if (!ok) showToast(t('enablePopupsToPrint'), 'error');
   };
 
   return (
@@ -289,7 +289,7 @@ function OverviewTab({ t }) {
           label={t('allCategories')}
           value={category}
           onChange={setCategory}
-          options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))}
+          options={STOCK_CATEGORIES.map((c) => ({ value: c, label: t(`stockCategory.${c}`) }))}
         />
       </div>
 
@@ -363,7 +363,7 @@ function OverviewTab({ t }) {
             <p className="text-sm text-[var(--color-mid-gray)] mb-4 flex-1">{report.description}</p>
             <div className="flex items-center gap-1.5">
               <Button size="sm" variant="secondary" icon={Eye} onClick={() => navigate(report.viewTo)}>
-                View
+                {t('view')}
               </Button>
               <IconButton icon={Printer} label={`Print ${report.title}`} onClick={() => handlePrint(report)} />
               <IconButton icon={Download} label={`Export ${report.title} as CSV`} onClick={() => handleExport(report)} />
@@ -400,7 +400,7 @@ function AnalyticsTab({ t }) {
           label={t('allCategories')}
           value={category}
           onChange={setCategory}
-          options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))}
+          options={STOCK_CATEGORIES.map((c) => ({ value: c, label: t(`stockCategory.${c}`) }))}
         />
       </div>
 
@@ -481,6 +481,7 @@ function AnalyticsTab({ t }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function ABCTab() {
   const { showToast }     = useToast();
+  const { t }             = useApp();
   const [report, setReport]               = useState(null);
   const [loading, setLoading]             = useState(true);
   const [selectedClass, setSelectedClass] = useState('A');
@@ -494,7 +495,7 @@ function ABCTab() {
         const json = await res.json();
         if (!cancelled) {
           if (json.success) setReport(json.data);
-          else showToast('Failed to load ABC report', 'error');
+          else showToast(t('failedLoadDisposedRecords'), 'error');
         }
       } catch (err) {
         if (!cancelled) showToast(err.message, 'error');
@@ -532,10 +533,10 @@ function ABCTab() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Items', value: report.summary.totalItems, color: 'var(--color-dark-gray)',   bg: 'var(--color-off-white)' },
-          { label: 'Class A',     value: report.classifications.A.count, sub: `${report.classifications.A.percentage}% of value`, color: '#10b981', bg: '#ecfdf5' },
-          { label: 'Class B',     value: report.classifications.B.count, sub: `${report.classifications.B.percentage}% of value`, color: '#f59e0b', bg: '#fffbeb' },
-          { label: 'Class C',     value: report.classifications.C.count, sub: `${report.classifications.C.percentage}% of value`, color: '#ef4444', bg: '#fef2f2' },
+          { label: t('totalItems'), value: report.summary.totalItems, color: 'var(--color-dark-gray)',   bg: 'var(--color-off-white)' },
+          { label: t('classA'),     value: report.classifications.A.count, sub: `${report.classifications.A.percentage}% ${t('ofValue')}`, color: '#10b981', bg: '#ecfdf5' },
+          { label: t('classB'),     value: report.classifications.B.count, sub: `${report.classifications.B.percentage}% ${t('ofValue')}`, color: '#f59e0b', bg: '#fffbeb' },
+          { label: t('classC'),     value: report.classifications.C.count, sub: `${report.classifications.C.percentage}% ${t('ofValue')}`, color: '#ef4444', bg: '#fef2f2' },
         ].map(({ label, value, sub, color, bg }) => (
           <div key={label} className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5"
             style={{ background: bg }}>
@@ -548,7 +549,7 @@ function ABCTab() {
 
       {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <ChartCard title="Items by Classification">
+        <ChartCard title={t('allItems')}>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-gray)" />
@@ -560,7 +561,7 @@ function ABCTab() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Value Distribution">
+        <ChartCard title={t('totalValue')}>
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
               <Pie
@@ -582,7 +583,7 @@ function ABCTab() {
       {/* Class detail table */}
       <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5">
         <div className="mb-4">
-          <h3 className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Classification Details</h3>
+          <h3 className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">{t('itemDetails')}</h3>
           <div className="flex flex-wrap gap-2">
             {['A', 'B', 'C'].map((cls) => (
               <button
@@ -617,12 +618,12 @@ function ABCTab() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--color-border-gray)] text-xs uppercase text-[var(--color-mid-gray)]">
-                <th className="text-left py-2 pr-4">Code</th>
-                <th className="text-left py-2 pr-4">Name</th>
-                <th className="text-left py-2 pr-4">Qty</th>
-                <th className="text-left py-2 pr-4">Stock Value</th>
-                <th className="text-left py-2 pr-4">Location</th>
-                <th className="text-left py-2">Status</th>
+                <th className="text-left py-2 pr-4">{t('code')}</th>
+                <th className="text-left py-2 pr-4">{t('itemName')}</th>
+                <th className="text-left py-2 pr-4">{t('quantity')}</th>
+                <th className="text-left py-2 pr-4">{t('valueRwf')}</th>
+                <th className="text-left py-2 pr-4">{t('location')}</th>
+                <th className="text-left py-2">{t('status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-border-gray)]">
@@ -635,10 +636,10 @@ function ABCTab() {
                   <td className="py-2.5 pr-4 text-[var(--color-mid-gray)]">{row.location || '—'}</td>
                   <td className="py-2.5">
                     {row.quantity > row.minLevel
-                      ? <Badge variant="success">In Stock</Badge>
+                      ? <Badge variant="success">{t('itemsInStock')}</Badge>
                       : row.quantity > 0
-                        ? <Badge variant="warning">Low Stock</Badge>
-                        : <Badge variant="error">Out of Stock</Badge>}
+                        ? <Badge variant="warning">{t('lowStock')}</Badge>
+                        : <Badge variant="error">{t('outOfStock')}</Badge>}
                   </td>
                 </tr>
               ))}

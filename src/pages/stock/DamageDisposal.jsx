@@ -35,10 +35,10 @@ import { useApp } from '../../context/AppContext';
 // ── constants ──────────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: 'damaged',        label: 'Damaged Items',    icon: ShieldAlert   },
-  { id: 'disposed',       label: 'Removal History',  icon: Archive       },
-  { id: 'approvals',      label: 'Disposal Approvals', icon: CheckCircle2 },
-  { id: 'reconciliation', label: 'Reconciliation',   icon: ClipboardList },
+  { id: 'damaged',        label: 'damagedItems',     icon: ShieldAlert   },
+  { id: 'disposed',       label: 'removedDisposed',  icon: Archive       },
+  { id: 'approvals',      label: 'disposalApprovals', icon: CheckCircle2 },
+  { id: 'reconciliation', label: 'reconciliation',   icon: ClipboardList },
 ];
 
 const REASON_TONE = {
@@ -47,10 +47,10 @@ const REASON_TONE = {
 };
 
 const STATUS_FILTER_OPTIONS = [
-  { value: 'all',      label: 'All',              icon: Archive      },
-  { value: 'pending',  label: 'Pending Approval', icon: Clock3       },
-  { value: 'approved', label: 'Approved',         icon: CheckCircle2 },
-  { value: 'rejected', label: 'Rejected',         icon: ShieldAlert  },
+  { value: 'all',      label: 'all',             icon: Archive      },
+  { value: 'pending',  label: 'pendingApproval', icon: Clock3       },
+  { value: 'approved', label: 'approved',       icon: CheckCircle2 },
+  { value: 'rejected', label: 'rejected',       icon: ShieldAlert  },
 ];
 
 const LOCATIONS = ['Main Store', 'Kitchen Store', 'ICT Lab Store', 'Admin Store'];
@@ -81,12 +81,12 @@ export default function DamageDisposal() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Damage & Disposal"
-        description="Track damaged items, disposal records, approval workflows and inventory reconciliation."
+        title={t('damageDisposal')}
+        description={t('damageDisposalDescription')}
         breadcrumb={[
           { label: t('stockManagement'), to: '/stock' },
-          { label: 'Activity', to: '/stock/transactions' },
-          { label: 'Damage & Disposal' },
+          { label: t('activity'), to: '/stock/transactions' },
+          { label: t('damageDisposal') },
         ]}
       />
 
@@ -110,8 +110,8 @@ export default function DamageDisposal() {
               ].join(' ')}
             >
               <Icon className="w-4 h-4" aria-hidden="true" />
-              <span className="hidden sm:inline">{label}</span>
-              <span className="sm:hidden">{label.split(' ')[0]}</span>
+              <span className="hidden sm:inline">{t(label)}</span>
+              <span className="sm:hidden">{t(label).split(' ')[0]}</span>
             </button>
           );
         })}
@@ -179,7 +179,7 @@ function DamagedTab({ viewOnly, t }) {
               label={t('selectDamageItem')}
               value={reportItemId}
               onChange={(e) => setReportItemId(e.target.value)}
-              options={availableItems.map((i) => ({ value: i.id, label: `${i.name} (${i.quantity} ${i.unit} in stock)` }))}
+              options={availableItems.map((i) => ({ value: i.id, label: t('itemOptionStock', { name: i.name, quantity: i.quantity, unit: i.unit }) }))}
             />
           </div>
           <Button
@@ -311,7 +311,7 @@ function DisposedTab({ showToast, t, language }) {
             ].join(' ')}
           >
             <Icon className="h-4 w-4" />
-            {label}
+              {t(label)}
           </button>
         ))}
       </div>
@@ -352,6 +352,7 @@ function DisposedTab({ showToast, t, language }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ApprovalsTab({ viewOnly, showToast, user }) {
+  const { t } = useApp();
   const [disposals, setDisposals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -367,7 +368,7 @@ function ApprovalsTab({ viewOnly, showToast, user }) {
       const res = await fetch(`/api/stock/disposal-requests/pending?page=${page}&limit=10`, { headers: authHeader() });
       const json = await res.json();
       if (json.success) { setDisposals(json.data); setTotal(json.pagination?.total || 0); }
-      else showToast('Failed to load disposal requests', 'error');
+      else showToast(t('failedLoadDisposedRecords'), 'error');
     } catch (err) { showToast(err.message, 'error'); }
     finally { setLoading(false); }
   };
@@ -388,12 +389,12 @@ function ApprovalsTab({ viewOnly, showToast, user }) {
       });
       const json = await res.json();
       if (json.success) {
-        showToast(actionType === 'approve' ? 'Disposal approved' : 'Disposal rejected', 'success');
+        showToast(actionType === 'approve' ? t('approved') : t('rejected'), 'success');
         logActivity({ user: user?.fullName, action: `${actionType} disposal: ${selected.itemName}`, module: 'Stock', status: 'success' });
         setSelected(null); setActionType(null); setActionNotes('');
         fetchPending();
       } else {
-        showToast(json.message || 'Action failed', 'error');
+        showToast(json.message || t('failedLoadDisposedRecords'), 'error');
       }
     } catch (err) { showToast(err.message, 'error'); }
     finally { setProcessing(false); }
@@ -416,7 +417,7 @@ function ApprovalsTab({ viewOnly, showToast, user }) {
       : []),
   ];
 
-  if (loading) return <div className="py-8 text-center text-sm text-[var(--color-mid-gray)]">Loading approval requests…</div>;
+  if (loading) return <div className="py-8 text-center text-sm text-[var(--color-mid-gray)]">{t('loadingDisposalRecords')}</div>;
 
   return (
     <div className="space-y-4">
@@ -427,8 +428,8 @@ function ApprovalsTab({ viewOnly, showToast, user }) {
       {disposals.length === 0 ? (
         <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] py-12 text-center">
           <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-[var(--color-status-green)]" />
-          <p className="font-semibold text-[var(--color-dark-gray)]">No pending requests</p>
-          <p className="mt-1 text-sm text-[var(--color-mid-gray)]">All disposal requests have been reviewed.</p>
+          <p className="font-semibold text-[var(--color-dark-gray)]">{t('noDisposedItems')}</p>
+          <p className="mt-1 text-sm text-[var(--color-mid-gray)]">{t('disposedItemsAppearHere')}</p>
         </div>
       ) : (
         <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)]">
@@ -451,25 +452,25 @@ function ApprovalsTab({ viewOnly, showToast, user }) {
       <Modal
         open={!!selected}
         onClose={() => { setSelected(null); setActionType(null); setActionNotes(''); }}
-        title="Review Disposal Request"
+        title={t('review')}
         footer={
           actionType ? (
             <>
-              <Button variant="ghost" onClick={() => setActionType(null)} disabled={processing}>Back</Button>
+              <Button variant="ghost" onClick={() => setActionType(null)} disabled={processing}>{t('back')}</Button>
               <Button
                 variant={actionType === 'approve' ? 'primary' : 'danger'}
                 onClick={handleAction}
                 loading={processing}
               >
-                {actionType === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
+                {t('confirmAction')}
               </Button>
             </>
           ) : (
             <>
-              <Button variant="ghost" onClick={() => setSelected(null)}>Close</Button>
+              <Button variant="ghost" onClick={() => setSelected(null)}>{t('close')}</Button>
               <div className="flex gap-2">
-                <Button variant="danger" onClick={() => setActionType('reject')}>Reject</Button>
-                <Button variant="primary" onClick={() => setActionType('approve')}>Approve</Button>
+                <Button variant="danger" onClick={() => setActionType('reject')}>{t('rejected')}</Button>
+                <Button variant="primary" onClick={() => setActionType('approve')}>{t('approved')}</Button>
               </div>
             </>
           )
@@ -478,12 +479,12 @@ function ApprovalsTab({ viewOnly, showToast, user }) {
         {selected && !actionType && (
           <div className="space-y-4">
             <dl className="grid grid-cols-2 gap-4 text-sm">
-              <div><dt className="text-[var(--color-mid-gray)] font-semibold">Item</dt><dd className="mt-1">{selected.itemName}</dd></div>
-              <div><dt className="text-[var(--color-mid-gray)] font-semibold">Quantity</dt><dd className="mt-1">{selected.quantityRemoved} units</dd></div>
-              <div><dt className="text-[var(--color-mid-gray)] font-semibold">Reason</dt><dd className="mt-1"><Badge variant={selected.reason === 'Damaged' ? 'error' : 'warning'}>{selected.reason}</Badge></dd></div>
-              <div><dt className="text-[var(--color-mid-gray)] font-semibold">Remaining Stock</dt><dd className="mt-1">{selected.remainingQuantity} units</dd></div>
-              <div><dt className="text-[var(--color-mid-gray)] font-semibold">Requested By</dt><dd className="mt-1">{selected.requestedBy?.name || 'Unknown'}</dd></div>
-              {selected.notes && <div className="col-span-2"><dt className="text-[var(--color-mid-gray)] font-semibold">Notes</dt><dd className="mt-1">{selected.notes}</dd></div>}
+              <div><dt className="text-[var(--color-mid-gray)] font-semibold">{t('item')}</dt><dd className="mt-1">{selected.itemName}</dd></div>
+              <div><dt className="text-[var(--color-mid-gray)] font-semibold">{t('quantity')}</dt><dd className="mt-1">{selected.quantityRemoved} {t('units')}</dd></div>
+              <div><dt className="text-[var(--color-mid-gray)] font-semibold">{t('reason')}</dt><dd className="mt-1"><Badge variant={selected.reason === 'Damaged' ? 'error' : 'warning'}>{t(`removalReason.${selected.reason}`)}</Badge></dd></div>
+              <div><dt className="text-[var(--color-mid-gray)] font-semibold">{t('remaining')}</dt><dd className="mt-1">{selected.remainingQuantity} {t('units')}</dd></div>
+              <div><dt className="text-[var(--color-mid-gray)] font-semibold">{t('requestedBy')}</dt><dd className="mt-1">{selected.requestedBy?.name || t('system')}</dd></div>
+              {selected.notes && <div className="col-span-2"><dt className="text-[var(--color-mid-gray)] font-semibold">{t('notes')}</dt><dd className="mt-1">{selected.notes}</dd></div>}
             </dl>
           </div>
         )}
@@ -514,6 +515,7 @@ function ApprovalsTab({ viewOnly, showToast, user }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ReconciliationTab({ viewOnly, showToast, user }) {
+  const { t } = useApp();
   const [reconciliations, setReconciliations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -534,7 +536,7 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!form.title || !form.location || !form.scheduledDate) { showToast('All fields are required', 'error'); return; }
+    if (!form.title || !form.location || !form.scheduledDate) { showToast(t('dateRequired'), 'error'); return; }
     setCreating(true);
     try {
       const res = await fetch('/api/stock/reconciliations', {
@@ -544,12 +546,12 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
       });
       const json = await res.json();
       if (json.success) {
-        showToast('Reconciliation scheduled', 'success');
+        showToast(t('reconciliation'), 'success');
         logActivity({ user: user?.fullName, action: `Created reconciliation: ${form.title}`, module: 'Stock', status: 'success' });
         setForm({ title: '', location: '', scheduledDate: '' });
         fetch_();
       } else {
-        showToast(json.message || 'Failed to create', 'error');
+        showToast(json.message || t('failedLoadDisposedRecords'), 'error');
       }
     } catch (err) { showToast(err.message, 'error'); }
     finally { setCreating(false); }
@@ -571,7 +573,7 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
   };
 
   const handleComplete = async () => {
-    if (!itemsData.length) { showToast('Add at least one item', 'error'); return; }
+    if (!itemsData.length) { showToast(t('selectAnItem'), 'error'); return; }
     setCreating(true);
     try {
       const res = await fetch(`/api/stock/reconciliations/${selected._id}/complete`, {
@@ -581,21 +583,21 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
       });
       const json = await res.json();
       if (json.success) {
-        showToast('Reconciliation completed and submitted for approval', 'success');
+        showToast(t('approved'), 'success');
         logActivity({ user: user?.fullName, action: `Completed reconciliation: ${selected.title}`, module: 'Stock', status: 'success' });
         setSelected(null); setItemsData([]); fetch_();
       } else {
-        showToast(json.message || 'Failed', 'error');
+        showToast(json.message || t('failedLoadDisposedRecords'), 'error');
       }
     } catch (err) { showToast(err.message, 'error'); }
     finally { setCreating(false); }
   };
 
   const STATUS_BADGE = {
-    'planned':          { variant: 'info',    label: 'Planned'           },
-    'in-progress':      { variant: 'warning', label: 'In Progress'       },
-    'completed':        { variant: 'success', label: 'Completed'         },
-    'pending-approval': { variant: 'warning', label: 'Pending Approval'  },
+    'planned':          { variant: 'info',    label: t('plannedStatus')          },
+    'in-progress':      { variant: 'warning', label: t('inProgressStatus')      },
+    'completed':        { variant: 'success', label: t('completedStatus')       },
+    'pending-approval': { variant: 'warning', label: t('pendingApproval')       },
   };
 
   const columns = [
@@ -621,7 +623,7 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
     }] : []),
   ];
 
-  if (loading) return <div className="py-8 text-center text-sm text-[var(--color-mid-gray)]">Loading reconciliation records…</div>;
+  if (loading) return <div className="py-8 text-center text-sm text-[var(--color-mid-gray)]">{t('loadingDisposalRecords')}</div>;
 
   return (
     <div className="space-y-5">
@@ -632,19 +634,19 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
       {/* Schedule new */}
       {!viewOnly && (
         <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5">
-          <h3 className="font-semibold text-[var(--color-dark-gray)] mb-4">Schedule New Reconciliation</h3>
+          <h3 className="font-semibold text-[var(--color-dark-gray)] mb-4">{t('reconciliation')}</h3>
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Input label="Title" value={form.title}
+              <Input label={t('title')} value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="e.g. Monthly Count – Main Store" required />
-              <Select label="Location" value={form.location}
+                placeholder={t('reconciliation')} required />
+              <Select label={t('location')} value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
-                options={LOCATIONS.map((l) => ({ value: l, label: l }))} required />
-              <Input label="Scheduled Date" type="date" value={form.scheduledDate}
+                options={LOCATIONS.map((l) => ({ value: l, label: t(`stockLocation.${l}`) }))} required />
+              <Input label={t('date')} type="date" value={form.scheduledDate}
                 onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })} required />
             </div>
-            <Button type="submit" variant="primary" icon={Plus} loading={creating}>Create Reconciliation</Button>
+            <Button type="submit" variant="primary" icon={Plus} loading={creating}>{t('add')}</Button>
           </form>
         </div>
       )}
@@ -652,7 +654,7 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
       {/* List */}
       <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)]">
         {reconciliations.length === 0 ? (
-          <EmptyState icon={ClipboardList} title="No reconciliation records" message="Schedule a physical count to get started." />
+          <EmptyState icon={ClipboardList} title={t('noTransactionsFound')} message={t('tryDifferentSearchFilter')} />
         ) : (
           <DataTable columns={columns} data={reconciliations} />
         )}
@@ -667,7 +669,7 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
           selected?.status === 'planned' ? (
             <>
               <Button variant="ghost" onClick={() => setSelected(null)}>Close</Button>
-              <Button variant="primary" onClick={handleComplete} loading={creating}>Complete & Submit</Button>
+              <Button variant="primary" onClick={handleComplete} loading={creating}>{t('save')}</Button>
             </>
           ) : (
             <Button variant="ghost" onClick={() => setSelected(null)}>Close</Button>
@@ -677,18 +679,18 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
         {selected && (
           <div className="space-y-5">
             <dl className="grid grid-cols-2 gap-4 text-sm">
-              <div><dt className="font-semibold text-[var(--color-mid-gray)]">Location</dt><dd className="mt-1">{selected.location}</dd></div>
-              <div><dt className="font-semibold text-[var(--color-mid-gray)]">Status</dt><dd className="mt-1"><Badge variant={STATUS_BADGE[selected.status]?.variant || 'info'}>{STATUS_BADGE[selected.status]?.label || selected.status}</Badge></dd></div>
+              <div><dt className="font-semibold text-[var(--color-mid-gray)]">{t('location')}</dt><dd className="mt-1">{t(`stockLocation.${selected.location}`)}</dd></div>
+              <div><dt className="font-semibold text-[var(--color-mid-gray)]">{t('status')}</dt><dd className="mt-1"><Badge variant={STATUS_BADGE[selected.status]?.variant || 'info'}>{STATUS_BADGE[selected.status]?.label || selected.status}</Badge></dd></div>
             </dl>
 
             {selected.status === 'planned' && (
               <div className="space-y-4 border-t pt-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-semibold text-[var(--color-dark-gray)]">Physical Count Items</h3>
-                  <Button size="sm" variant="primary" icon={Plus} onClick={handleAddItem}>Add Item</Button>
+                  <h3 className="font-semibold text-[var(--color-dark-gray)]">{t('physicalQuantity')}</h3>
+                  <Button size="sm" variant="primary" icon={Plus} onClick={handleAddItem}>{t('addItem')}</Button>
                 </div>
                 {itemsData.length === 0 ? (
-                  <Alert type="info">Click "Add Item" to start recording physical counts.</Alert>
+                  <Alert type="info">{t('addItemInstruction')}</Alert>
                 ) : (
                   <div className="space-y-3">
                     {itemsData.map((item, idx) => (
@@ -698,19 +700,19 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
                           <Button size="sm" variant="danger" onClick={() => handleRemoveItem(idx)}>Remove</Button>
                         </div>
                         <div className="grid grid-cols-3 gap-3">
-                          <Input label="System Qty" type="number" min="0" value={item.systemQuantity}
+                          <Input label={t('systemQuantity')} type="number" min="0" value={item.systemQuantity}
                             onChange={(e) => handleUpdateItem(idx, 'systemQuantity', Number(e.target.value))} />
-                          <Input label="Physical Qty" type="number" min="0" value={item.physicalQuantity}
+                          <Input label={t('physicalQuantity')} type="number" min="0" value={item.physicalQuantity}
                             onChange={(e) => handleUpdateItem(idx, 'physicalQuantity', Number(e.target.value))} />
                           <div>
-                            <label className="text-sm font-semibold text-[var(--color-mid-gray)]">Variance</label>
+                            <label className="text-sm font-semibold text-[var(--color-mid-gray)]">{t('difference')}</label>
                             <p className="mt-2 text-lg font-bold" style={{ color: item.variance === 0 ? '#10b981' : '#ef4444' }}>
                               {item.variance > 0 ? '+' : ''}{item.variance || 0}
                             </p>
                             <p className="text-xs text-[var(--color-mid-gray)]">{item.variancePercentage || 0}%</p>
                           </div>
                         </div>
-                        <Textarea label="Notes" value={item.notes} rows={2} placeholder="Discrepancies or observations…"
+                          <Textarea label={t('notes')} value={item.notes} rows={2} placeholder={t('notes')}
                           onChange={(e) => handleUpdateItem(idx, 'notes', e.target.value)} />
                       </div>
                     ))}

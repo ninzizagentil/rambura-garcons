@@ -65,7 +65,7 @@ async function mutateStock(req, res, type) {
   const previousQuantity = item.quantity - (type === 'in' ? quantity : -quantity);
 
   try {
-    const created = await StockTransaction.create({ itemId: item._id, type, quantity, previousQuantity, newQuantity: item.quantity, date: req.body.date || new Date(), party: req.body.party, supplierId: req.body.supplierId, responsibleUser: req.user._id, notes: req.body.notes });
+    const created = await StockTransaction.create({ itemId: item._id, type, quantity, previousQuantity, newQuantity: item.quantity, date: req.body.date || new Date(), party: req.body.party, supplierId: req.body.supplierId || undefined, responsibleUser: req.user._id, notes: req.body.notes });
     await recordAudit(req, { action: type === 'in' ? 'Stock received' : 'Stock issued', module: 'Stock', resourceType: 'StockTransaction', resourceId: created._id, description: `${type} ${quantity} ${item.unit} of ${item.name}` });
     return ok(res, created, type === 'in' ? 'Stock received' : 'Stock issued', 201);
   } catch (err) {
@@ -75,7 +75,7 @@ async function mutateStock(req, res, type) {
 }
 export const stockIn = (req, res) => mutateStock(req, res, 'in');
 export const stockOut = (req, res) => mutateStock(req, res, 'out');
-export async function getTransactions(req, res) { const page = Math.max(1, Number(req.query.page || 1)); const limit = Math.min(100, Math.max(1, Number(req.query.limit || 20))); const filter = {}; if (req.query.type) filter.type = req.query.type; if (req.query.itemId) filter.itemId = req.query.itemId; const [data, total] = await Promise.all([StockTransaction.find(filter).populate('itemId', 'name code category unit').sort('-date').skip((page - 1) * limit).limit(limit), StockTransaction.countDocuments(filter)]); return list(res, data, { page, limit, total, totalPages: Math.ceil(total / limit) }); }
+export async function getTransactions(req, res) { const page = Math.max(1, Number(req.query.page || 1)); const limit = Math.min(100, Math.max(1, Number(req.query.limit || 20))); const filter = {}; if (req.query.type) filter.type = req.query.type; if (req.query.itemId) filter.itemId = req.query.itemId; const [data, total] = await Promise.all([StockTransaction.find(filter).populate('itemId', 'name code category unit').populate('responsibleUser', 'fullName name email').sort('-date').skip((page - 1) * limit).limit(limit), StockTransaction.countDocuments(filter)]); return list(res, data, { page, limit, total, totalPages: Math.ceil(total / limit) }); }
 
 async function recordTransaction(req, item, payload) {
   const created = await StockTransaction.create({ itemId: item._id, responsibleUser: req.user._id, ...payload });

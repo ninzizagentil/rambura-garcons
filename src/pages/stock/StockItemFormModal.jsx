@@ -129,7 +129,7 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
             onChange={update('category')}
             error={errors.category}
             hint={t('stockCategoryHint')}
-            options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))}
+            options={STOCK_CATEGORIES.map((c) => ({ value: c, label: t(`stockCategory.${c}`) }))}
           />
           <Select
             label={t('unit')}
@@ -137,7 +137,7 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
             value={form.unit}
             onChange={update('unit')}
             error={errors.unit}
-            options={STOCK_UNITS.map((u) => ({ value: u, label: u }))}
+            options={STOCK_UNITS.map((u) => ({ value: u, label: t(`stockUnit.${u}`) }))}
           />
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
@@ -208,25 +208,22 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
         {/* Supplier & Location */}
         <div className="grid sm:grid-cols-2 gap-4">
           <Select
-            label="Default Supplier"
+            label={t('supplier')}
             value={form.supplierId}
             onChange={update('supplierId')}
-            hint="The supplier who usually provides this item."
+            hint={t('sourceSupplier')}
             options={[
-              { value: '', label: '— No supplier —' },
+              { value: '', label: `— ${t('selectAnOption')} —` },
               ...suppliers.map((s) => ({ value: s.id, label: s.name })),
             ]}
           />
           <Select
-            label="Storage Location"
+            label={t('location')}
             value={form.location}
             onChange={update('location')}
             options={[
-              { value: '', label: '— Select location —' },
-              { value: 'Main Store',    label: 'Main Store'    },
-              { value: 'Kitchen Store', label: 'Kitchen Store' },
-              { value: 'ICT Lab Store', label: 'ICT Lab Store' },
-              { value: 'Admin Store',   label: 'Admin Store'   },
+              { value: '', label: `— ${t('selectAnOption')} —` },
+              ...['Main Store', 'Kitchen Store', 'ICT Lab Store', 'Admin Store'].map((location) => ({ value: location, label: t(`stockLocation.${location}`) })),
             ]}
           />
         </div>

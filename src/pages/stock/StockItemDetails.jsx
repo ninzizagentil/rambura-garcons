@@ -10,11 +10,13 @@ import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
 import { getItemById, getTransactionsForItem, refreshStock } from '../../services/stockService';
 import StockItemFormModal from './StockItemFormModal';
+import { useApp } from '../../context/AppContext';
 
 export default function StockItemDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
+  const { t } = useApp();
   const [searchParams, setSearchParams] = useSearchParams();
   const [item, setItem] = useState(() => getItemById(id));
   const [transactions, setTransactions] = useState(() => getTransactionsForItem(id));
@@ -47,16 +49,16 @@ export default function StockItemDetails() {
     <div>
       <PageHeader
         title={item.name}
-        description={item.category}
-        breadcrumb={[{ label: 'Stock', to: '/stock' }, { label: 'All Items', to: '/stock/items' }, { label: item.name }]}
+        description={t(`stockCategory.${item.category}`)}
+        breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('allItems'), to: '/stock/items' }, { label: item.name }]}
         actions={
           !viewOnly && (
             <>
-              <Button variant="secondary" icon={Pencil} onClick={() => { setSearchParams({}); setEditOpen(true); }}>Edit Item</Button>
-              <Button variant="outline" icon={ArrowLeftRight} onClick={() => navigate(`/stock/transfer?item=${item.id}`)}>Transfer</Button>
-              <Button variant="outline" icon={ClipboardEdit} onClick={() => navigate(`/stock/adjustment?item=${item.id}`)}>Adjust</Button>
-              <Button variant="outline" icon={PackageMinus} onClick={() => navigate(`/stock/stock-out?item=${item.id}`)}>Stock Out</Button>
-              <Button icon={PackagePlus} onClick={() => navigate(`/stock/stock-in?item=${item.id}`)}>Stock In</Button>
+              <Button variant="secondary" icon={Pencil} onClick={() => { setSearchParams({}); setEditOpen(true); }}>{t('edit')}</Button>
+              <Button variant="outline" icon={ArrowLeftRight} onClick={() => navigate(`/stock/transfer?item=${item.id}`)}>{t('stockTransfer')}</Button>
+              <Button variant="outline" icon={ClipboardEdit} onClick={() => navigate(`/stock/adjustment?item=${item.id}`)}>{t('adjust')}</Button>
+              <Button variant="outline" icon={PackageMinus} onClick={() => navigate(`/stock/stock-out?item=${item.id}`)}>{t('stockOut')}</Button>
+              <Button icon={PackagePlus} onClick={() => navigate(`/stock/stock-in?item=${item.id}`)}>{t('stockIn')}</Button>
             </>
           )
         }
@@ -68,20 +70,20 @@ export default function StockItemDetails() {
         <div className="lg:col-span-2 bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
           <div className="flex items-center gap-3 mb-4">
             <StatusBadge status={item.status} />
-            <span className="text-xs text-[var(--color-mid-gray)]">Unit: {item.unit}</span>
+            <span className="text-xs text-[var(--color-mid-gray)]">{t('unit')}: {item.unit}</span>
           </div>
           <p className="text-sm text-[var(--color-dark-gray)] leading-relaxed">{item.description || 'No description provided.'}</p>
           <dl className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-[var(--color-border-gray)]">
-            <div><dt className="text-xs text-[var(--color-mid-gray)]">Category</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{item.category}</dd></div>
-            <div><dt className="text-xs text-[var(--color-mid-gray)]">Current Quantity</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{item.quantity} {item.unit}</dd></div>
-            <div><dt className="text-xs text-[var(--color-mid-gray)]">Minimum Quantity</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{item.minLevel} {item.unit}</dd></div>
+            <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('category')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{t(`stockCategory.${item.category}`)}</dd></div>
+            <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('currentQuantity')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{item.quantity} {t(`stockUnit.${item.unit}`)}</dd></div>
+            <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('minimumLevel')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{item.minLevel} {t(`stockUnit.${item.unit}`)}</dd></div>
           </dl>
         </div>
 
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
-          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Recent Activity</p>
+          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">{t('stockActivity')}</p>
           {transactions.length === 0 ? (
-            <p className="text-sm text-[var(--color-mid-gray)]">No stock movements recorded yet.</p>
+            <p className="text-sm text-[var(--color-mid-gray)]">{t('noTransactionsFound')}</p>
           ) : (
             <ul className="space-y-2.5">
               {transactions.slice(0, 6).map((t) => (
@@ -97,17 +99,17 @@ export default function StockItemDetails() {
 
       <div className="grid lg:grid-cols-2 gap-5">
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
-          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Stock In History</p>
+          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">{t('stockIn')} — {t('fullHistory')}</p>
           {stockInHistory.length === 0 ? (
-            <EmptyState title="No Stock In records" message="This item hasn't received any stock yet." />
+            <EmptyState title={t('noTransactionsFound')} message={t('tryDifferentSearchFilter')} />
           ) : (
             <div className="table-scroll">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--color-border-gray)] text-xs uppercase text-[var(--color-mid-gray)]">
-                    <th className="text-left py-2 pr-4">Date</th>
-                    <th className="text-left py-2 pr-4">Quantity</th>
-                    <th className="text-left py-2">Source</th>
+                    <th className="text-left py-2 pr-4">{t('date')}</th>
+                    <th className="text-left py-2 pr-4">{t('quantity')}</th>
+                    <th className="text-left py-2">{t('sourceSupplier')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border-gray)]">
@@ -125,17 +127,17 @@ export default function StockItemDetails() {
         </div>
 
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
-          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Stock Out History</p>
+          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">{t('stockOut')} — {t('fullHistory')}</p>
           {stockOutHistory.length === 0 ? (
-            <EmptyState title="No Stock Out records" message="This item hasn't been issued yet." />
+            <EmptyState title={t('noTransactionsFound')} message={t('tryDifferentSearchFilter')} />
           ) : (
             <div className="table-scroll">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--color-border-gray)] text-xs uppercase text-[var(--color-mid-gray)]">
-                    <th className="text-left py-2 pr-4">Date</th>
-                    <th className="text-left py-2 pr-4">Quantity</th>
-                    <th className="text-left py-2">Destination</th>
+                    <th className="text-left py-2 pr-4">{t('date')}</th>
+                    <th className="text-left py-2 pr-4">{t('quantity')}</th>
+                    <th className="text-left py-2">{t('destination')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border-gray)]">
@@ -155,17 +157,17 @@ export default function StockItemDetails() {
 
       <div className="grid lg:grid-cols-2 gap-5 mt-5">
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
-          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Adjustment History</p>
+          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">{t('stockAdjustment')} — {t('fullHistory')}</p>
           {adjustmentHistory.length === 0 ? (
-            <EmptyState title="No adjustments recorded" message="This item's quantity hasn't been reconciled against a physical count yet." />
+            <EmptyState title={t('noTransactionsFound')} message={t('tryDifferentSearchFilter')} />
           ) : (
             <div className="table-scroll">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--color-border-gray)] text-xs uppercase text-[var(--color-mid-gray)]">
-                    <th className="text-left py-2 pr-4">Date</th>
-                    <th className="text-left py-2 pr-4">Difference</th>
-                    <th className="text-left py-2">Reason</th>
+                    <th className="text-left py-2 pr-4">{t('date')}</th>
+                    <th className="text-left py-2 pr-4">{t('difference')}</th>
+                    <th className="text-left py-2">{t('reason')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border-gray)]">
@@ -183,17 +185,17 @@ export default function StockItemDetails() {
         </div>
 
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-6">
-          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">Transfer History</p>
+          <p className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">{t('stockTransfer')} — {t('fullHistory')}</p>
           {transferHistory.length === 0 ? (
-            <EmptyState title="No transfers recorded" message="This item hasn't moved between locations yet." />
+            <EmptyState title={t('noTransactionsFound')} message={t('tryDifferentSearchFilter')} />
           ) : (
             <div className="table-scroll">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--color-border-gray)] text-xs uppercase text-[var(--color-mid-gray)]">
-                    <th className="text-left py-2 pr-4">Date</th>
-                    <th className="text-left py-2 pr-4">Quantity</th>
-                    <th className="text-left py-2">Route</th>
+                    <th className="text-left py-2 pr-4">{t('date')}</th>
+                    <th className="text-left py-2 pr-4">{t('quantity')}</th>
+                    <th className="text-left py-2">{t('fromLocation')} / {t('toLocation')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-border-gray)]">
@@ -212,7 +214,7 @@ export default function StockItemDetails() {
       </div>
 
       <Button variant="ghost" icon={ArrowLeft} onClick={() => navigate('/stock/items')} className="mt-5">
-        Back to All Items
+        {t('back')} {t('allItems')}
       </Button>
 
       <StockItemFormModal open={editOpen && !viewOnly} onClose={() => setEditOpen(false)} item={item} onSaved={() => { refresh(); setEditOpen(false); }} />

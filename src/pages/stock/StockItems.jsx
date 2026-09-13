@@ -351,13 +351,13 @@ export default function StockItems() {
                 label={t('allCategories')}
                 value={categoryFilter}
                 onChange={setCategoryFilter}
-                options={STOCK_CATEGORIES.map((c) => ({ value: c, label: c }))}
+                options={STOCK_CATEGORIES.map((c) => ({ value: c, label: t(`stockCategory.${c}`) }))}
               />
               <FilterDropdown
                 label={t('allUnits')}
                 value={unitFilter}
                 onChange={setUnitFilter}
-                options={STOCK_UNITS.map((u) => ({ value: u, label: u }))}
+                options={STOCK_UNITS.map((u) => ({ value: u, label: t(`stockUnit.${u}`) }))}
               />
               <FilterDropdown
                 label={t('allStatus')}
@@ -485,7 +485,7 @@ export default function StockItems() {
               <p className="text-sm text-[var(--color-dark-gray)] leading-relaxed">{viewItem.description}</p>
             )}
             <dl className="grid grid-cols-2 gap-4 pt-4 border-t border-[var(--color-border-gray)]">
-              <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('category')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{viewItem.category}</dd></div>
+              <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('category')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{t(`stockCategory.${viewItem.category}`)}</dd></div>
               <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('unit')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{viewItem.unit}</dd></div>
               <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('quantity')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{viewItem.quantity} {viewItem.unit}</dd></div>
               <div><dt className="text-xs text-[var(--color-mid-gray)]">{t('minimumLevel')}</dt><dd className="font-medium text-[var(--color-dark-gray)] mt-0.5">{viewItem.minLevel} {viewItem.unit}</dd></div>

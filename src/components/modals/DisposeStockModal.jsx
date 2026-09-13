@@ -8,6 +8,7 @@ import { useToast } from '../../context/ToastContext';
 import { disposeStock, disposeDamagedItem } from '../../services/stockService';
 import { logActivity } from '../../services/activityService';
 import { REMOVAL_REASONS, STOCK_TODAY } from '../../data/stock';
+import { useApp } from '../../context/AppContext';
 
 /**
  * DisposeStockModal — permanently removes quantity from active/damaged stock
@@ -22,6 +23,7 @@ import { REMOVAL_REASONS, STOCK_TODAY } from '../../data/stock';
 export default function DisposeStockModal({ open, onClose, item, damagedRecord, defaultReason, onDisposed }) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useApp();
   const isDamagedFlow = !!damagedRecord;
   const target = damagedRecord || item;
 
@@ -61,13 +63,13 @@ export default function DisposeStockModal({ open, onClose, item, damagedRecord, 
     const next = {};
     if (!isDamagedFlow) {
       const qty = Number(form.quantity);
-      if (!form.quantity || Number.isNaN(qty) || qty <= 0) next.quantity = 'Enter a positive quantity.';
-      else if (qty > item.quantity) next.quantity = `Only ${item.quantity} ${item.unit} available.`;
-      if (!form.reason) next.reason = 'Select a reason.';
-      if (!form.responsibleUser?.trim()) next.responsibleUser = 'Responsible user is required.';
+      if (!form.quantity || Number.isNaN(qty) || qty <= 0) next.quantity = t('positiveQuantityRequired');
+      else if (qty > item.quantity) next.quantity = t('insufficientStock', { quantity: item.quantity, unit: item.unit });
+      if (!form.reason) next.reason = t('reason');
+      if (!form.responsibleUser?.trim()) next.responsibleUser = t('responsibleUserRequired');
     }
-    if (!form.approvedBy?.trim()) next.approvedBy = 'Approver is required.';
-    if (!form.date) next.date = 'Date is required.';
+    if (!form.approvedBy?.trim()) next.approvedBy = t('responsibleUserRequired');
+    if (!form.date) next.date = t('dateRequired');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -86,7 +88,7 @@ export default function DisposeStockModal({ open, onClose, item, damagedRecord, 
       return;
     }
     const name = target.itemName || target.name;
-    showToast(`${name} moved to Removed / Disposed.`, 'success');
+    showToast(t('removedDisposed'), 'success');
     logActivity({
       user: form.approvedBy,
       action: `Disposed stock: ${name} (${isDamagedFlow ? damagedRecord.quantity : form.quantity} ${target.unit})`,
@@ -103,32 +105,32 @@ export default function DisposeStockModal({ open, onClose, item, damagedRecord, 
     <Modal
       open={open}
       onClose={onClose}
-      title={`Dispose Stock — ${name}`}
+      title={`${t('disposeStock')} — ${name}`}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
-          <Button variant="danger" onClick={handleSubmit} loading={saving}>Confirm Disposal</Button>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>{t('cancel')}</Button>
+          <Button variant="danger" onClick={handleSubmit} loading={saving}>{t('confirmDisposal')}</Button>
         </>
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {serverError && <Alert type="error">{serverError}</Alert>}
-        <Alert type="warning" title="This action is permanent">
-          Disposed stock is removed from usable inventory and recorded in the Removed / Disposed history — it cannot be undone.
+        <Alert type="warning" title={t('permanentAction')}>
+          {t('permanentWarning')}
         </Alert>
 
         {isDamagedFlow ? (
           <p className="text-sm text-[var(--color-dark-gray)]">
             Disposing <span className="font-semibold">{damagedRecord.quantity} {damagedRecord.unit}</span> reported as{' '}
-            <span className="font-semibold">{damagedRecord.reason}</span> on {damagedRecord.date}.
+            <span className="font-semibold">{t(`damageReason.${damagedRecord.reason}`)}</span> on {damagedRecord.date}.
           </p>
         ) : (
           <>
             <p className="text-sm text-[var(--color-mid-gray)]">
-              Currently in stock: <span className="font-semibold text-[var(--color-dark-gray)]">{item.quantity} {item.unit}</span>
+              {t('currentlyInStock')}: <span className="font-semibold text-[var(--color-dark-gray)]">{item.quantity} {item.unit}</span>
             </p>
             <Input
-              label="Quantity to Remove"
+              label={t('quantityToRemove')}
               type="number"
               min="1"
               required
@@ -137,20 +139,20 @@ export default function DisposeStockModal({ open, onClose, item, damagedRecord, 
               error={errors.quantity}
             />
             <Select
-              label="Reason"
+              label={t('reason')}
               required
               value={form.reason}
               onChange={update('reason')}
               error={errors.reason}
-              options={REMOVAL_REASONS.map((r) => ({ value: r, label: r }))}
+              options={REMOVAL_REASONS.map((r) => ({ value: r, label: t(`removalReason.${r}`) }))}
             />
-            <Input label="Responsible User" required value={form.responsibleUser} onChange={update('responsibleUser')} error={errors.responsibleUser} />
+            <Input label={t('responsibleUser')} required value={form.responsibleUser} onChange={update('responsibleUser')} error={errors.responsibleUser} />
           </>
         )}
 
-        <Input label="Date" type="date" required value={form.date} onChange={update('date')} error={errors.date} />
-        <Input label="Approved By" required value={form.approvedBy} onChange={update('approvedBy')} error={errors.approvedBy} placeholder="Name of approving manager" />
-        <Textarea label="Notes" value={form.notes} onChange={update('notes')} placeholder="Optional details…" />
+        <Input label={t('date')} type="date" required value={form.date} onChange={update('date')} error={errors.date} />
+        <Input label={t('approvedBy')} required value={form.approvedBy} onChange={update('approvedBy')} error={errors.approvedBy} placeholder={t('nameOfApprovingManager')} />
+        <Textarea label={t('notes')} value={form.notes} onChange={update('notes')} placeholder={t('optionalDetails')} />
       </form>
     </Modal>
   );

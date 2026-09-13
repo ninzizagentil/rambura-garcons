@@ -200,7 +200,7 @@ export default function StockIn() {
                   value={form.itemId}
                   onChange={handleItemChange}
                   error={errors.itemId}
-                  options={items.map((i) => ({ value: i.id, label: `${i.name} (${i.quantity} ${i.unit} in stock)` }))}
+                  options={items.map((i) => ({ value: i.id, label: t('itemOptionStock', { name: i.name, quantity: i.quantity, unit: i.unit }) }))}
                 />
               </div>
             </div>
@@ -215,12 +215,12 @@ export default function StockIn() {
               {/* Supplier select — auto-fills party; falls back to free text */}
               <div className="stock-form-grid full">
                 <Select
-                  label="Supplier"
+                  label={t('supplier')}
                   value={form.supplierId}
                   onChange={handleSupplierChange}
-                  hint="Select a registered supplier, or leave blank and type the source manually below."
+                  hint={t('sourceSupplier')}
                   options={[
-                    { value: '', label: '— Select supplier (optional) —' },
+                    { value: '', label: `— ${t('selectAnOption')} —` },
                     ...suppliers.map((s) => ({ value: s.id, label: s.name })),
                   ]}
                 />
@@ -234,7 +234,7 @@ export default function StockIn() {
                   onChange={update('party')}
                   error={errors.party}
                   placeholder={t('sourceSupplierPlaceholder')}
-                  hint={selectedSupplier ? `Auto-filled from supplier "${selectedSupplier.name}". You can edit if needed.` : 'Type the supplier or source name.'}
+                  hint={selectedSupplier ? `${t('sourceSupplier')}: ${selectedSupplier.name}` : t('sourceSupplierPlaceholder')}
                 />
               </div>
               <div className="stock-form-grid full">
@@ -259,7 +259,7 @@ export default function StockIn() {
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('item')}</dt><dd className="font-medium">{selectedItem?.name}</dd></div>
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('quantity')}</dt><dd className="font-medium">+{form.quantity} {selectedItem?.unit}</dd></div>
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('date')}</dt><dd className="font-medium">{form.date}</dd></div>
-              {selectedSupplier && <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">Supplier</dt><dd className="font-medium">{selectedSupplier.name}</dd></div>}
+              {selectedSupplier && <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('supplier')}</dt><dd className="font-medium">{selectedSupplier.name}</dd></div>}
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('sourceSupplier')}</dt><dd className="font-medium">{form.party}</dd></div>
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('responsibleUser')}</dt><dd className="font-medium">{form.responsibleUser}</dd></div>
               <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('newQuantity')}</dt><dd className="font-medium">{(selectedItem?.quantity || 0) + Number(form.quantity)} {selectedItem?.unit}</dd></div>

@@ -21,15 +21,15 @@ import {
 import { useApp } from '../../context/AppContext';
 
 const TABS = [
-  { id: 'low-stock',      label: 'Low Stock',      icon: TrendingDown,   tone: 'amber'  },
-  { id: 'out-of-stock',   label: 'Out of Stock',   icon: PackageX,       tone: 'red'    },
-  { id: 'expiring',       label: 'Expiry',         icon: CalendarClock,  tone: 'purple' },
+  { id: 'low-stock',      label: 'lowStock',       icon: TrendingDown,   tone: 'amber'  },
+  { id: 'out-of-stock',   label: 'outOfStock',     icon: PackageX,       tone: 'red'    },
+  { id: 'expiring',       label: 'expiryDate',     icon: CalendarClock,  tone: 'purple' },
 ];
 
 const EXPIRY_STATUS_OPTIONS = [
-  { value: 'expired',       label: 'Expired'        },
-  { value: 'expiring-soon', label: 'Expiring Soon'  },
-  { value: 'valid',         label: 'Valid'           },
+  { value: 'expired',       label: 'itemExpired'      },
+  { value: 'expiring-soon', label: 'itemExpiringSoon' },
+  { value: 'valid',         label: 'valid'            },
 ];
 
 export default function StockAlerts() {
@@ -210,7 +210,7 @@ export default function StockAlerts() {
               ].join(' ')}
             >
               <Icon className="w-4 h-4" aria-hidden="true" />
-              {label}
+              {t(label)}
               {count > 0 && (
                 <span className={[
                   'rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none',

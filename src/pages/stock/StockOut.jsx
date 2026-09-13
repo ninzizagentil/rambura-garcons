@@ -174,7 +174,7 @@ export default function StockOut() {
               value={form.itemId}
               onChange={update('itemId')}
               error={errors.itemId}
-              options={items.map((i) => ({ value: i.id, label: `${i.name} (${i.quantity} ${i.unit} in stock)` }))}
+              options={items.map((i) => ({ value: i.id, label: t('itemOptionStock', { name: i.name, quantity: i.quantity, unit: i.unit }) }))}
             />
             {selectedItem && <p className="text-xs text-[var(--color-mid-gray)] -mt-2">{t('currentlyAvailable', { quantity: selectedItem.quantity, unit: selectedItem.unit })}</p>}
             <div className="grid sm:grid-cols-2 gap-4">

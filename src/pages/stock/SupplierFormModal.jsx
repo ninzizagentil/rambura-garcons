@@ -7,12 +7,14 @@ import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { createSupplier, updateSupplier } from '../../services/stockService';
 import { logActivity } from '../../services/activityService';
+import { useApp } from '../../context/AppContext';
 
 const EMPTY_FORM = { name: '', contactPerson: '', phone: '', email: '', address: '', notes: '' };
 
 export default function SupplierFormModal({ open, onClose, supplier, onSaved }) {
   const { showToast } = useToast();
   const { user } = useAuth();
+  const { t } = useApp();
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
@@ -51,7 +53,7 @@ export default function SupplierFormModal({ open, onClose, supplier, onSaved }) 
       setServerError(result.error);
       return;
     }
-      showToast(isEdit ? `"${form.name}" updated.` : `"${form.name}" added as a supplier.`, 'success');
+      showToast(isEdit ? t('saveChanges') : t('addSupplier'), 'success');
       logActivity({
         user: user?.fullName || 'Stock Manager',
         action: `${isEdit ? 'Updated' : 'Added'} supplier: ${form.name}`,
@@ -63,20 +65,20 @@ export default function SupplierFormModal({ open, onClose, supplier, onSaved }) 
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Supplier' : 'Add Supplier'} size="md">
+    <Modal open={open} onClose={onClose} title={isEdit ? t('edit') : t('addSupplier')} size="md">
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         {serverError && <Alert type="error">{serverError}</Alert>}
-        <Input label="Supplier Name" required value={form.name} onChange={update('name')} error={errors.name} placeholder="e.g. Kigali Grain Suppliers Ltd" />
+        <Input label={t('supplier')} required value={form.name} onChange={update('name')} error={errors.name} placeholder={t('sourceSupplierPlaceholder')} />
         <div className="grid sm:grid-cols-2 gap-4">
-          <Input label="Contact Person" required value={form.contactPerson} onChange={update('contactPerson')} error={errors.contactPerson} />
-          <Input label="Phone" required value={form.phone} onChange={update('phone')} error={errors.phone} placeholder="+250 7xx xxx xxx" />
+          <Input label={t('fullName')} required value={form.contactPerson} onChange={update('contactPerson')} error={errors.contactPerson} />
+          <Input label={t('phone')} required value={form.phone} onChange={update('phone')} error={errors.phone} placeholder="+250 7xx xxx xxx" />
         </div>
-        <Input label="Email" type="email" value={form.email} onChange={update('email')} error={errors.email} />
-        <Input label="Address" value={form.address} onChange={update('address')} />
-        <Textarea label="Notes" value={form.notes} onChange={update('notes')} rows={3} />
+        <Input label={t('email')} type="email" value={form.email} onChange={update('email')} error={errors.email} />
+        <Input label={t('address')} value={form.address} onChange={update('address')} />
+        <Textarea label={t('notes')} value={form.notes} onChange={update('notes')} rows={3} />
         <div className="flex justify-end gap-3 pt-2">
-          <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
-          <Button type="submit" variant="primary" loading={saving}>{isEdit ? 'Save Changes' : 'Add Supplier'}</Button>
+          <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>{t('cancel')}</Button>
+          <Button type="submit" variant="primary" loading={saving}>{isEdit ? t('saveChanges') : t('addSupplier')}</Button>
         </div>
       </form>
     </Modal>

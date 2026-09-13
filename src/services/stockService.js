@@ -28,7 +28,7 @@ function normalizeTransaction(transaction) {
     itemId: item?._id || transaction.itemId,
     itemName: transaction.itemName || item?.name || 'Unknown item',
     category: transaction.category || item?.category || 'Other School Materials',
-    responsibleUser: responsibleUser?.fullName || responsibleUser?.name || transaction.responsibleUser || 'Unknown user',
+    responsibleUser: responsibleUser?.fullName || responsibleUser?.name || responsibleUser?.email || (typeof transaction.responsibleUser === 'string' && transaction.responsibleUser.length !== 24 ? transaction.responsibleUser : null) || 'Unknown user',
   };
 }
 

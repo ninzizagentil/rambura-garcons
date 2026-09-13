@@ -8,6 +8,7 @@ import { useToast } from '../../context/ToastContext';
 import { reportDamage } from '../../services/stockService';
 import { logActivity } from '../../services/activityService';
 import { DAMAGE_REASONS, STOCK_TODAY } from '../../data/stock';
+import { useApp } from '../../context/AppContext';
 
 /**
  * ReportDamageModal — logs damaged stock against a specific item.
@@ -17,6 +18,7 @@ import { DAMAGE_REASONS, STOCK_TODAY } from '../../data/stock';
 export default function ReportDamageModal({ open, onClose, item, onReported }) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useApp();
 
   const [form, setForm] = useState({ quantity: '', reason: '', date: STOCK_TODAY, reportedBy: user?.fullName || '', notes: '' });
   const [errors, setErrors] = useState({});
@@ -36,11 +38,11 @@ export default function ReportDamageModal({ open, onClose, item, onReported }) {
   const validate = () => {
     const next = {};
     const qty = Number(form.quantity);
-    if (!form.quantity || Number.isNaN(qty) || qty <= 0) next.quantity = 'Enter a positive quantity.';
-    else if (qty > item.quantity) next.quantity = `Only ${item.quantity} ${item.unit} available.`;
-    if (!form.reason) next.reason = 'Select a reason.';
-    if (!form.date) next.date = 'Date is required.';
-    if (!form.reportedBy?.trim()) next.reportedBy = 'Reported by is required.';
+    if (!form.quantity || Number.isNaN(qty) || qty <= 0) next.quantity = t('positiveQuantityRequired');
+    else if (qty > item.quantity) next.quantity = t('insufficientStock', { quantity: item.quantity, unit: item.unit });
+    if (!form.reason) next.reason = t('reason');
+    if (!form.date) next.date = t('dateRequired');
+    if (!form.reportedBy?.trim()) next.reportedBy = t('responsibleUserRequired');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -56,7 +58,7 @@ export default function ReportDamageModal({ open, onClose, item, onReported }) {
       setServerError(res.error);
       return;
     }
-    showToast(`Damage reported for "${item.name}".`, 'success');
+    showToast(t('reportDamage'), 'success');
     logActivity({
       user: form.reportedBy,
       action: `Reported damage: ${item.name} (${form.quantity} ${item.unit}, ${form.reason})`,
@@ -71,21 +73,21 @@ export default function ReportDamageModal({ open, onClose, item, onReported }) {
     <Modal
       open={open}
       onClose={onClose}
-      title={`Report Damage — ${item.name}`}
+      title={`${t('reportDamage')} — ${item.name}`}
       footer={
         <>
-          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancel</Button>
-          <Button variant="danger" onClick={handleSubmit} loading={saving}>Report Damage</Button>
+          <Button variant="ghost" onClick={onClose} disabled={saving}>{t('cancel')}</Button>
+          <Button variant="danger" onClick={handleSubmit} loading={saving}>{t('reportDamage')}</Button>
         </>
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {serverError && <Alert type="error">{serverError}</Alert>}
         <p className="text-sm text-[var(--color-mid-gray)]">
-          Currently in stock: <span className="font-semibold text-[var(--color-dark-gray)]">{item.quantity} {item.unit}</span>
+          {t('currentlyInStock')}: <span className="font-semibold text-[var(--color-dark-gray)]">{item.quantity} {item.unit}</span>
         </p>
         <Input
-          label="Quantity Damaged"
+          label={t('quantityDamaged')}
           type="number"
           min="1"
           required
@@ -95,16 +97,16 @@ export default function ReportDamageModal({ open, onClose, item, onReported }) {
           placeholder={`e.g. 2 ${item.unit}`}
         />
         <Select
-          label="Reason"
+          label={t('reason')}
           required
           value={form.reason}
           onChange={update('reason')}
           error={errors.reason}
-          options={DAMAGE_REASONS.map((r) => ({ value: r, label: r }))}
+          options={DAMAGE_REASONS.map((r) => ({ value: r, label: t(`damageReason.${r}`) }))}
         />
-        <Input label="Date" type="date" required value={form.date} onChange={update('date')} error={errors.date} />
-        <Input label="Reported By" required value={form.reportedBy} onChange={update('reportedBy')} error={errors.reportedBy} />
-        <Textarea label="Notes" value={form.notes} onChange={update('notes')} placeholder="Optional details…" />
+        <Input label={t('date')} type="date" required value={form.date} onChange={update('date')} error={errors.date} />
+        <Input label={t('reportedBy')} required value={form.reportedBy} onChange={update('reportedBy')} error={errors.reportedBy} />
+        <Textarea label={t('notes')} value={form.notes} onChange={update('notes')} placeholder={t('optionalDetails')} />
       </form>
     </Modal>
   );

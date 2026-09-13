@@ -32,6 +32,11 @@ const ATTENTION_TONE = {
 };
 
 export default function StockDashboard() {
+  const { language } = useApp();
+  return <StockDashboardView key={language} />;
+}
+
+function StockDashboardView() {
   const navigate = useNavigate();
   const { viewOnly } = useModuleAccess(ROLES.STOCK_MANAGER);
   const { t, language } = useApp();
