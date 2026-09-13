@@ -18,6 +18,8 @@ function translateLabel(label, t) {
     'Activity / Audit': 'activityAudit',
     'Settings': 'settings',
     'Library MIS': 'libraryMis',
+    'Library Catalogue': 'libraryCatalogue',
+    'Library Activity': 'libraryActivity',
     'Stock MIS': 'stockMis',
     'School Modules': 'schoolModules',
     Administration: 'administration',

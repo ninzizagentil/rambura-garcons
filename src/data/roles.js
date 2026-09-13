@@ -55,12 +55,26 @@ export const NAV_BY_ROLE = {
   ],
   [ROLES.LIBRARIAN]: [
     { label: 'Dashboard', to: '/library', icon: LayoutDashboard, permission: 'library.view' },
-    { label: 'Books', to: '/library/books', icon: BookOpen, permission: 'library.view' },
-    { label: 'Borrowed Books', to: '/library/borrowed', icon: BookMarked, permission: 'library.view' },
-    { label: 'Overdue Books', to: '/library/overdue', icon: AlertTriangle, permission: 'library.view' },
-    { label: 'Returns', to: '/library/returns', icon: RotateCcw, permission: 'library.return' },
-    { label: 'Borrowing History', to: '/library/history', icon: HistoryIcon, permission: 'library.reports' },
-    { label: 'Library Reports', to: '/library/reports', icon: FileBarChart, permission: 'library.reports' },
+    {
+      label: 'Library Catalogue',
+      to: '/library/books',
+      icon: Boxes,
+      children: [
+        { label: 'Books', to: '/library/books', icon: BookOpen, permission: 'library.view' },
+        { label: 'Borrowed Books', to: '/library/borrowed', icon: BookMarked, permission: 'library.view' },
+        { label: 'Overdue Books', to: '/library/overdue', icon: AlertTriangle, permission: 'library.view' },
+        { label: 'Returns', to: '/library/returns', icon: RotateCcw, permission: 'library.return' },
+      ],
+    },
+    {
+      label: 'Library Activity',
+      to: '/library/history',
+      icon: Activity,
+      children: [
+        { label: 'Borrowing History', to: '/library/history', icon: HistoryIcon, permission: 'library.reports' },
+        { label: 'Library Reports', to: '/library/reports', icon: FileBarChart, permission: 'library.reports' },
+      ],
+    },
   ],
   [ROLES.STOCK_MANAGER]: [
     { label: 'Dashboard', to: '/stock', icon: LayoutDashboard, permission: 'stock.view' },
