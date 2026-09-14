@@ -12,14 +12,14 @@ import ThemeToggle from './ThemeToggle';
 const NAV_LABEL_KEYS = {
   Dashboard: 'dashboard', Website: 'website', Reports: 'reports', 'Users & Roles': 'usersRoles',
   'Roles & Permissions': 'rolesPermissions', 'Activity / Audit': 'activityAudit', Settings: 'settings',
-  'Library MIS': 'libraryMis', 'Library Catalogue': 'libraryCatalogue', 'Library Activity': 'libraryActivity', 'Stock MIS': 'stockMis', 'School Modules': 'schoolModules', Administration: 'administration', Inventory: 'inventory', Operations: 'operations', Items: 'allItems', Alerts: 'stockAlerts', 'Receive Stock': 'stockInMenu',
+  'Library MIS': 'libraryMis', 'Library Catalogue': 'libraryCatalogue', 'Library Activity': 'libraryActivity', Management: 'managementMenu', 'Reports & Insights': 'reportsInsights', 'Stock MIS': 'stockMis', 'School Modules': 'schoolModules', Administration: 'administration', Inventory: 'inventory', Operations: 'operations', Items: 'allItems', Alerts: 'stockAlerts', 'Receive Stock': 'stockInMenu',
   'Issue Stock': 'stockOutMenu', Transfer: 'stockTransfer', 'Transfer Stock': 'transferStock', Adjust: 'stockAdjustment', 'Adjust Stock': 'adjustStock', Activity: 'activity', 'Damage & Disposal': 'damageDisposal', 'All Items': 'allItems', 'Low Stock': 'lowStockMenu',
   'Out of Stock': 'outOfStockMenu', 'Damaged Items': 'damagedItems', 'Expired Items': 'expiredItems',
   'Removed / Disposed': 'removedDisposed', 'Stock Operations': 'stockOperations', 'Stock In': 'stockInMenu',
   'Stock Out': 'stockOutMenu', 'Stock Adjustment': 'stockAdjustment', 'Stock Transfer': 'stockTransfer',
   Transactions: 'transactions', Suppliers: 'suppliers', 'Usage Analytics': 'usageAnalytics', 'Stock Reports': 'stockReports',
   Books: 'books', 'Borrowed Books': 'borrowedBooks', 'Overdue Books': 'overdueBooks', Returns: 'returns',
-  'Borrowing History': 'borrowingHistory', 'Library Reports': 'libraryReports', Applications: 'applications',
+  'Borrowing History': 'borrowingHistory', 'Library Reports': 'libraryReports', Applications: 'applications', 'Contact Messages': 'contactMessages', 'Developers Page': 'developersPage',
   'Management Insights': 'managementInsights', Notifications: 'notifications',
 };
 

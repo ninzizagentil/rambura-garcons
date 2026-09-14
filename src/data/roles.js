@@ -112,12 +112,26 @@ export const NAV_BY_ROLE = {
   ],
   [ROLES.MANAGEMENT]: [
     { label: 'Dashboard', to: '/management', icon: LayoutDashboard, permission: 'applications.view' },
-    { label: 'Applications', to: '/management/applications', icon: GraduationCap, permission: 'applications.view' },
-    { label: 'Contact Messages', to: '/management/contact-messages', icon: MessageSquare, permission: 'applications.view' },
-    { label: 'Developers Page', to: '/management/developers', icon: Code2, permission: 'applications.view' },
-    { label: 'Library Reports', to: '/management/library-reports', icon: BookOpen, permission: 'library.reports' },
-    { label: 'Stock Reports', to: '/management/stock-reports', icon: Package, permission: 'stock.reports' },
-    { label: 'Management Insights', to: '/management/insights', icon: LayoutList, permission: 'reports.view' },
+    {
+      label: 'Management',
+      to: '/management/applications',
+      icon: LayoutList,
+      children: [
+        { label: 'Applications', to: '/management/applications', icon: GraduationCap, permission: 'applications.view' },
+        { label: 'Contact Messages', to: '/management/contact-messages', icon: MessageSquare, permission: 'applications.view' },
+        { label: 'Developers Page', to: '/management/developers', icon: Code2, permission: 'applications.view' },
+      ],
+    },
+    {
+      label: 'Reports & Insights',
+      to: '/management/insights',
+      icon: FileBarChart,
+      children: [
+        { label: 'Library Reports', to: '/management/library-reports', icon: BookOpen, permission: 'library.reports' },
+        { label: 'Stock Reports', to: '/management/stock-reports', icon: Package, permission: 'stock.reports' },
+        { label: 'Management Insights', to: '/management/insights', icon: LayoutList, permission: 'reports.view' },
+      ],
+    },
     { label: 'Notifications', to: '/notifications', icon: Bell },
   ],
 };
