@@ -64,7 +64,6 @@ export default function StockAlerts() {
     setSearchParams({ tab: id }, { replace: true });
   };
 
-  // ── Low Stock rows ─────────────────────────────────────────────────────────
   const lowStockCols = useMemo(() => [
     { key: 'name',     header: t('item'),            render: (i) => <span className="font-medium">{i.name}</span> },
     { key: 'category', header: t('category') },
@@ -85,7 +84,6 @@ export default function StockAlerts() {
     },
   ], [navigate, viewOnly, t]);
 
-  // ── Out of Stock rows ──────────────────────────────────────────────────────
   const outOfStockRows = useMemo(() =>
     outOfStock.map((i) => {
       const lastTx = getTransactionsForItem(i.id).sort((a, b) => (a.date < b.date ? 1 : -1))[0];
@@ -127,7 +125,6 @@ export default function StockAlerts() {
     },
   ], [navigate, viewOnly, t]);
 
-  // ── Expiry rows ────────────────────────────────────────────────────────────
   const expiryItems = useMemo(
     () => {
       const all = getItems().filter((i) => !!i.expiryDate);
@@ -170,7 +167,6 @@ export default function StockAlerts() {
     },
   ], [navigate, viewOnly, t]);
 
-  // ── Tab badge counts ───────────────────────────────────────────────────────
   const counts = {
     'low-stock':    lowStock.filter((i) => i.quantity > 0).length,
     'out-of-stock': outOfStock.length,
@@ -191,7 +187,6 @@ export default function StockAlerts() {
 
       {viewOnly && <ViewOnlyBanner module="Stock MIS" />}
 
-      {/* ── Tab bar ─────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-2 border-b border-[var(--color-border-gray)] pb-0">
         {TABS.map(({ id, label, icon: Icon }) => {
           const count = counts[id] ?? 0;
@@ -226,7 +221,6 @@ export default function StockAlerts() {
         })}
       </div>
 
-      {/* ── Tab content ─────────────────────────────────────────────────── */}
       {activeTab === 'low-stock' && (
         <div>
           <p className="text-sm text-[var(--color-mid-gray)] mb-3">

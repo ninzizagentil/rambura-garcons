@@ -221,7 +221,6 @@ export default function BorrowingHistory() {
 
       {viewOnly && <ViewOnlyBanner module="Library MIS" />}
 
-      {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label={t('totalLoans')} value={totalLoans} icon={BookOpen} />
         <StatCard label={t('activeLoans')} value={activeLoans} icon={BookMarked} tone="blue" />
@@ -229,7 +228,6 @@ export default function BorrowingHistory() {
         <StatCard label={t('overdue')} value={overdueLoans} icon={AlertTriangle} tone="red" />
       </div>
 
-      {/* Search + filters */}
       <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card p-4 mb-6">
         <div className="flex flex-wrap items-center gap-3">
           <SearchBar
@@ -280,7 +278,6 @@ export default function BorrowingHistory() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] shadow-card overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--color-border-gray)]">
           <h2 className="font-display text-sm font-semibold text-[var(--color-dark-gray)]">{t('loanRecords')}</h2>

@@ -136,9 +136,9 @@ const DEFAULT_DEVELOPERS_PAGE = {
   heading: 'Built with purpose.',
   description: "This system brings the school's public story and day-to-day operations into one dependable digital home.",
   developers: [
-    { name: 'Ninziza Aime Gentil', role: 'Product & Interface Development' },
-    { name: 'Byiringiro Dady Roger', role: 'Platform & Systems Development' },
-    { name: 'Niyonsaba Emery', role: 'Data & Experience Development' },
+    { name: 'Ninziza Aime Gentil', role: 'Product & Interface Development', bio: 'Shapes clear, accessible experiences for students, families, and staff.', skills: ['UI design', 'Frontend', 'Accessibility'], photo: '', socials: { facebook: '', instagram: '', whatsapp: '', twitter: '', github: '' } },
+    { name: 'Byiringiro Dady Roger', role: 'Platform & Systems Development', bio: 'Builds dependable systems that support the school team every day.', skills: ['Backend', 'APIs', 'Infrastructure'], photo: '', socials: { facebook: '', instagram: '', whatsapp: '', twitter: '', github: '' } },
+    { name: 'Niyonsaba Emery', role: 'Data & Experience Development', bio: 'Connects information and workflows so the school can work with confidence.', skills: ['Data', 'Workflows', 'User experience'], photo: '', socials: { facebook: '', instagram: '', whatsapp: '', twitter: '', github: '' } },
   ],
   capabilities: [
     { label: 'Public website', detail: 'A clear digital front door for students, families, and partners.' },
@@ -233,7 +233,30 @@ export function getContactPage() {
     developerUrl: saved.developerUrl || DEFAULT_CONTACT_PAGE.developerUrl,
   };
 }
-export function getDevelopersPage() { return { ...DEFAULT_DEVELOPERS_PAGE, ...(cache.settings.developersPage || {}), developers: cache.settings.developersPage?.developers || DEFAULT_DEVELOPERS_PAGE.developers, capabilities: cache.settings.developersPage?.capabilities || DEFAULT_DEVELOPERS_PAGE.capabilities }; }
+function normalizeDeveloper(developer) {
+  const photo = developer?.photo;
+  return {
+    ...developer,
+    photo: typeof photo === 'string' ? photo : photo?.imageUrl || '',
+    socials: {
+      facebook: '',
+      instagram: '',
+      whatsapp: '',
+      twitter: '',
+      github: '',
+      ...(developer?.socials || {}),
+    },
+  };
+}
+export function getDevelopersPage() {
+  const saved = cache.settings.developersPage || {};
+  return {
+    ...DEFAULT_DEVELOPERS_PAGE,
+    ...saved,
+    developers: (saved.developers || DEFAULT_DEVELOPERS_PAGE.developers).map(normalizeDeveloper),
+    capabilities: saved.capabilities || DEFAULT_DEVELOPERS_PAGE.capabilities,
+  };
+}
 export function getPrograms() { return cache.programs; }
 export function getDepartments() { return cache.departments; }
 export function getStaff() { return cache.staff; }
@@ -290,7 +313,19 @@ export function updateDepartmentsPage(data) { return mutate('put', '/admin/setti
 export function updateNewsPage(data) { return mutate('put', '/admin/settings', { newsPage: data }); }
 export function updateGalleryPage(data) { return mutate('put', '/admin/settings', { galleryPage: data }); }
 export function updateContactPage(data) { return mutate('put', '/admin/settings', { contactPage: data }); }
-export function updateDevelopersPage(data) { return mutate('put', '/admin/settings', { developersPage: data }); }
+export async function updateDevelopersPage(data) {
+  try {
+    const developers = await Promise.all((data.developers || []).map(async (developer) => ({
+      ...developer,
+      photo: typeof developer.photo === 'string' && developer.photo.startsWith('data:')
+        ? (await uploadImage(developer.photo, 'rambura-garcons/developers')).imageUrl
+        : typeof developer.photo === 'string' ? developer.photo : developer.photo?.imageUrl || '',
+    })));
+    return mutate('put', '/admin/settings', { developersPage: { ...data, developers } });
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
 export async function submitContactMessage(data) {
   const result = await api.post('/public/contact', data);
   return result.data;

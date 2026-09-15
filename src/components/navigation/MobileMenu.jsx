@@ -11,7 +11,7 @@ import { cn } from '../../utils/cn';
 function translateLabel(label, t) {
   const labelMap = {
     'Dashboard': 'dashboard',
-    'Website': 'website',
+    'Website Management': 'websiteManagement',
     'Reports': 'reports',
     'Users & Roles': 'usersRoles',
     'Roles & Permissions': 'rolesPermissions',
@@ -90,14 +90,16 @@ function MobileNavItem({ item, onNavigate }) {
         onClick={onNavigate}
         className={({ isActive }) =>
           cn(
-            'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium',
+            'flex items-center gap-3 rounded-xl border border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] px-3 py-3 text-sm font-medium',
             isActive
               ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)]'
               : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)]'
           )
         }
       >
-        <item.icon className="w-[18px] h-[18px] flex-shrink-0" aria-hidden="true" />
+        <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--sidebar-nav-hover-bg)]">
+          <item.icon className="h-[18px] w-[18px]" aria-hidden="true" />
+        </span>
         <span>{translateLabel(item.label, t)}</span>
       </NavLink>
     );
@@ -110,13 +112,15 @@ function MobileNavItem({ item, onNavigate }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className={cn(
-          'w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium',
+          'w-full flex items-center gap-3 rounded-xl border border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] px-3 py-3 text-sm font-medium',
           childActive
             ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)]'
             : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)]'
         )}
       >
-        <item.icon className="w-[18px] h-[18px] flex-shrink-0" aria-hidden="true" />
+        <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--sidebar-nav-hover-bg)]">
+          <item.icon className="h-[18px] w-[18px]" aria-hidden="true" />
+        </span>
         <span className="flex-1 text-left">{translateLabel(item.label, t)}</span>
         <ChevronDown className={cn('w-4 h-4 flex-shrink-0 transition-transform duration-200', open && 'rotate-180')} aria-hidden="true" />
       </button>
@@ -129,7 +133,7 @@ function MobileNavItem({ item, onNavigate }) {
               onClick={onNavigate}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium',
+                  'flex items-center gap-2.5 rounded-lg border border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] px-3 py-2.5 text-sm font-medium',
                   isActive
                     ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)]'
                     : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)]'

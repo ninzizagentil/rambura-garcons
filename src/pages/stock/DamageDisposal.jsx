@@ -1,12 +1,3 @@
-/**
- * DamageDisposal — Activity hub for damage, disposal and reconciliation.
- *
- * Tabs:
- *   damaged    — Report and dispose of damaged items (was DamagedItems.jsx)
- *   disposed   — Full removal / disposal history with status filters (was RemovedDisposed.jsx)
- *   approvals  — Approve / reject pending disposal requests (was DisposalApprovals.jsx)
- *   reconciliation — Physical stock count checklists (was ReconciliationChecklist.jsx)
- */
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -32,8 +23,6 @@ import { getDamagedItems, getItems, refreshStock } from '../../services/stockSer
 import { logActivity } from '../../services/activityService';
 import { useApp } from '../../context/AppContext';
 
-// ── constants ──────────────────────────────────────────────────────────────
-
 const TABS = [
   { id: 'damaged',        label: 'damagedItems',     icon: ShieldAlert   },
   { id: 'disposed',       label: 'removedDisposed',  icon: Archive       },
@@ -55,13 +44,9 @@ const STATUS_FILTER_OPTIONS = [
 
 const LOCATIONS = ['Main Store', 'Kitchen Store', 'ICT Lab Store', 'Admin Store'];
 
-// ── helpers ────────────────────────────────────────────────────────────────
-
 function authHeader() {
   return { Authorization: `Bearer ${localStorage.getItem('rg_access_token')}` };
 }
-
-// ── main component ─────────────────────────────────────────────────────────
 
 export default function DamageDisposal() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -92,7 +77,6 @@ export default function DamageDisposal() {
 
       {viewOnly && <ViewOnlyBanner module="Stock MIS" />}
 
-      {/* Tab bar */}
       <div className="flex flex-wrap gap-2 border-b border-[var(--color-border-gray)] pb-0">
         {TABS.map(({ id, label, icon: Icon }) => {
           const isActive = activeTab === id;
@@ -117,7 +101,6 @@ export default function DamageDisposal() {
         })}
       </div>
 
-      {/* Tab content */}
       {activeTab === 'damaged'        && <DamagedTab viewOnly={viewOnly} t={t} />}
       {activeTab === 'disposed'       && <DisposedTab showToast={showToast} t={t} language={language} />}
       {activeTab === 'approvals'      && <ApprovalsTab viewOnly={viewOnly} showToast={showToast} user={user} />}
@@ -125,10 +108,6 @@ export default function DamageDisposal() {
     </div>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TAB: Damaged Items
-// ─────────────────────────────────────────────────────────────────────────────
 
 function DamagedTab({ viewOnly, t }) {
   const [records, setRecords] = useState(() => getDamagedItems());
@@ -219,10 +198,6 @@ function DamagedTab({ viewOnly, t }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TAB: Removal / Disposed history
-// ─────────────────────────────────────────────────────────────────────────────
-
 function DisposedTab({ showToast, t, language }) {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -297,7 +272,6 @@ function DisposedTab({ showToast, t, language }) {
         </div>
       </div>
 
-      {/* Status filter tabs */}
       <div className="flex flex-wrap gap-2">
         {STATUS_FILTER_OPTIONS.map(({ value, label, icon: Icon }) => (
           <button
@@ -346,10 +320,6 @@ function DisposedTab({ showToast, t, language }) {
     </div>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TAB: Disposal Approvals
-// ─────────────────────────────────────────────────────────────────────────────
 
 function ApprovalsTab({ viewOnly, showToast, user }) {
   const { t } = useApp();
@@ -448,7 +418,6 @@ function ApprovalsTab({ viewOnly, showToast, user }) {
         </div>
       )}
 
-      {/* Review modal */}
       <Modal
         open={!!selected}
         onClose={() => { setSelected(null); setActionType(null); setActionNotes(''); }}
@@ -509,10 +478,6 @@ function ApprovalsTab({ viewOnly, showToast, user }) {
     </div>
   );
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TAB: Reconciliation
-// ─────────────────────────────────────────────────────────────────────────────
 
 function ReconciliationTab({ viewOnly, showToast, user }) {
   const { t } = useApp();
@@ -631,7 +596,6 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
         Schedule physical inventory counts and compare against system records to identify discrepancies.
       </p>
 
-      {/* Schedule new */}
       {!viewOnly && (
         <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5">
           <h3 className="font-semibold text-[var(--color-dark-gray)] mb-4">{t('reconciliation')}</h3>
@@ -651,7 +615,6 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
         </div>
       )}
 
-      {/* List */}
       <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)]">
         {reconciliations.length === 0 ? (
           <EmptyState icon={ClipboardList} title={t('noTransactionsFound')} message={t('tryDifferentSearchFilter')} />

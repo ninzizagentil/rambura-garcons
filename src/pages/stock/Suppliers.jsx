@@ -210,7 +210,6 @@ export default function Suppliers() {
         )}
       </Modal>
 
-      {/* Items currently supplied by this supplier */}
       <Modal
         open={!!supplierItemsTarget}
         onClose={() => setSupplierItemsTarget(null)}
@@ -229,7 +228,6 @@ export default function Suppliers() {
 
           return (
             <div className="space-y-5">
-              {/* Summary badges */}
               <div className="flex flex-wrap gap-2 pb-3 border-b border-[var(--color-border-gray)]">
                 <span className="text-sm font-semibold text-[var(--color-dark-gray)]">
                   {info.items.length} item{info.items.length !== 1 ? 's' : ''} across {info.cats.length} categor{info.cats.length !== 1 ? 'ies' : 'y'}

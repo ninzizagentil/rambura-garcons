@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import PublicNavbar from '../components/navigation/PublicNavbar';
@@ -8,6 +8,8 @@ import PageTransition from '../components/common/PageTransition';
 
 export default function PublicLayout() {
   const { isDark } = useTheme();
+  const { pathname } = useLocation();
+  const showFooter = pathname !== '/developers';
 
   useEffect(() => {
     const root = document.documentElement;
@@ -24,7 +26,7 @@ export default function PublicLayout() {
       <main className="flex-1">
         <PageTransition><Outlet /></PageTransition>
       </main>
-      <Footer />
+      {showFooter && <Footer />}
       <WhatsAppButton />
     </div>
   );

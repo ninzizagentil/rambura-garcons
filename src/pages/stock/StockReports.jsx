@@ -1,11 +1,3 @@
-/**
- * StockReports — Consolidated reporting hub.
- *
- * Tabs:
- *   overview    — KPI summary + charts + 9 downloadable report cards
- *   analytics   — Fast/slow-moving items, monthly trend, category value
- *   abc         — ABC classification analysis (previously orphaned)
- */
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -32,7 +24,6 @@ import { exportToCSV } from '../../utils/export';
 import { printReport } from '../../utils/print';
 import { useApp } from '../../context/AppContext';
 
-// ── constants ──────────────────────────────────────────────────────────────
 const PIE_COLORS   = ['var(--color-medium-green)', 'var(--color-status-blue)', 'var(--color-gold)'];
 const ABC_COLORS   = ['#10b981', '#f59e0b', '#ef4444'];
 const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -43,7 +34,6 @@ const TABS = [
   { id: 'abc',       label: 'abcClassification' },
 ];
 
-// ── helpers ────────────────────────────────────────────────────────────────
 function formatRWF(amount) {
   return `RWF ${Math.round(amount || 0).toLocaleString('en-US')}`;
 }
@@ -69,7 +59,6 @@ function authHeader() {
   return { Authorization: `Bearer ${localStorage.getItem('rg_access_token')}` };
 }
 
-// ── main component ─────────────────────────────────────────────────────────
 export default function StockReports() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = TABS.find((tb) => tb.id === searchParams.get('tab'))?.id ?? 'overview';
@@ -89,7 +78,6 @@ export default function StockReports() {
         breadcrumb={[{ label: t('stockManagement'), to: '/stock' }, { label: t('reports') }]}
       />
 
-      {/* Tab bar */}
       <div className="flex flex-wrap gap-2 border-b border-[var(--color-border-gray)] pb-0">
         {TABS.map(({ id, label }) => {
           const isActive = activeTab === id;
@@ -119,9 +107,6 @@ export default function StockReports() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TAB: Overview
-// ─────────────────────────────────────────────────────────────────────────────
 function OverviewTab({ t }) {
   const { showToast } = useToast();
   const navigate      = useNavigate();
@@ -293,7 +278,6 @@ function OverviewTab({ t }) {
         />
       </div>
 
-      {/* KPI strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
         <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)] p-5">
           <p className="text-sm text-[var(--color-mid-gray)]">{t('receivedStock')}</p>
@@ -309,7 +293,6 @@ function OverviewTab({ t }) {
         </div>
       </div>
 
-      {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-5 mb-6">
         <ChartCard title={t('currentBalancesCategory')} description={t('stockCategoriesDescription')}>
           <ResponsiveContainer width="100%" height={240}>
@@ -339,7 +322,6 @@ function OverviewTab({ t }) {
         </ChartCard>
       </div>
 
-      {/* Report cards */}
       <h2 className="font-display text-base font-semibold text-[var(--color-heading)] mb-3">
         {t('allReports')}
       </h2>
@@ -375,9 +357,6 @@ function OverviewTab({ t }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TAB: Usage Analytics
-// ─────────────────────────────────────────────────────────────────────────────
 function AnalyticsTab({ t }) {
   const [category, setCategory]     = useState('');
   const usage           = useMemo(() => getUsageByItem(),          []);
@@ -476,9 +455,6 @@ function AnalyticsTab({ t }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TAB: ABC Classification (previously orphaned — now accessible)
-// ─────────────────────────────────────────────────────────────────────────────
 function ABCTab() {
   const { showToast }     = useToast();
   const { t }             = useApp();
@@ -530,7 +506,6 @@ function ABCTab() {
         ABC analysis classifies inventory items by value so you can focus control effort where it matters most.
       </p>
 
-      {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: t('totalItems'), value: report.summary.totalItems, color: 'var(--color-dark-gray)',   bg: 'var(--color-off-white)' },
@@ -547,7 +522,6 @@ function ABCTab() {
         ))}
       </div>
 
-      {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-5">
         <ChartCard title={t('allItems')}>
           <ResponsiveContainer width="100%" height={280}>
@@ -580,7 +554,6 @@ function ABCTab() {
         </ChartCard>
       </div>
 
-      {/* Class detail table */}
       <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5">
         <div className="mb-4">
           <h3 className="font-display font-semibold text-[var(--color-dark-gray)] mb-3">{t('itemDetails')}</h3>
@@ -602,7 +575,6 @@ function ABCTab() {
           </div>
         </div>
 
-        {/* Class description strip */}
         <div className="mb-4 rounded-xl bg-[var(--color-soft-gray)] border border-[var(--color-border-gray)] p-4">
           <p className="font-semibold text-[var(--color-dark-gray)]">{currentClass.label}</p>
           <p className="text-sm text-[var(--color-mid-gray)] mt-1">{currentClass.description}</p>
@@ -613,7 +585,6 @@ function ABCTab() {
           </div>
         </div>
 
-        {/* Items table */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -648,7 +619,6 @@ function ABCTab() {
         </div>
       </div>
 
-      {/* Insights */}
       <div className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5">
         <h3 className="font-display font-semibold text-[var(--color-dark-gray)] mb-4">
           Key Insights &amp; Recommendations

@@ -202,7 +202,6 @@ export async function dispose(req, res) {
 export async function expiry(req, res) { const now = new Date(); const end = new Date(now.getTime() + 30 * 86400000); const filter = { active: true, expiryDate: req.query.kind === 'expired' ? { $lt: now } : { $gte: now, $lte: end } }; return ok(res, await StockItem.find(filter).sort('expiryDate')); }
 export async function dashboard(_req, res) { const items = await StockItem.find({ active: true }); const transactions = await StockTransaction.find(); const now = new Date(); const soon = new Date(now.getTime() + 30 * 86400000); const low = items.filter((i) => i.quantity > 0 && i.quantity <= i.minLevel); const out = items.filter((i) => i.quantity <= 0); return ok(res, { totalItems: items.length, itemsInStock: items.filter((i) => i.quantity > 0).length, lowStockCount: low.length, outOfStockCount: out.length, expiredCount: items.filter((i) => i.expiryDate && i.expiryDate < now).length, expiringSoonCount: items.filter((i) => i.expiryDate >= now && i.expiryDate <= soon).length, damagedCount: await DamagedStock.countDocuments({ status: 'reported' }), disposedCount: await DisposedStock.countDocuments(), totalStockValue: items.reduce((sum, i) => sum + i.quantity * i.unitPrice, 0), stockInTotal: transactions.filter((t) => t.type === 'in').reduce((sum, t) => sum + t.quantity, 0), stockOutTotal: transactions.filter((t) => t.type === 'out').reduce((sum, t) => sum + t.quantity, 0), recentTransactions: transactions.sort((a, b) => b.date - a.date).slice(0, 8), attentionRequired: [...out, ...low] }); }
 
-// ============ DISPOSAL APPROVAL WORKFLOW ============
 /**
  * Request disposal - creates a pending disposal record
  */
@@ -249,7 +248,6 @@ export async function approveDisposal(req, res) {
   if (disposed.status !== 'pending') return fail(res, 'Only pending disposals can be approved', 409);
 
   try {
-    // Update the stock item - deduct quantity
     const item = await StockItem.findOneAndUpdate(
       { _id: disposed.itemId, quantity: { $gte: disposed.quantityRemoved }, active: true },
       { $inc: { quantity: -disposed.quantityRemoved } },
@@ -258,7 +256,6 @@ export async function approveDisposal(req, res) {
 
     if (!item) return fail(res, 'Insufficient stock or item not found', 409);
 
-    // Create transaction record
     const previousQuantity = item.quantity + disposed.quantityRemoved;
     await StockTransaction.create({
       itemId: item._id,
@@ -272,7 +269,6 @@ export async function approveDisposal(req, res) {
       notes: disposed.notes
     });
 
-    // Update disposal record
     disposed.status = 'approved';
     disposed.approvedBy = req.user._id;
     disposed.approvalNotes = req.body.approvalNotes;
@@ -361,7 +357,6 @@ export async function getDisposedPaginated(req, res) {
   return list(res, data, { page, limit, total, totalPages: Math.ceil(total / limit) });
 }
 
-// ============ BATCH & SERIAL VALIDATION ============
 /**
  * Validate batch number for Foods category
  */
@@ -399,7 +394,6 @@ export async function validateSerialNumber(req, res) {
     return fail(res, 'Serial number is only required for Electronic Devices', 422);
   }
 
-  // Check for duplicate serial numbers
   const existing = await StockItem.findOne({
     _id: { $ne: itemId },
     serialNumber,
@@ -413,7 +407,6 @@ export async function validateSerialNumber(req, res) {
   return ok(res, { valid: true, message: 'Serial number is valid' }, '', 200);
 }
 
-// ============ ABC CLASSIFICATION & ANALYTICS ============
 /**
  * Get ABC Classification Report
  */

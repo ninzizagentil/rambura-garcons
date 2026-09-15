@@ -9,7 +9,6 @@ router.post('/items', requirePermission('stock.create'), asyncHandler(createItem
 router.post('/transactions/in', requirePermission('stock.in'), asyncHandler(stockIn)); router.post('/transactions/out', requirePermission('stock.out'), asyncHandler(stockOut)); router.get('/transactions', asyncHandler(getTransactions));
 router.post('/transactions/adjustment', requirePermission('stock.adjust'), asyncHandler(adjustment)); router.post('/transactions/transfer', requirePermission('stock.transfer'), asyncHandler(transfer));
 router.get('/damaged', requirePermission('stock.view'), asyncHandler(getDamaged)); router.post('/damaged', requirePermission('stock.damage'), asyncHandler(damaged));
-// ============ DISPOSAL APPROVAL WORKFLOW ============
 router.post('/disposal-requests', requirePermission('stock.dispose'), asyncHandler(requestDisposal));
 router.get('/disposal-requests/pending', requirePermission('stock.dispose'), asyncHandler(getPendingDisposals));
 router.post('/disposal-requests/:id/approve', requirePermission('stock.dispose'), asyncHandler(approveDisposal));
@@ -17,11 +16,9 @@ router.post('/disposal-requests/:id/reject', requirePermission('stock.dispose'),
 router.get('/disposed', requirePermission('stock.view'), asyncHandler(getDisposedPaginated));
 router.post('/disposed', requirePermission('stock.dispose'), asyncHandler(dispose));
 
-// ============ VALIDATION ============
 router.post('/validate/batch', asyncHandler(validateBatchNumber));
 router.post('/validate/serial', asyncHandler(validateSerialNumber));
 
-// ============ ANALYTICS & REPORTS ============
 router.get('/reports/abc-classification', asyncHandler(getABCClassificationReport));
 router.get('/reports/fast-moving', asyncHandler(getFastMovingReport));
 router.get('/reports/slow-moving', asyncHandler(getSlowMovingReport));

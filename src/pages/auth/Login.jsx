@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Eye, EyeOff, GraduationCap, LogIn, ArrowLeft, AlertCircle, User, Lock,
@@ -15,7 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 import { verifyLoginTwoFactor } from '../../services/authService';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
-import { ROLE_HOME, NAV_BY_ROLE } from '../../data/roles';
+import { ROLE_HOME } from '../../data/roles';
 import { getSiteImage, useSiteImageVersion } from '../../services/imageService';
 
 const PANEL_HIGHLIGHTS = [
@@ -23,15 +23,6 @@ const PANEL_HIGHLIGHTS = [
   { Icon: Users, text: 'Build Skills' },
   { Icon: Trophy, text: 'Achieve Success' },
 ];
-
-const SHARED_ROUTES = ['/notifications', '/profile', '/change-password'];
-
-function isPathAllowedForRole(pathname, role) {
-  if (!pathname) return false;
-  if (SHARED_ROUTES.includes(pathname)) return true;
-  const navItems = NAV_BY_ROLE[role] || [];
-  return navItems.some((item) => pathname === item.to || pathname.startsWith(`${item.to}/`));
-}
 
 const ADMIN_ACCOUNT = { identifier: 'admin', password: 'Admin@123', role: 'Administrator' };
 const OTHER_DEMO_ACCOUNTS = [
@@ -61,7 +52,6 @@ export default function Login() {
   const { toggleTheme, isDark } = useTheme();
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -100,8 +90,7 @@ export default function Login() {
   };
 
   const redirectAfterLogin = (user) => {
-    const from = location.state?.from?.pathname;
-    const redirectTo = isPathAllowedForRole(from, user.role) ? from : ROLE_HOME[user.role] || '/';
+    const redirectTo = ROLE_HOME[user.role] || '/';
     navigate(redirectTo, { replace: true });
   };
 
@@ -184,7 +173,6 @@ export default function Login() {
           exit="exit"
           className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-off-white)] p-0 lg:p-4 overflow-y-auto overflow-x-hidden"
         >
-          {/* Theme & Help Buttons */}
           <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
             <button
               type="button"
@@ -284,14 +272,12 @@ export default function Login() {
               />
             </svg>
 
-            {/* Right — login form panel with the campus image visible behind it */}
             <div className="relative z-30 flex flex-col items-center justify-center px-5 py-8 sm:px-8 lg:px-10 lg:py-6 order-2">
               <img
                 src={getSiteImage('login.form')}
                 alt="Rambura Garçons campus"
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              {/* Mobile-only compact hero strip */}
               <div className="relative z-10 lg:hidden w-full max-w-md mb-8 rounded-2xl overflow-hidden h-40 shrink-0">
                 <img
                   src={getSiteImage('login.background')}
@@ -321,7 +307,6 @@ export default function Login() {
                   Back to school website
                 </button>
 
-                {/* Premium header section with brand */}
                 <div className="flex animate-[fadeInUp_.45s_.08s_ease-out_both] motion-reduce:animate-none flex-col items-center text-center mb-6">
                   <div className="mb-6 transform transition-transform duration-300 hover:scale-110">
                     <BrandMark
@@ -338,7 +323,6 @@ export default function Login() {
                   <p className="text-sm text-[var(--color-mid-gray)] leading-relaxed dark:text-[#A9C0B9]">Sign in to your School Management System</p>
                 </div>
 
-                {/* Form panel */}
                 <div className="animate-[fadeInUp_.45s_.16s_ease-out_both] motion-reduce:animate-none mb-5 rounded-2xl border border-[var(--color-medium-green)]/20 bg-[var(--color-light-green)]/70 p-5 shadow-[0_10px_30px_rgba(15,108,255,0.08)] dark:border-[#D5A24A]/35 dark:bg-[#174C40]/80 dark:shadow-[0_10px_30px_rgba(0,0,0,0.22)] sm:p-6">
                   <AnimatePresence mode="wait">
                     <motion.div key="login-form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -357,7 +341,6 @@ export default function Login() {
                             )}
 
                             {!twoFactorRequired && <>
-                            {/* Username/Email Field */}
                             <div>
                               <label className="block text-xs font-bold text-[var(--color-dark-gray)] uppercase tracking-wider mb-2.5 dark:text-[#F3F7F4]">
                                 Username or Email
@@ -377,7 +360,6 @@ export default function Login() {
                               </div>
                             </div>
 
-                            {/* Password Field */}
                             <div>
                               <label className="block text-xs font-bold text-[var(--color-dark-gray)] uppercase tracking-wider mb-2.5 dark:text-[#F3F7F4]">
                                 Password
@@ -407,7 +389,6 @@ export default function Login() {
                               </div>
                             </div>
 
-                            {/* Remember & Forgot */}
                             <div className="flex items-center justify-between pt-2">
                               <label className="inline-flex items-center gap-2.5 text-sm text-[var(--color-dark-gray)] cursor-pointer select-none group dark:text-[#F3F7F4]">
                                 <input
@@ -470,7 +451,6 @@ export default function Login() {
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--color-border-gray)] to-transparent" />
                 </div>
 
-                {/* Demo Accounts Section */}
                 <div className="space-y-3 mb-6">
                   <Button
                     type="button"

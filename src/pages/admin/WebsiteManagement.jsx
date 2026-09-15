@@ -1,9 +1,9 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Pencil, Trash2, Plus, Save, ExternalLink, History, RotateCcw, ImageOff,
   LayoutPanelTop, GraduationCap, Building2, Users, Newspaper, Images, CalendarDays,
-  ClipboardList, Phone, ImageIcon, ChevronRight,
+  ClipboardList, Phone, ImageIcon, ChevronRight, ChevronDown,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import HillRidgeDivider from '../../components/common/HillRidgeDivider';
@@ -113,7 +113,7 @@ const WEBSITE_KEYS = {
   'Website Management': 'websiteManagement',
   'Manage every piece of content on the public website — changes here appear live on the site immediately.': 'websiteManagementDescription',
   'All Website Activity': 'allWebsiteActivity',
-  'View Site': 'viewSite',
+  'View Sit e': 'viewSite',
   Add: 'add',
   'Recent Website Actions': 'recentWebsiteActions',
   'View full audit log': 'viewFullAuditLog',
@@ -162,6 +162,17 @@ function websiteText(t, value) {
  */
 function SectionSidebar({ active, onChange, counts }) {
   const { t } = useApp();
+  const activeGroup = SECTION_GROUPS.find((group) => group.sections.some((section) => section.value === active))?.group;
+  const [openGroups, setOpenGroups] = useState(() => Object.fromEntries(SECTION_GROUPS.map((group) => [group.group, true])));
+
+  useEffect(() => {
+    if (activeGroup) setOpenGroups((groups) => ({ ...groups, [activeGroup]: true }));
+  }, [activeGroup]);
+
+  const toggleGroup = (group) => {
+    setOpenGroups((groups) => ({ ...groups, [group]: !groups[group] }));
+  };
+
   const Row = ({ s, compact = false }) => {
     const isActive = active === s.value;
     const count = s.countKey ? counts[s.countKey] : null;
@@ -271,12 +282,22 @@ function SectionSidebar({ active, onChange, counts }) {
       <div className="hidden lg:block relative p-4 max-h-[calc(100vh-3rem)] overflow-y-auto">
         {SECTION_GROUPS.map((grp, i) => (
           <div key={grp.group} className={i > 0 ? 'mt-5 pt-5 border-t border-[rgba(255,255,255,0.10)]' : ''}>
-            <p className="px-1 mb-2 font-display text-[11px] font-bold tracking-[0.12em] uppercase text-[var(--color-gold)]">
-              {websiteText(t, grp.group)}
-            </p>
-            <div className="space-y-1.5">
-              {grp.sections.map((s) => <Row key={s.value} s={s} />)}
-            </div>
+            <button
+              type="button"
+              onClick={() => toggleGroup(grp.group)}
+              aria-expanded={openGroups[grp.group]}
+              className="group flex w-full items-center justify-between rounded-lg border border-[var(--sidebar-border)] bg-[var(--surface)] px-3 py-2 mb-2 text-left transition-colors hover:border-[var(--color-gold)]/50 hover:bg-[var(--sidebar-nav-hover-bg)] focus-visible:outline-2 focus-visible:outline-[var(--color-gold)] focus-visible:outline-offset-2"
+            >
+              <span className="font-display text-[11px] font-bold tracking-[0.12em] uppercase text-[var(--color-gold)]">
+                {websiteText(t, grp.group)}
+              </span>
+              <ChevronDown className={cn('h-4 w-4 text-[var(--color-gold)] transition-transform', !openGroups[grp.group] && '-rotate-90')} aria-hidden="true" />
+            </button>
+            {openGroups[grp.group] && (
+              <div className="space-y-1.5">
+                {grp.sections.map((s) => <Row key={s.value} s={s} />)}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -284,12 +305,22 @@ function SectionSidebar({ active, onChange, counts }) {
       <div className="lg:hidden relative p-4 space-y-3">
         {SECTION_GROUPS.map((grp) => (
           <div key={grp.group}>
-            <p className="mb-1.5 font-display text-[10px] font-bold tracking-[0.12em] uppercase text-[var(--color-gold)]">
-              {websiteText(t, grp.group)}
-            </p>
-            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-              {grp.sections.map((s) => <Row key={s.value} s={s} compact />)}
-            </div>
+            <button
+              type="button"
+              onClick={() => toggleGroup(grp.group)}
+              aria-expanded={openGroups[grp.group]}
+              className="group flex w-full items-center justify-between rounded-lg border border-[var(--sidebar-border)] bg-[var(--surface)] px-3 py-2 mb-1.5 text-left transition-colors hover:border-[var(--color-gold)]/50 hover:bg-[var(--sidebar-nav-hover-bg)] focus-visible:outline-2 focus-visible:outline-[var(--color-gold)] focus-visible:outline-offset-2"
+            >
+              <span className="font-display text-[10px] font-bold tracking-[0.12em] uppercase text-[var(--color-gold)]">
+                {websiteText(t, grp.group)}
+              </span>
+              <ChevronDown className={cn('h-4 w-4 text-[var(--color-gold)] transition-transform', !openGroups[grp.group] && '-rotate-90')} aria-hidden="true" />
+            </button>
+            {openGroups[grp.group] && (
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                {grp.sections.map((s) => <Row key={s.value} s={s} compact />)}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -500,9 +531,16 @@ export default function WebsiteManagement() {
   const { addNotification } = useNotifications();
   const { user } = useAuth();
   const { t } = useApp();
-  const [tab, setTab] = useState('hero');
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
+  const initialTab = ALL_SECTIONS.some((section) => section.value === requestedTab) ? requestedTab : 'hero';
+  const [tab, setTab] = useState(initialTab);
   const contentVersion = useContentVersion();
   const activityVersion = useActivityVersion();
+
+  useEffect(() => {
+    if (requestedTab && ALL_SECTIONS.some((section) => section.value === requestedTab)) setTab(requestedTab);
+  }, [requestedTab]);
 
   const [programs, setPrograms] = useState(getPrograms());
   const [departments, setDepartments] = useState(getDepartments());
@@ -1352,10 +1390,51 @@ export default function WebsiteManagement() {
           <section className="space-y-4 border-t border-[var(--border)] pt-7">
             <div><h3 className="font-display text-base font-semibold text-[var(--text-primary)]">Development team</h3><p className="mt-1 text-xs text-[var(--text-secondary)]">Update each person&apos;s name and role shown on the public page.</p></div>
             {(developersPageForm.developers || []).map((developer, index) => (
-              <div key={index} className="grid sm:grid-cols-[auto_1fr_1fr] items-end gap-3 rounded-xl border border-[var(--border)] bg-[var(--color-soft-gray)] p-4">
-                <span className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-deep-green)] text-sm font-bold text-[var(--color-gold)]">{index + 1}</span>
-                <Input label={`Developer ${index + 1} name`} required value={developer.name} onChange={(e) => editDevelopersPage((page) => ({ ...page, developers: page.developers.map((item, itemIndex) => itemIndex === index ? { ...item, name: e.target.value } : item) }))} />
-                <Input label="Role" required value={developer.role} onChange={(e) => editDevelopersPage((page) => ({ ...page, developers: page.developers.map((item, itemIndex) => itemIndex === index ? { ...item, role: e.target.value } : item) }))} />
+              <div key={index} className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(12,34,30,0.96),rgba(8,22,20,0.96))] p-4 shadow-[0_14px_30px_rgba(0,0,0,0.18)] md:p-5">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-gold)] text-[11px] font-bold text-[var(--color-deep-green)]">{index + 1}</span>
+                    <h4 className="font-display text-lg font-semibold text-[var(--text-primary)]">Developer {index + 1}</h4>
+                  </div>
+                </div>
+                <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
+                  <div className="rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.02)] p-3">
+                    <ImageField
+                      label="Profile picture"
+                      value={developer.photo || ''}
+                      onChange={(photo) => editDevelopersPage((page) => ({ ...page, developers: page.developers.map((item, itemIndex) => itemIndex === index ? { ...item, photo } : item) }))}
+                      hint="Use a clear professional headshot."
+                      maxDimension={800}
+                      preserveTransparency={false}
+                      dark
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <Input
+                      label={`Developer ${index + 1} name`}
+                      required
+                      value={developer.name}
+                      onChange={(e) => editDevelopersPage((page) => ({ ...page, developers: page.developers.map((item, itemIndex) => itemIndex === index ? { ...item, name: e.target.value } : item) }))}
+                      className="h-12 text-base"
+                      dark
+                    />
+                    <Input
+                      label="Role"
+                      required
+                      value={developer.role}
+                      onChange={(e) => editDevelopersPage((page) => ({ ...page, developers: page.developers.map((item, itemIndex) => itemIndex === index ? { ...item, role: e.target.value } : item) }))}
+                      className="h-12 text-base"
+                      dark
+                    />
+                  </div>
+                </div>
+                <div className="mt-5 grid gap-3 border-t border-white/10 pt-4 md:grid-cols-2 xl:grid-cols-5">
+                  <Input label="Facebook" type="url" value={developer.socials?.facebook || ''} onChange={(e) => editDevelopersPage((page) => ({ ...page, developers: page.developers.map((item, itemIndex) => itemIndex === index ? { ...item, socials: { ...(item.socials || {}), facebook: e.target.value } } : item) }))} placeholder="https://facebook.com/..." className="h-11" dark />
+                  <Input label="Instagram" type="url" value={developer.socials?.instagram || ''} onChange={(e) => editDevelopersPage((page) => ({ ...page, developers: page.developers.map((item, itemIndex) => itemIndex === index ? { ...item, socials: { ...(item.socials || {}), instagram: e.target.value } } : item) }))} placeholder="https://instagram.com/..." className="h-11" dark />
+                  <Input label="WhatsApp" type="url" value={developer.socials?.whatsapp || ''} onChange={(e) => editDevelopersPage((page) => ({ ...page, developers: page.developers.map((item, itemIndex) => itemIndex === index ? { ...item, socials: { ...(item.socials || {}), whatsapp: e.target.value } } : item) }))} placeholder="https://wa.me/..." className="h-11" dark />
+                  <Input label="Twitter" type="url" value={developer.socials?.twitter || ''} onChange={(e) => editDevelopersPage((page) => ({ ...page, developers: page.developers.map((item, itemIndex) => itemIndex === index ? { ...item, socials: { ...(item.socials || {}), twitter: e.target.value } } : item) }))} placeholder="https://x.com/..." className="h-11" dark />
+                  <Input label="GitHub" type="url" value={developer.socials?.github || ''} onChange={(e) => editDevelopersPage((page) => ({ ...page, developers: page.developers.map((item, itemIndex) => itemIndex === index ? { ...item, socials: { ...(item.socials || {}), github: e.target.value } } : item) }))} placeholder="https://github.com/..." className="h-11" dark />
+                </div>
               </div>
             ))}
           </section>

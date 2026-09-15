@@ -49,8 +49,8 @@ app.use('/uploads', (req, res, next) => {
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   next();
 }, express.static(UPLOADS_ROOT));
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use(express.json({ limit: '8mb' }));
+app.use(express.urlencoded({ extended: true, limit: '8mb' }));
 app.use(cookieParser());
 app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 app.get('/api/health', (_req, res) => {

@@ -12,14 +12,12 @@ export async function calculateABCClassification() {
 
   if (items.length === 0) return [];
 
-  // Calculate stock value for each item
   const itemsWithValue = items.map((item) => ({
     _id: item._id,
     name: item.name,
     value: item.stockValue // quantity × unitPrice
   }));
 
-  // Sort by value descending
   itemsWithValue.sort((a, b) => b.value - a.value);
 
   const totalValue = itemsWithValue.reduce((sum, item) => sum + item.value, 0);
@@ -45,7 +43,6 @@ export async function calculateABCClassification() {
       percentageOfTotal: percentageOfTotal.toFixed(2)
     });
 
-    // Update item in database
     await StockItem.findByIdAndUpdate(item._id, { abcClassification: classification });
   }
 
@@ -176,10 +173,8 @@ export async function getSlowMovingItems(limit = 10) {
 
   const movedItemIds = new Set(movements.map((m) => m._id.toString()));
 
-  // Items with no movement are slowest
   const slowItems = allItems.filter((item) => !movedItemIds.has(item._id.toString())).slice(0, limit / 2);
 
-  // Items with minimal movement
   const minimalMovements = movements.sort((a, b) => a.totalQuantity - b.totalQuantity).slice(0, limit / 2);
 
   const slowMovementDetails = minimalMovements.map((m) => {

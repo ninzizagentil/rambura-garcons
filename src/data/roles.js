@@ -35,7 +35,7 @@ export const NAV_BY_ROLE = {
       to: '/admin',
       icon: LayoutList,
       children: [
-        { label: 'Website',    to: '/admin/website', icon: Globe },
+        { label: 'Website Management', to: '/admin/website', icon: Globe },
         { label: 'Library MIS', to: '/library',      icon: BookOpen },
         { label: 'Stock MIS',  to: '/stock',         icon: Package },
       ],

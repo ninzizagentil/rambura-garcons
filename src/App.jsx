@@ -125,28 +125,22 @@ export default function App() {
 
       <Route element={<PermissionProtectedRoute allow={[ROLES.STOCK_MANAGER, ROLES.ADMIN]} permissions={['stock.view']} />}>
         <Route element={<DashboardLayout />}>
-          {/* ── Core pages ───────────────────────────────────────────── */}
           <Route path="/stock"              element={<StockDashboard />} />
           <Route path="/stock/items"        element={<StockItems />} />
           <Route path="/stock/items/:id"    element={<StockItemDetails />} />
 
-          {/* ── Inventory: Alerts (Low Stock + Out of Stock + Expiry) ── */}
           <Route path="/stock/alerts"       element={<StockAlerts />} />
 
-          {/* ── Operations ───────────────────────────────────────────── */}
           <Route path="/stock/stock-in"     element={<StockIn />} />
           <Route path="/stock/stock-out"    element={<StockOut />} />
           <Route path="/stock/adjustment"   element={<StockAdjustment />} />
           <Route path="/stock/transfer"     element={<StockTransfer />} />
 
-          {/* ── Suppliers ────────────────────────────────────────────── */}
           <Route path="/stock/suppliers"    element={<Suppliers />} />
 
-          {/* ── Activity ─────────────────────────────────────────────── */}
           <Route path="/stock/transactions" element={<Transactions />} />
           <Route path="/stock/activity"     element={<DamageDisposal />} />
 
-          {/* ── Reports (Overview + Analytics + ABC) ─────────────────── */}
           <Route path="/stock/reports"      element={<StockReports />} />
 
           {/* ── Backward-compat redirects (old URLs → new locations) ─── */}
@@ -164,10 +158,15 @@ export default function App() {
           <Route path="/management" element={<ManagementDashboard />} />
           <Route path="/management/applications" element={<ManagementApplications />} />
           <Route path="/management/contact-messages" element={<ContactMessages />} />
-          <Route path="/management/developers" element={<DevelopersManagement />} />
           <Route path="/management/library-reports" element={<ManagementLibraryReports />} />
           <Route path="/management/stock-reports" element={<ManagementStockReports />} />
           <Route path="/management/insights" element={<ManagementInsights />} />
+        </Route>
+      </Route>
+
+      <Route element={<RoleProtectedRoute allow={[ROLES.MANAGEMENT, ROLES.ADMIN]} />}>
+        <Route element={<DashboardLayout />}>
+          <Route path="/management/developers" element={<DevelopersManagement />} />
         </Route>
       </Route>
 

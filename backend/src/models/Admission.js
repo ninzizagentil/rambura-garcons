@@ -1,5 +1,31 @@
 import mongoose from 'mongoose';
-const schema = new mongoose.Schema({ referenceNumber: { type: String, unique: true, index: true }, fullName: { type: String, required: true }, email: { type: String, required: true, match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ }, phone: { type: String, required: true }, program: String, programLabel: String, message: String, status: { type: String, enum: ['new', 'reviewed', 'accepted', 'declined'], default: 'new' }, submittedAt: { type: Date, default: Date.now }, reviewedAt: Date, reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } }, { timestamps: true });
+const schema = new mongoose.Schema({
+	referenceNumber: { type: String, unique: true, index: true },
+	fullName: { type: String, required: true },
+	email: { type: String, required: true, match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
+	phone: { type: String, required: true },
+	program: String,
+	programLabel: String,
+	dateOfBirth: String,
+	gender: String,
+	educationLevel: String,
+	district: String,
+	previousSchool: String,
+	guardianName: String,
+	guardianPhone: String,
+	guardianRelationship: String,
+	emergencyContactName: String,
+	emergencyContactPhone: String,
+	intakeYear: String,
+	applicantPhoto: String,
+	supportingDocument: String,
+	privacyConsent: { type: Boolean, required: true },
+	message: String,
+	status: { type: String, enum: ['new', 'reviewed', 'accepted', 'declined'], default: 'new' },
+	submittedAt: { type: Date, default: Date.now },
+	reviewedAt: Date,
+	reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+}, { timestamps: true });
 schema.index({ status: 1, submittedAt: -1 });
 schema.pre('validate', function assignReference(next) {
 	if (!this.referenceNumber) {

@@ -170,6 +170,32 @@ export default function ManagementApplications() {
                 <Phone className="w-4 h-4 text-[var(--color-medium-green)] shrink-0" aria-hidden="true" />
                 {selected.phone}
               </a>
+              <div className="grid sm:grid-cols-2 gap-3 rounded-xl border border-[var(--color-border-gray)] bg-[var(--color-off-white)] p-4">
+                {[
+                  ['Date of birth', selected.dateOfBirth],
+                  ['Gender', selected.gender],
+                  ['Education', selected.educationLevel],
+                  ['District', selected.district],
+                  ['Previous school', selected.previousSchool],
+                  ['Guardian', selected.guardianName],
+                  ['Guardian phone', selected.guardianPhone],
+                  ['Relationship', selected.guardianRelationship],
+                  ['Intake year', selected.intakeYear],
+                  ['Emergency contact', selected.emergencyContactName],
+                  ['Emergency phone', selected.emergencyContactPhone],
+                ].filter(([, value]) => value).map(([label, value]) => (
+                  <div key={label}>
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--color-mid-gray)]">{label}</p>
+                    <p className="mt-0.5 text-[var(--color-dark-gray)]">{value}</p>
+                  </div>
+                ))}
+              </div>
+              {(selected.applicantPhoto || selected.supportingDocument) && (
+                <div className="flex flex-wrap gap-3">
+                  {selected.applicantPhoto && <a href={selected.applicantPhoto} download={`${selected.fullName}-photo`} className="text-sm font-semibold text-[var(--color-medium-green)] hover:underline">Download applicant photo</a>}
+                  {selected.supportingDocument && <a href={selected.supportingDocument} download={`${selected.fullName}-document`} className="text-sm font-semibold text-[var(--color-medium-green)] hover:underline">Download supporting document</a>}
+                </div>
+              )}
               {selected.message && (
                 <p className="flex items-start gap-2 text-[var(--color-dark-gray)]">
                   <MessageSquare className="w-4 h-4 text-[var(--color-medium-green)] shrink-0 mt-0.5" aria-hidden="true" />

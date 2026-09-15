@@ -306,7 +306,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA banner */}
       <section className="pb-16 max-w-7xl mx-auto px-4 md:px-6">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <div>

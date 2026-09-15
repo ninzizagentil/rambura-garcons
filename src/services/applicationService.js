@@ -6,7 +6,7 @@ export async function getApplications(params = {}) {
 }
 
 /**
- * @param {{ fullName: string, email: string, phone: string, program: string, programLabel: string, message?: string }} data
+ * @param {{ fullName: string, email: string, phone: string, program: string, programLabel: string, dateOfBirth: string, gender: string, educationLevel: string, district: string, previousSchool?: string, guardianName: string, guardianPhone: string, guardianRelationship: string, intakeYear: string, privacyConsent: boolean, message?: string }} data
  */
 export async function submitApplication(data) {
   const result = await api.post('/public/applications', {

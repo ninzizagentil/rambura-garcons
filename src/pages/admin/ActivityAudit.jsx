@@ -158,7 +158,6 @@ export default function ActivityAudit() {
         }
       />
 
-      {/* Summary Stats — premium design with elevation and hover effects */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <div className="relative overflow-hidden rounded-[20px] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5 shadow-[0_12px_30px_rgba(15,108,255,0.08)] transition-all duration-300 hover:shadow-[0_18px_42px_rgba(15,108,255,0.12)] hover:-translate-y-1 ring-1 ring-[rgba(15,108,255,0.04)]">
           <div className="absolute inset-0 bg-gradient-to-br from-[rgba(217,164,65,0.02)] via-transparent to-transparent" />
@@ -210,7 +209,6 @@ export default function ActivityAudit() {
         </div>
       </div>
 
-      {/* Filters Section */}
       <div className="relative overflow-hidden rounded-[20px] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-6 mb-6 shadow-[0_12px_30px_rgba(15,108,255,0.06)] ring-1 ring-[rgba(15,108,255,0.04)]">
         <div className="absolute inset-0 bg-gradient-to-br from-[rgba(217,164,65,0.02)] via-transparent to-transparent" />
         <div className="relative">
@@ -220,7 +218,6 @@ export default function ActivityAudit() {
           </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-mid-gray)]" />
             <input
@@ -232,7 +229,6 @@ export default function ActivityAudit() {
             />
           </div>
 
-          {/* Module Filter */}
           <div>
             <select
               value={moduleFilter}
@@ -255,7 +251,6 @@ export default function ActivityAudit() {
             </select>
           </div>
 
-          {/* Status Filter */}
           <div>
             <select
               value={statusFilter}
@@ -281,7 +276,6 @@ export default function ActivityAudit() {
             </select>
           </div>
 
-          {/* Clear Filters */}
           {(search || moduleFilter || statusFilter) && (
             <button
               type="button"
@@ -300,7 +294,6 @@ export default function ActivityAudit() {
         </div>
       </div>
 
-      {/* Activity Table */}
       <div className="relative overflow-hidden rounded-[20px] border border-[var(--color-border-gray)] bg-[var(--color-white)] shadow-[0_12px_30px_rgba(15,108,255,0.06)] ring-1 ring-[rgba(15,108,255,0.04)]">
         <div className="absolute inset-0 bg-gradient-to-br from-[rgba(217,164,65,0.01)] via-transparent to-transparent" />
         <div className="relative">

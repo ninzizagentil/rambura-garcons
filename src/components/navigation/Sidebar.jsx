@@ -11,7 +11,7 @@ import { cn } from '../../utils/cn';
 function translateLabel(label, t) {
   const labelMap = {
     'Dashboard': 'dashboard',
-    'Website': 'website',
+    'Website Management': 'websiteManagement',
     'Reports': 'reports',
     'Users & Roles': 'usersRoles',
     'Roles & Permissions': 'rolesPermissions',
@@ -94,14 +94,16 @@ function NavItem({ item, collapsed }) {
         title={collapsed ? translateLabel(item.label, t) : undefined}
         className={({ isActive }) =>
           cn(
-            'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold tracking-[0.01em] transition-all duration-200 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-[var(--color-gold)] before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(0,0,0,0.18)]',
+            'group relative flex items-center gap-3 rounded-xl border border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] px-3 py-2.5 text-sm font-semibold tracking-[0.01em] transition-all duration-200 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-[var(--color-gold)] before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:border-[var(--color-gold)]/40 hover:bg-[var(--sidebar-nav-hover-bg)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.18)]',
             isActive
               ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)] shadow-[0_10px_22px_rgba(23,59,49,0.12)] ring-1 ring-[var(--color-gold)]/20 before:opacity-100'
               : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)] before:opacity-0'
           )
         }
       >
-        <item.icon className="h-[18px] w-[18px] flex-shrink-0" aria-hidden="true" />
+        <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--sidebar-nav-hover-bg)]">
+          <item.icon className="h-[18px] w-[18px]" aria-hidden="true" />
+        </span>
         {!collapsed && <span className="truncate">{translateLabel(item.label, t)}</span>}
       </NavLink>
     );
@@ -114,14 +116,16 @@ function NavItem({ item, collapsed }) {
         title={translateLabel(item.label, t)}
         className={({ isActive }) =>
           cn(
-            'group relative flex items-center justify-center rounded-xl px-3 py-2.5 text-sm font-semibold tracking-[0.01em] transition-all duration-200 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-[var(--color-gold)] before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(0,0,0,0.18)]',
+            'group relative flex items-center justify-center rounded-xl border border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] px-3 py-2.5 text-sm font-semibold tracking-[0.01em] transition-all duration-200 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-[var(--color-gold)] before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:border-[var(--color-gold)]/40 hover:bg-[var(--sidebar-nav-hover-bg)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.18)]',
             isActive || childActive
               ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)] shadow-[0_10px_22px_rgba(23,59,49,0.12)] ring-1 ring-[var(--color-gold)]/20 before:opacity-100'
               : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)] before:opacity-0'
           )
         }
       >
-        <item.icon className="h-[18px] w-[18px] flex-shrink-0" aria-hidden="true" />
+        <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--sidebar-nav-hover-bg)]">
+          <item.icon className="h-[18px] w-[18px]" aria-hidden="true" />
+        </span>
       </NavLink>
     );
   }
@@ -133,13 +137,15 @@ function NavItem({ item, collapsed }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className={cn(
-          'group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold tracking-[0.01em] transition-all duration-200 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-[var(--color-gold)] before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(0,0,0,0.18)]',
+          'group relative flex w-full items-center gap-3 rounded-xl border border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] px-3 py-2.5 text-sm font-semibold tracking-[0.01em] transition-all duration-200 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-full before:bg-[var(--color-gold)] before:opacity-0 before:transition-opacity hover:-translate-y-0.5 hover:border-[var(--color-gold)]/40 hover:bg-[var(--sidebar-nav-hover-bg)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.18)]',
           childActive
             ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)] shadow-[0_10px_22px_rgba(23,59,49,0.12)] ring-1 ring-[var(--color-gold)]/20 before:opacity-100'
             : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)] before:opacity-0'
         )}
       >
-        <item.icon className="h-[18px] w-[18px] flex-shrink-0" aria-hidden="true" />
+        <span className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--sidebar-nav-hover-bg)]">
+          <item.icon className="h-[18px] w-[18px]" aria-hidden="true" />
+        </span>
         <span className="flex-1 truncate text-left">{translateLabel(item.label, t)}</span>
         <ChevronDown className={cn('h-4 w-4 flex-shrink-0 transition-transform duration-200', open && 'rotate-180')} aria-hidden="true" />
       </button>
@@ -152,7 +158,7 @@ function NavItem({ item, collapsed }) {
               to={child.to}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-200 hover:translate-x-0.5',
+                  'flex items-center gap-2.5 rounded-lg border border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] px-3 py-2 text-xs font-medium transition-all duration-200 hover:translate-x-0.5 hover:border-[var(--color-gold)]/40',
                   isActive
                     ? 'bg-[var(--sidebar-nav-active-bg)] text-[var(--sidebar-nav-active-text)] shadow-[inset_0_0_0_1px_rgba(25,135,84,0.14)]'
                     : 'text-[var(--sidebar-text-secondary)] hover:bg-[var(--sidebar-nav-hover-bg)] hover:text-[var(--sidebar-text)]'

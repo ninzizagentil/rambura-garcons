@@ -10,7 +10,7 @@ import ProfileMenu from './ProfileMenu';
 import ThemeToggle from './ThemeToggle';
 
 const NAV_LABEL_KEYS = {
-  Dashboard: 'dashboard', Website: 'website', Reports: 'reports', 'Users & Roles': 'usersRoles',
+  Dashboard: 'dashboard', Website: 'website', 'Website Management': 'websiteManagement', Reports: 'reports', 'Users & Roles': 'usersRoles',
   'Roles & Permissions': 'rolesPermissions', 'Activity / Audit': 'activityAudit', Settings: 'settings',
   'Library MIS': 'libraryMis', 'Library Catalogue': 'libraryCatalogue', 'Library Activity': 'libraryActivity', Management: 'managementMenu', 'Reports & Insights': 'reportsInsights', 'Stock MIS': 'stockMis', 'School Modules': 'schoolModules', Administration: 'administration', Inventory: 'inventory', Operations: 'operations', Items: 'allItems', Alerts: 'stockAlerts', 'Receive Stock': 'stockInMenu',
   'Issue Stock': 'stockOutMenu', Transfer: 'stockTransfer', 'Transfer Stock': 'transferStock', Adjust: 'stockAdjustment', 'Adjust Stock': 'adjustStock', Activity: 'activity', 'Damage & Disposal': 'damageDisposal', 'All Items': 'allItems', 'Low Stock': 'lowStockMenu',

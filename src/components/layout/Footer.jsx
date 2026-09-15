@@ -118,7 +118,7 @@ export default function Footer() {
           <span className="flex flex-wrap items-center justify-center gap-4 sm:justify-end">
             <Link to="/contact" className="transition-colors hover:text-[var(--button-primary)]">Privacy Policy</Link>
             <Link to="/contact" className="transition-colors hover:text-[var(--button-primary)]">Terms of Use</Link>
-            <Link to="/developers" className="transition-colors hover:text-[var(--button-primary)]" title="Website developers">
+            <Link to={contactPage.developerUrl || '/developers'} className="transition-colors hover:text-[var(--button-primary)]" title="Website developers">
               Developed by {contactPage.developerName}
             </Link>
           </span>

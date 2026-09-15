@@ -1,10 +1,7 @@
-/* Stock Dashboard Specific Styles */
-
 .stock-dashboard {
   padding: 2rem 0;
 }
 
-/* ===== HERO SECTION ===== */
 .stock-hero {
   display: flex;
   justify-content: space-between;
@@ -58,7 +55,6 @@
   color: var(--color-medium-green);
 }
 
-/* ===== METRIC CARDS ===== */
 .stock-metric-card {
   background: linear-gradient(135deg, rgba(25, 135, 84, 0.04) 0%, transparent 100%);
   border: 1px solid rgba(25, 135, 84, 0.1);
@@ -73,7 +69,6 @@
   transform: translateY(-2px);
 }
 
-/* ===== PANEL ===== */
 .stock-panel {
   background: white;
   border: 1px solid var(--color-border-gray);
@@ -100,7 +95,6 @@ html.dark-public .stock-panel:hover,
   box-shadow: 0 16px 28px rgba(0, 0, 0, 0.28);
 }
 
-/* ===== LIST ===== */
 .stock-list {
   list-style: none;
   padding: 0;
@@ -139,7 +133,6 @@ html.dark-public .stock-list-item:hover,
   border-left-color: rgba(213, 162, 74, 1);
 }
 
-/* ===== TABLE ===== */
 .stock-table-wrap {
   overflow-x: auto;
   border-radius: 0.75rem;
@@ -202,7 +195,6 @@ html.dark-public .stock-table tbody tr:hover,
   vertical-align: middle;
 }
 
-/* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
   .stock-hero {
     flex-direction: column;
