@@ -1,0 +1,16 @@
+.env
+env
+node_modules/
+dist/
+build/
+*.log
+backups/
+backend/backups/
+.mongodb/
+
+# AI-tool worktrees (full duplicate copies of the project)
+.kilo/
+
+# Uploaded files never belong in git
+backend/uploads/*
+!backend/uploads/.gitkeep

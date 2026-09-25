@@ -1,0 +1,11 @@
+**/node_modules
+dist
+.git
+.kilo
+.env
+**/.env
+backend
+backups
+**/backups
+**/uploads
+*.log

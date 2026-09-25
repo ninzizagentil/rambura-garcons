@@ -1,0 +1,23 @@
+import mongoose from 'mongoose';
+
+const userSchema = new mongoose.Schema({
+  fullName: { type: String, required: true, trim: true, maxlength: 120 },
+  username: { type: String, required: true, unique: true, trim: true, lowercase: true, maxlength: 50 },
+  email: { type: String, required: true, unique: true, trim: true, lowercase: true, match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
+  passwordHash: { type: String, required: true, select: false },
+  role: { type: String, enum: ['admin', 'librarian', 'stock_manager', 'equipment_manager', 'management'], required: true },
+  permissions: { type: [String], default: [] },
+  status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+  profileImage: { imageUrl: String, publicId: String },
+  lastActivity: Date,
+  lastLogin: Date,
+  // One entry per signed-in device. Stored as SHA-256 hashes, never the tokens themselves.
+  refreshTokens: { type: [{ hash: String, createdAt: Date, expiresAt: Date, _id: false }], select: false, default: [] },
+  passwordResetTokenHash: { type: String, select: false },
+  passwordResetExpires: { type: Date, select: false },
+  twoFactorSecret: { type: String, select: false },
+  twoFactorEnabled: { type: Boolean, default: false },
+  twoFactorRecoveryCodes: { type: [{ hash: String, usedAt: Date }], select: false, default: [] },
+}, { timestamps: true });
+
+export default mongoose.model('User', userSchema);

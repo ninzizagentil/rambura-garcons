@@ -1,0 +1,4 @@
+import mongoose from 'mongoose';
+const schema = new mongoose.Schema({ itemId: { type: mongoose.Schema.Types.ObjectId, ref: 'StockItem', required: true }, type: { type: String, enum: ['in', 'out', 'adjustment', 'transfer', 'damaged', 'removed'], required: true }, quantity: { type: Number, min: 0, required: true }, previousQuantity: { type: Number, min: 0 }, newQuantity: { type: Number, min: 0 }, difference: Number, date: { type: Date, default: Date.now }, party: String, fromLocation: String, toLocation: String, supplierId: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' }, responsibleUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, notes: String, referenceNumber: String }, { timestamps: true });
+schema.index({ itemId: 1, type: 1, date: -1 });
+export default mongoose.model('StockTransaction', schema);

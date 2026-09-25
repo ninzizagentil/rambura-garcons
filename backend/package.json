@@ -1,0 +1,34 @@
+{
+  "name": "rambura-garcons-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --watch-path=src src/server.js",
+    "start": "node src/server.js",
+    "seed": "node src/seed/seed.js",
+    "clear:stock": "node src/scripts/clear-stock.js",
+    "fix:disposals": "node src/scripts/fix-direct-disposals.js",
+    "fix:phones": "node src/scripts/fix-phones.js",
+    "fix:image-urls": "node src/scripts/relativize-image-urls.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "csv-stringify": "^6.6.0",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
+    "express-validator": "^7.3.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^9.0.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "nodemailer": "^10.0.2",
+    "pdfkit": "^0.17.2"
+  }
+}
