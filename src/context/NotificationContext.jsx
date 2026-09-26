@@ -92,32 +92,36 @@ export function NotificationProvider({ children }) {
   }, [soundEnabled]);
 
   useEffect(() => {
-    const refresh = () => {
+    const refresh = (scanAlerts = false) => {
       const accessToken = localStorage.getItem('rg_access_token');
       if (!accessToken) {
         setNotifications([]);
         return Promise.resolve([]);
       }
-      return api.post('/notifications/scan', {}).catch(() => null)
+      const scan = scanAlerts ? api.post('/notifications/scan', {}).catch(() => null) : Promise.resolve();
+      return scan
         .then(() => getNotifications())
         .then((result) => setNotifications((Array.isArray(result) ? result : result?.items || []).map(normalizeNotification)))
         .catch(() => setNotifications([]));
     };
 
     const authenticated = () => {
-      refresh();
+      refresh(true);
     };
     const loggedOut = () => setNotifications([]);
     window.addEventListener('rg:authenticated', authenticated);
     window.addEventListener('rg:logged-out', loggedOut);
 
-    if (localStorage.getItem('rg_access_token')) refresh();
-    const interval = setInterval(() => {
+    if (localStorage.getItem('rg_access_token')) refresh(true);
+    const refreshInterval = setInterval(() => {
       if (localStorage.getItem('rg_access_token')) refresh();
-    }, 10000);
+    }, 30000);
+    const scanInterval = setInterval(() => {
+      if (localStorage.getItem('rg_access_token')) refresh(true);
+    }, 5 * 60 * 1000);
 
     const t = setTimeout(() => { hydrated.current = true; }, 0);
-    return () => { clearTimeout(t); clearInterval(interval); window.removeEventListener('rg:authenticated', authenticated); window.removeEventListener('rg:logged-out', loggedOut); };
+    return () => { clearTimeout(t); clearInterval(refreshInterval); clearInterval(scanInterval); window.removeEventListener('rg:authenticated', authenticated); window.removeEventListener('rg:logged-out', loggedOut); };
   }, []);
 
   const toggleSound = useCallback(() => {

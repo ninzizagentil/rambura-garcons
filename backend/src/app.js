@@ -20,6 +20,7 @@ import activityRoutes from './routes/activityRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import accessRoutes from './routes/accessRoutes.js';
+import developerRoutes from './routes/developerRoutes.js';
 import { publicRouter, adminRouter, applicationRouter } from './routes/contentRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
@@ -73,6 +74,7 @@ app.get('/api/health/ready', (_req, res) => {
 });
 app.use('/api', requireDatabase);
 app.use('/api/auth', authRoutes);
+app.use('/api/developer', developerRoutes);
 app.use('/api/audit-logs', auditRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/library', libraryRoutes);

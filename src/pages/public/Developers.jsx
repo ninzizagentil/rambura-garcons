@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUpRight, Search, X } from 'lucide-react';
+import { ArrowUpRight, MessageCircle, Search, X } from 'lucide-react';
 import PageHero from '../../components/common/PageHero';
 import { getDevelopersPage, useContentVersion } from '../../services/contentService';
 
@@ -69,15 +69,17 @@ export default function Developers() {
         <p className="mt-3 max-w-2xl text-[var(--text-secondary)]">{page.intro}</p>
       </PageHero>
 
-      <section className="max-w-6xl mx-auto px-4 md:px-6 py-14 md:py-18">
+      <section className="relative isolate overflow-hidden bg-[var(--surface-hover)] px-4 py-14 md:px-6 md:py-18">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,color-mix(in_srgb,var(--color-status-green)_48%,transparent),transparent)]" aria-hidden="true" />
+        <div className="relative mx-auto max-w-6xl">
         <div className="space-y-10">
           <div className="max-w-3xl">
-            <span className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--color-medium-green)]">Meet the team</span>
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--color-status-green)]">Meet the team</span>
             <h2 className="mt-2 font-display text-3xl font-bold text-[var(--text-primary)] md:text-4xl">{page.heading}</h2>
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-[var(--text-secondary)]">{page.description}</p>
           </div>
 
-          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3 sm:flex-row">
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-[color-mix(in_srgb,var(--text-primary)_12%,transparent)] bg-[color-mix(in_srgb,var(--surface)_72%,transparent)] p-3 shadow-[0_12px_30px_rgba(23,59,49,0.06)] backdrop-blur-xl sm:flex-row">
             <label className="relative flex-1">
               <span className="sr-only">Search developers</span>
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-secondary)]" aria-hidden="true" />
@@ -85,12 +87,12 @@ export default function Developers() {
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search developers..."
-                className="w-full rounded-xl border border-[var(--border)] bg-transparent py-2.5 pl-9 pr-3 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--color-gold)] focus:ring-2 focus:ring-[var(--color-gold)]/20"
+                className="w-full rounded-xl border border-[var(--border)] bg-transparent py-2.5 pl-9 pr-3 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--color-status-green)] focus:ring-2 focus:ring-[var(--color-status-green)]/20"
               />
             </label>
             <label>
               <span className="sr-only">Filter by skill</span>
-              <select value={skillFilter} onChange={(event) => setSkillFilter(event.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--color-gold)] focus:ring-2 focus:ring-[var(--color-gold)]/20 sm:min-w-44">
+              <select value={skillFilter} onChange={(event) => setSkillFilter(event.target.value)} className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--color-status-green)] focus:ring-2 focus:ring-[var(--color-status-green)]/20 sm:min-w-44">
                 <option>All skills</option>
                 {allSkills.map((skill) => <option key={skill}>{skill}</option>)}
               </select>
@@ -99,10 +101,10 @@ export default function Developers() {
 
           <div className="mb-4 flex items-center justify-between gap-3 text-sm text-[var(--text-secondary)]">
             <span>{filteredDevelopers.length} developer{filteredDevelopers.length === 1 ? '' : 's'}</span>
-            {(searchTerm || skillFilter !== 'All skills') && <button type="button" onClick={() => { setSearchTerm(''); setSkillFilter('All skills'); }} className="font-semibold text-[var(--color-gold)] hover:underline">Clear filters</button>}
+            {(searchTerm || skillFilter !== 'All skills') && <button type="button" onClick={() => { setSearchTerm(''); setSkillFilter('All skills'); }} className="font-semibold text-[var(--color-status-green)] hover:underline">Clear filters</button>}
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {filteredDevelopers.map((developer, index) => (
               <motion.article
                 key={developer.name}
@@ -110,26 +112,39 @@ export default function Developers() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.45, delay: index * 0.08 }}
-                className="group flex h-full flex-col overflow-hidden rounded-[26px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_18px_40px_rgba(23,59,49,0.14)] transition-all duration-300 hover:-translate-y-1 hover:border-[var(--color-gold)]/60 hover:shadow-[0_24px_48px_rgba(23,59,49,0.2)]"
+                className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-[var(--border)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] shadow-[0_16px_38px_rgba(23,59,49,0.12)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-[color-mix(in_srgb,var(--color-status-green)_72%,transparent)] hover:bg-[color-mix(in_srgb,var(--surface)_94%,transparent)] hover:shadow-[0_24px_52px_rgba(23,59,49,0.2)]"
               >
-                <div className="relative h-64 shrink-0 overflow-hidden border-b border-[var(--border)] bg-[var(--surface-hover)]">
+                <div className="relative h-64 shrink-0 overflow-hidden border-b border-[color-mix(in_srgb,var(--text-primary)_12%,transparent)] bg-[var(--surface-hover)]">
                   {developer.photo ? (
-                    <img src={developer.photo} alt={developer.name} className="h-full w-full object-cover" />
+                    <img src={developer.photo} alt={developer.name} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-[var(--surface-hover)] font-display text-6xl font-bold text-[var(--color-gold)]">
+                    <div className="flex h-full w-full items-center justify-center bg-[var(--surface-hover)] font-display text-6xl font-bold text-[var(--color-status-green)]">
                       {developer.name.charAt(0)}
                     </div>
                   )}
                 </div>
-                <div className="flex flex-1 flex-col p-5">
+                <div className="flex flex-1 flex-col p-5 sm:p-6">
                   <h3 className="font-display text-[1.55rem] font-bold leading-tight text-[var(--text-primary)]">{developer.name}</h3>
                   <p className="mt-2 text-sm font-medium leading-relaxed text-[var(--text-secondary)]">{developer.role}</p>
                   {developer.bio && <p className="mt-3 text-sm leading-relaxed text-[var(--text-secondary)]">{developer.bio}</p>}
                   {developer.skills?.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-1.5">
-                      {developer.skills.map((skill) => <span key={skill} className="rounded-full border border-[var(--color-gold)]/25 bg-[var(--color-gold)]/10 px-2.5 py-1 text-[10px] font-semibold text-[var(--color-gold)]">{skill}</span>)}
+                    <div className="mt-5">
+                      <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--text-secondary)]">Skills &amp; expertise</p>
+                      <div className="flex flex-wrap gap-2">
+                        {developer.skills.map((skill) => <span key={skill} className="rounded-full border border-[var(--color-status-green)]/30 bg-[var(--color-status-green-bg)] px-3 py-1.5 text-xs font-semibold text-[var(--color-status-green)]">{skill}</span>)}
+                      </div>
                     </div>
                   )}
+
+                  <a
+                    href={developer.socials?.whatsapp || '/contact'}
+                    target={developer.socials?.whatsapp ? '_blank' : undefined}
+                    rel={developer.socials?.whatsapp ? 'noreferrer' : undefined}
+                    className="mt-5 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[var(--color-status-green)] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-[var(--color-status-green)] focus:ring-offset-2 focus:ring-offset-[var(--surface)]"
+                  >
+                    <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                    Contact developer
+                  </a>
 
                   <div className="mt-auto flex items-center gap-2.5 pt-6">
                     {developer.socials?.facebook && (
@@ -158,13 +173,13 @@ export default function Developers() {
                       </a>
                     )}
                     {(developer.socials?.facebook || developer.socials?.instagram || developer.socials?.whatsapp || developer.socials?.twitter || developer.socials?.github) && (
-                      <ArrowUpRight className="ml-1 h-4 w-4 text-[var(--color-gold)]" aria-hidden="true" />
+                      <ArrowUpRight className="ml-1 h-4 w-4 text-[var(--color-status-green)]" aria-hidden="true" />
                     )}
                   </div>
                   <button
                     type="button"
                     onClick={() => setActiveDeveloper(developer.name)}
-                    className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--color-gold)]/45 px-4 py-2.5 text-sm font-semibold text-[var(--color-gold)] transition hover:bg-[var(--color-gold)] hover:text-[var(--color-deep-green)] focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)] focus:ring-offset-2 focus:ring-offset-[var(--surface)]"
+                    className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--color-status-green)]/45 px-4 py-2.5 text-sm font-semibold text-[var(--color-status-green)] transition hover:bg-[var(--color-status-green)] hover:text-[var(--color-deep-green)] focus:outline-none focus:ring-2 focus:ring-[var(--color-status-green)] focus:ring-offset-2 focus:ring-offset-[var(--surface)]"
                   >
                     View profile <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
                   </button>
@@ -197,13 +212,13 @@ export default function Developers() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 12, scale: 0.98 }}
                   transition={{ duration: 0.22 }}
-                  className="relative w-full max-w-xl overflow-hidden rounded-[28px] border border-[var(--color-gold)]/35 bg-[var(--surface)] shadow-[0_28px_80px_rgba(0,0,0,0.38)]"
+                  className="relative w-full max-w-xl overflow-hidden rounded-[28px] border border-[var(--color-status-green)]/35 bg-[var(--surface)] shadow-[0_28px_80px_rgba(0,0,0,0.38)]"
                 >
                   <button
                     type="button"
                     onClick={closeDeveloper}
                     aria-label="Close developer profile"
-                    className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)]/80 text-[var(--text-primary)] transition hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)]"
+                    className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)]/80 text-[var(--text-primary)] transition hover:border-[var(--color-status-green)] hover:text-[var(--color-status-green)] focus:outline-none focus:ring-2 focus:ring-[var(--color-status-green)]"
                   >
                     <X className="h-5 w-5" aria-hidden="true" />
                   </button>
@@ -212,24 +227,24 @@ export default function Developers() {
                       {selectedDeveloper.photo ? (
                         <img src={selectedDeveloper.photo} alt={selectedDeveloper.name} className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex h-full items-center justify-center font-display text-6xl font-bold text-[var(--color-gold)]">
+                        <div className="flex h-full items-center justify-center font-display text-6xl font-bold text-[var(--color-status-green)]">
                           {selectedDeveloper.name.charAt(0)}
                         </div>
                       )}
                     </div>
                     <div className="p-6 sm:p-8">
-                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--color-gold)]">Developer profile</p>
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--color-status-green)]">Developer profile</p>
                       <h2 id="developer-dialog-title" className="mt-2 font-display text-2xl font-bold text-[var(--text-primary)]">{selectedDeveloper.name}</h2>
                       <p className="mt-2 text-sm font-medium text-[var(--text-secondary)]">{selectedDeveloper.role}</p>
                       {selectedDeveloper.bio && <p className="mt-5 text-sm leading-relaxed text-[var(--text-secondary)]">{selectedDeveloper.bio}</p>}
                       {selectedDeveloper.skills?.length > 0 && (
                         <div className="mt-5 flex flex-wrap gap-2">
-                          {selectedDeveloper.skills.map((skill) => <span key={skill} className="rounded-full border border-[var(--color-gold)]/30 bg-[var(--color-gold)]/10 px-3 py-1 text-xs font-semibold text-[var(--color-gold)]">{skill}</span>)}
+                          {selectedDeveloper.skills.map((skill) => <span key={skill} className="rounded-full border border-[var(--color-status-green)]/30 bg-[var(--color-status-green-bg)] px-3 py-1 text-xs font-semibold text-[var(--color-status-green)]">{skill}</span>)}
                         </div>
                       )}
                       <div className="mt-6 flex flex-wrap gap-2">
                         {Object.entries(selectedDeveloper.socials || {}).filter(([, link]) => link).map(([platform, link]) => (
-                          <a key={platform} href={link} target="_blank" rel="noreferrer" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold capitalize text-[var(--text-secondary)] transition hover:border-[var(--color-gold)] hover:text-[var(--color-gold)]">
+                          <a key={platform} href={link} target="_blank" rel="noreferrer" className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs font-semibold capitalize text-[var(--text-secondary)] transition hover:border-[var(--color-status-green)] hover:text-[var(--color-status-green)]">
                             {platform}
                           </a>
                         ))}
@@ -241,7 +256,7 @@ export default function Developers() {
             )}
           </AnimatePresence>
         </div>
-
+        </div>
       </section>
     </div>
   );

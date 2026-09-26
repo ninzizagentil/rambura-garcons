@@ -33,6 +33,16 @@ async function addNewDefaultPermissions(roleName, keys) {
 	await Role.updateOne({ name: roleName }, { $addToSet: { permissions: { $each: permissions.map((permission) => permission._id) } } });
 }
 
+async function syncDeveloperPermissions() {
+	await addNewDefaultPermissions('developer', DEFAULT_ROLE_PERMISSIONS.developer);
+	const permissions = await Permission.find({ key: { $in: DEFAULT_ROLE_PERMISSIONS.developer } }, { _id: 1 });
+	await Role.updateOne(
+		{ name: 'developer' },
+		{ $setOnInsert: { label: 'Developer', permissions: permissions.map((permission) => permission._id) } },
+		{ upsert: true }
+	);
+}
+
 async function syncManagementPermissions() {
 	await addNewDefaultPermissions('management', DEFAULT_ROLE_PERMISSIONS.management);
 }
@@ -45,6 +55,7 @@ const database = await connectDatabase();
 if (database) {
 	try {
 		await removeObsoletePermissions();
+		await syncDeveloperPermissions();
 		await syncManagementPermissions();
 		await syncLibrarianPermissions();
 	} catch (error) {

@@ -109,7 +109,9 @@ export default function UserFormModal({ open, onClose, user, onSaved }) {
             value={form.role}
             onChange={update('role')}
             error={errors.role}
-            options={Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }))}
+            options={Object.entries(ROLE_LABELS)
+              .filter(([value]) => isEdit || value !== 'developer')
+              .map(([value, label]) => ({ value, label }))}
           />
           {!isEdit && (
             <Select

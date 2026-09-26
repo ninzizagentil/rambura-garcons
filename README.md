@@ -63,13 +63,9 @@ backend/Dockerfile    Backend production image
 	npm --prefix backend install
 	```
 
-3. Copy `backend/.env.example` to `backend/.env` and fill it in (at least the two JWT secrets, and the `SMTP_*` lines if you want e-mail to work). Production must define the required secrets.
+3. Copy `backend/.env.example` to `backend/.env`, set `MONGODB_URI` to your MongoDB Atlas connection string, and fill in the JWT secrets. Set the `SMTP_*` lines if you want e-mail to work.
 
-4. Start MongoDB. The default local connection is:
-
-	```text
-	mongodb://localhost:27017/rambura_garcons
-	```
+4. In Atlas Network Access, allow your development machine's IP and ensure the database user has access to the project database.
 
 5. Start the frontend and backend together:
 
@@ -115,7 +111,7 @@ Create `backend/.env` for local or production settings. Never commit this file.
 ```env
 NODE_ENV=development
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/rambura_garcons
+MONGODB_URI=<MongoDB Atlas connection string>
 CLIENT_URL=http://localhost:5173
 TRUST_PROXY=0   # set to 1 when the API runs behind nginx / a load balancer
 ```
@@ -256,6 +252,7 @@ The `build` command creates `dist/`. This is generated output and is ignored by 
 with 70 stock movements, damaged and disposed stock, 4 reconciliations, stock/equipment archive and retirement requests (pending, approved, rejected),
 16 equipment items with assignments and maintenance, 14 admission applications in every status, 7 events, contact messages,
 notifications for every role, an activity/audit log and reports. Extra accounts (password `Demo@12345`): `librarian2`, `registrar` (management), `stock2` (inactive).
+The developer panel demo login is `developer` / `Developer@123`.
 All dates are relative to today. In production the demo data is skipped unless `SEED_DEMO=true`; `SEED_DEMO=false` skips it anywhere.
 
 ## Troubleshooting the terminal

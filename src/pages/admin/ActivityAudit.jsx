@@ -6,6 +6,7 @@ import { Badge } from '../../components/common/Badge';
 import { EmptyState } from '../../components/feedback/States';
 import { getActivity, refreshActivity, useActivityVersion } from '../../services/activityService';
 import { getActivityStatus, timeAgo } from '../../utils/activityStatus';
+import { matchesActivityDateRange, sortActivityEntries } from '../../utils/activitySort';
 import { useApp } from '../../context/AppContext';
 
 const STATUS_ICONS = {
@@ -36,6 +37,8 @@ export default function ActivityAudit() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [sortKey, setSortKey] = useState('date');
+  const [sortDir, setSortDir] = useState('desc');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -47,13 +50,16 @@ export default function ActivityAudit() {
   const statuses = useMemo(() => [...new Set(activity.map((a) => a.status))], [activity]);
 
   const filtered = useMemo(() => {
-    return activity.filter((a) => {
+    const matches = activity.filter((a) => {
       const matchesSearch = !search || a.action.toLowerCase().includes(search.toLowerCase()) || a.user.toLowerCase().includes(search.toLowerCase());
       const matchesModule = !moduleFilter || a.module === moduleFilter;
       const matchesStatus = !statusFilter || a.status === statusFilter;
-      return matchesSearch && matchesModule && matchesStatus;
+      const matchesDateRange = matchesActivityDateRange(a, fromDate, toDate);
+      return matchesSearch && matchesModule && matchesStatus && matchesDateRange;
     });
-  }, [activity, search, moduleFilter, statusFilter]);
+
+    return sortActivityEntries(matches, sortKey, sortDir);
+  }, [activity, search, moduleFilter, statusFilter, fromDate, toDate, sortKey, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pageStart = (page - 1) * pageSize;
@@ -61,6 +67,16 @@ export default function ActivityAudit() {
 
   const updateFilter = (setter) => (value) => {
     setter(value);
+    setPage(1);
+  };
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortDir((current) => (current === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir(key === 'date' ? 'desc' : 'asc');
+    }
     setPage(1);
   };
 
@@ -109,6 +125,7 @@ export default function ActivityAudit() {
     {
       key: 'date',
       header: t('timestamp'),
+      sortable: true,
       render: (a) => (
         <div className="flex items-center gap-2" title={new Date(a.date).toLocaleString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}>
           <Calendar className="w-4 h-4 text-[var(--color-mid-gray)]" />
@@ -223,103 +240,109 @@ export default function ActivityAudit() {
             <h3 className="font-semibold text-[var(--color-dark-gray)]">{t('filtersSearch')}</h3>
           </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-mid-gray)]" />
-            <input
-              type="text"
-              placeholder={t('searchUserAction')}
-              value={search}
-              onChange={(e) => updateFilter(setSearch)(e.target.value)}
-              className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-[var(--color-border-gray)] text-sm text-[var(--color-dark-gray)] placeholder-[var(--color-mid-gray)] focus:outline-none focus:border-[var(--color-medium-green)] focus:ring-1 focus:ring-[var(--color-medium-green)]"
-            />
-          </div>
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(180px,1fr)_minmax(180px,1fr)] gap-3">
+            <div className="relative">
+              <label className="sr-only">{t('searchUserAction')}</label>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-mid-gray)]" />
+              <input
+                type="text"
+                placeholder={t('searchUserAction')}
+                value={search}
+                onChange={(e) => updateFilter(setSearch)(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 rounded-lg border border-[var(--color-border-gray)] text-sm text-[var(--color-dark-gray)] placeholder-[var(--color-mid-gray)] focus:outline-none focus:border-[var(--color-medium-green)] focus:ring-1 focus:ring-[var(--color-medium-green)] bg-[var(--color-white)]"
+              />
+            </div>
 
-          <div>
-            <select
-              value={moduleFilter}
-              onChange={(e) => updateFilter(setModuleFilter)(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border border-[var(--color-border-gray)] text-sm text-[var(--color-dark-gray)] bg-[var(--color-white)] focus:outline-none focus:border-[var(--color-medium-green)] focus:ring-1 focus:ring-[var(--color-medium-green)] appearance-none"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23555' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")`,
-                backgroundPosition: 'right 0.5rem center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '1.5em 1.5em',
-                paddingRight: '2.5rem',
-              }}
-            >
-              <option value="">{t('allModules')}</option>
-              {modules.map((m) => (
-                <option key={m} value={m}>
-                  {MODULE_ICONS[m]} {m}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <select
-              value={statusFilter}
-              onChange={(e) => updateFilter(setStatusFilter)(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg border border-[var(--color-border-gray)] text-sm text-[var(--color-dark-gray)] bg-[var(--color-white)] focus:outline-none focus:border-[var(--color-medium-green)] focus:ring-1 focus:ring-[var(--color-medium-green)] appearance-none"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23555' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")`,
-                backgroundPosition: 'right 0.5rem center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '1.5em 1.5em',
-                paddingRight: '2.5rem',
-              }}
-            >
-              <option value="">{t('allStatuses')}</option>
-              {statuses.map((s) => {
-                const status = getActivityStatus(s);
-                return (
-                  <option key={s} value={s}>
-                    {status.label}
+            <div>
+              <select
+                value={moduleFilter}
+                onChange={(e) => updateFilter(setModuleFilter)(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border-gray)] text-sm text-[var(--color-dark-gray)] bg-[var(--color-white)] focus:outline-none focus:border-[var(--color-medium-green)] focus:ring-1 focus:ring-[var(--color-medium-green)] appearance-none"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23555' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")`,
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5em 1.5em',
+                  paddingRight: '2.5rem',
+                }}
+              >
+                <option value="">{t('allModules')}</option>
+                {modules.map((m) => (
+                  <option key={m} value={m}>
+                    {MODULE_ICONS[m]} {m}
                   </option>
-                );
-              })}
-            </select>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <select
+                value={statusFilter}
+                onChange={(e) => updateFilter(setStatusFilter)(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border-gray)] text-sm text-[var(--color-dark-gray)] bg-[var(--color-white)] focus:outline-none focus:border-[var(--color-medium-green)] focus:ring-1 focus:ring-[var(--color-medium-green)] appearance-none"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23555' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E")`,
+                  backgroundPosition: 'right 0.5rem center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '1.5em 1.5em',
+                  paddingRight: '2.5rem',
+                }}
+              >
+                <option value="">{t('allStatuses')}</option>
+                {statuses.map((s) => {
+                  const status = getActivityStatus(s);
+                  return (
+                    <option key={s} value={s}>
+                      {status.label}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </div>
 
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-dark-gray)]">
-            {t('fromDate')}
-            <input
-              type="date"
-              value={fromDate}
-              max={toDate || undefined}
-              onChange={(e) => updateFilter(setFromDate)(e.target.value)}
-              className="w-full rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-white)] px-3.5 py-2.5 text-sm font-normal focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)]"
-            />
-          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(180px,1fr)_minmax(180px,1fr)_auto] gap-3 items-end">
+            <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-dark-gray)]">
+              {t('fromDate')}
+              <input
+                type="date"
+                value={fromDate}
+                max={toDate || undefined}
+                onChange={(e) => updateFilter(setFromDate)(e.target.value)}
+                className="w-full rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-white)] px-3.5 py-2.5 text-sm font-normal focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)]"
+              />
+            </label>
 
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-dark-gray)]">
-            {t('toDate')}
-            <input
-              type="date"
-              value={toDate}
-              min={fromDate || undefined}
-              onChange={(e) => updateFilter(setToDate)(e.target.value)}
-              className="w-full rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-white)] px-3.5 py-2.5 text-sm font-normal focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)]"
-            />
-          </label>
+            <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-dark-gray)]">
+              {t('toDate')}
+              <input
+                type="date"
+                value={toDate}
+                min={fromDate || undefined}
+                onChange={(e) => updateFilter(setToDate)(e.target.value)}
+                className="w-full rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-white)] px-3.5 py-2.5 text-sm font-normal focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)]"
+              />
+            </label>
 
-          {(search || moduleFilter || statusFilter || fromDate || toDate) && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearch('');
-                setModuleFilter('');
-                setStatusFilter('');
-                setFromDate('');
-                setToDate('');
-                setPage(1);
-              }}
-              className="px-4 py-2.5 rounded-lg bg-[var(--color-off-white)] text-sm font-medium text-[var(--color-dark-gray)] hover:bg-[var(--color-soft-gray)] transition-colors"
-            >
-              {t('clearAllFilters')}
-            </button>
-          )}
+            {(search || moduleFilter || statusFilter || fromDate || toDate) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setModuleFilter('');
+                  setStatusFilter('');
+                  setFromDate('');
+                  setToDate('');
+                  setPage(1);
+                }}
+                className="inline-flex items-center justify-center px-3 py-2 rounded-md border border-[var(--color-border-gray)] bg-[var(--color-off-white)] text-xs font-semibold text-[var(--color-dark-gray)] hover:bg-[var(--color-soft-gray)] transition-colors whitespace-nowrap"
+              >
+                {t('clearAllFilters')}
+              </button>
+            )}
+          </div>
+
         </div>
         </div>
       </div>
@@ -335,7 +358,14 @@ export default function ActivityAudit() {
               </span>
             </div>
           </div>
-          <DataTable columns={columns} data={paginated} emptyState={<EmptyState title={t('noActivityFound')} message={t('adjustActivityFilters')} />} />
+          <DataTable
+            columns={columns}
+            data={paginated}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={handleSort}
+            emptyState={<EmptyState title={t('noActivityFound')} message={t('adjustActivityFilters')} />}
+          />
           <TablePagination
             page={page}
             totalPages={totalPages}

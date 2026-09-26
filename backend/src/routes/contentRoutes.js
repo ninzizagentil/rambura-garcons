@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate, authorize, requireAnyPermission, requirePermission } from '../middleware/auth.js';
+import { authenticate, authorize, requireAnyPermission, requireAnyPermissionOrRole, requirePermission } from '../middleware/auth.js';
 import { asyncHandler, fail, ok } from '../utils/api.js';
 import { publicList, publicDetail, adminList, adminCreate, adminUpdate, adminDelete, publishNews, getSettings, updateSettings, updateDevelopersPageSettings, getHero, updateHero } from '../controllers/contentController.js';
 import { submit, getApplications, getApplication, updateStatus, remove, trackApplication, downloadAdminAttachment } from '../controllers/admissionController.js';
@@ -64,7 +64,7 @@ adminRouter.delete('/contact-messages/:id', requirePermission('applications.upda
 }));
 
 // ── Generic CMS resource routes ───────────────────────────────────────────────
-adminRouter.put('/developers-page', requirePermission('applications.update'), asyncHandler(updateDevelopersPageSettings));
+adminRouter.put('/developers-page', requireAnyPermissionOrRole(['developer'], 'website.update', 'applications.update'), asyncHandler(updateDevelopersPageSettings));
 adminRouter.get('/settings', requireAnyPermission('settings.view', 'website.view'), asyncHandler(getSettings));
 adminRouter.put('/settings', requireAnyPermission('settings.update', 'website.update'), asyncHandler(updateSettings));
 adminRouter.get('/website/hero', requireAnyPermission('website.view'), asyncHandler(getHero));

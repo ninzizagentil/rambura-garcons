@@ -30,6 +30,7 @@ const PANEL_MODULES = [
 const SHOW_DEMO_ACCOUNTS = import.meta.env.DEV || import.meta.env.VITE_SHOW_DEMO_ACCOUNTS === 'true';
 const ADMIN_ACCOUNT = SHOW_DEMO_ACCOUNTS ? { identifier: 'admin', password: 'Admin@123', role: 'Administrator' } : null;
 const OTHER_DEMO_ACCOUNTS = SHOW_DEMO_ACCOUNTS ? [
+  { identifier: 'developer', password: 'Developer@123', role: 'Developer', access: 'Developer Panel' },
   { identifier: 'librarian', password: 'Library@123', role: 'Librarian', access: 'Library' },
   { identifier: 'stock', password: 'Stock@123', role: 'Stock Manager', access: 'Inventory + Equipment' },
   { identifier: 'equipment', password: 'Equipment@123', role: 'Equipment MIS', access: 'Equipment & maintenance' },
@@ -409,7 +410,7 @@ export default function Login() {
                               type="submit"
                               variant="primary"
                               size="lg"
-                              className="w-full !bg-gradient-to-r !from-[var(--button-primary)] !via-[var(--button-primary-hover)] !to-[var(--button-primary)] hover:!from-[var(--button-primary-hover)] hover:!via-[var(--button-primary)] hover:!to-[var(--button-primary-hover)] shadow-lg hover:shadow-xl !border-0 !text-white font-bold uppercase tracking-wide transition-all duration-200 group"
+                              className="w-full !bg-[var(--color-medium-green)] hover:!bg-[var(--color-medium-green-600)] shadow-lg hover:shadow-xl !border-0 !text-white font-bold uppercase tracking-wide transition-all duration-200 group"
                               loading={loading}
                               icon={LogIn}
                             >

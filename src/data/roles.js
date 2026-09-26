@@ -4,11 +4,12 @@ import {
   History as HistoryIcon, ClipboardList, PackagePlus, PackageMinus, ArrowLeftRight,
   Boxes, LayoutList, ShieldAlert,
   ClipboardEdit, Truck, GraduationCap, MessageSquare, Code2, Activity,
-  Laptop, CheckCircle2, Archive, Wrench,
+  Laptop, CheckCircle2, Archive, Wrench, Database, Bell,
 } from 'lucide-react';
 
 export const ROLES = {
   ADMIN: 'admin',
+  DEVELOPER: 'developer',
   LIBRARIAN: 'librarian',
   STOCK_MANAGER: 'stock_manager',
   EQUIPMENT_MANAGER: 'equipment_manager',
@@ -17,6 +18,7 @@ export const ROLES = {
 
 export const ROLE_LABELS = {
   [ROLES.ADMIN]: 'IT / System Administrator',
+  [ROLES.DEVELOPER]: 'Developer',
   [ROLES.LIBRARIAN]: 'Librarian',
   [ROLES.STOCK_MANAGER]: 'Stock Manager',
   [ROLES.EQUIPMENT_MANAGER]: 'Equipment Manager',
@@ -25,6 +27,7 @@ export const ROLE_LABELS = {
 
 export const ROLE_HOME = {
   [ROLES.ADMIN]: '/admin',
+  [ROLES.DEVELOPER]: '/developer',
   [ROLES.LIBRARIAN]: '/library',
   [ROLES.STOCK_MANAGER]: '/stock',
   [ROLES.EQUIPMENT_MANAGER]: '/equipment',
@@ -86,6 +89,43 @@ export const ADMIN_NAV = [
  *   dashboard      – marks a module dashboard (renamed to "Dashboard" when it
  *                    is the only one the user can open)
  */
+export const DEVELOPER_NAV = [
+  { label: 'Developer Panel', to: '/developer', icon: LayoutDashboard, dashboard: true },
+  { label: 'Developers Page', to: '/developer/developers', icon: Code2, anyPermission: ['website.view', 'website.update', 'applications.view', 'applications.update'] },
+  {
+    label: 'Access & Users',
+    to: '/developer/users',
+    icon: ShieldCheck,
+    children: [
+      { label: 'Users', to: '/developer/users', icon: Users, permission: 'users.view' },
+      { label: 'Roles & Permissions', to: '/developer/roles', icon: ShieldCheck, permission: 'users.update' },
+      { label: 'Access Troubleshooter', to: '/developer/access-troubleshooter', icon: ShieldAlert, permission: 'users.view' },
+    ],
+  },
+  {
+    label: 'System Recovery',
+    to: '/developer/recovery',
+    icon: Archive,
+    children: [
+      { label: 'Backups', to: '/developer/recovery?tab=backups', icon: Archive, permission: 'audit.view' },
+      { label: 'Restore', to: '/developer/recovery?tab=restore', icon: RotateCcw, permission: 'audit.view' },
+      { label: 'Recovery History', to: '/developer/recovery?tab=history', icon: HistoryIcon, permission: 'audit.view' },
+    ],
+  },
+  {
+    label: 'Diagnostics',
+    to: '/developer/diagnostics',
+    icon: Activity,
+    children: [
+      { label: 'System Health', to: '/developer/diagnostics?tab=health', icon: Activity, permission: 'audit.view' },
+      { label: 'Database Check', to: '/developer/diagnostics?tab=database', icon: Database, permission: 'audit.view' },
+      { label: 'Notification Check', to: '/developer/diagnostics?tab=notifications', icon: Bell, permission: 'audit.view' },
+      { label: 'Error Check', to: '/developer/diagnostics?tab=errors', icon: AlertTriangle, permission: 'audit.view' },
+      { label: 'System Controls', to: '/developer/diagnostics?tab=controls', icon: Settings, permission: 'settings.update' },
+    ],
+  },
+];
+
 export const MASTER_NAV = [
   { label: 'Library Dashboard', to: '/library', icon: LayoutDashboard, permission: 'library.view', dashboard: true },
   { label: 'Stock Dashboard', to: '/stock', icon: LayoutDashboard, permission: 'stock.view', dashboard: true },
@@ -168,7 +208,6 @@ export const MASTER_NAV = [
     children: [
       { label: 'Applications', to: '/management/applications', icon: GraduationCap, permission: 'applications.view' },
       { label: 'Contact Messages', to: '/management/contact-messages', icon: MessageSquare, permission: 'applications.view' },
-      { label: 'Developers Page', to: '/management/developers', icon: Code2, permission: 'applications.view' },
     ],
   },
   {
@@ -221,6 +260,9 @@ export function getNavForUser(user, hasPermission) {
   if (user.role === ROLES.ADMIN) {
     return filterNavItems(ADMIN_NAV, user.role, hasPermission);
   }
+  if (user.role === ROLES.DEVELOPER) {
+    return filterNavItems(DEVELOPER_NAV, user.role, hasPermission);
+  }
   const items = filterNavItems(MASTER_NAV, user.role, hasPermission);
   if (user.role === ROLES.MANAGEMENT) {
     const dashboardOrder = {
@@ -257,6 +299,7 @@ const HOME_CANDIDATES = [
 export function getHomePath(user) {
   if (!user) return '/login';
   if (user.role === ROLES.ADMIN) return ROLE_HOME[ROLES.ADMIN];
+  if (user.role === ROLES.DEVELOPER) return ROLE_HOME[ROLES.DEVELOPER];
   const has = (permission) => !!user.permissions?.includes(permission);
   const open = HOME_CANDIDATES.filter((candidate) => canSeeNavItem(candidate, has));
   const own = open.find((candidate) => candidate.to === ROLE_HOME[user.role]);

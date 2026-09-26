@@ -35,6 +35,7 @@ import ContactMessage from '../models/ContactMessage.js';
 import StockReconciliation from '../models/StockReconciliation.js';
 import StockArchiveRequest from '../models/StockArchiveRequest.js';
 import { seedDemoData } from './demoData.js';
+import { DEFAULT_ROLE_PERMISSIONS } from '../config/defaultPermissions.js';
 import { SEED_BOOKS } from '../../../src/data/library.js';
 import { SEED_ITEMS, SEED_SUPPLIERS } from '../../../src/data/stock.js';
 import { PROGRAMS, DEPARTMENTS, STAFF, NEWS, GALLERY } from '../../../src/data/content.js';
@@ -59,6 +60,7 @@ const seedImage = (relPath) => ({ imageUrl: `/uploads/seed/${relPath}`, publicId
 
 const demoUsers = [
   ['Jean de Dieu Habimana', 'admin', 'ninzizaaime31@gmail.com', 'Admin@123', 'admin'],
+  ['Rambura Garçons Developer', 'developer', 'developer@ramburagarcons.rw', 'Developer@123', 'developer'],
   ['Marie Claire Uwase', 'librarian', 'librarian@ramburagarcons.rw', 'Library@123', 'librarian'],
   ['Emmanuel Nshuti', 'stock', 'stock@ramburagarcons.rw', 'Stock@123', 'stock_manager'],
   ['Fiston Mukiza', 'equipment', 'equipment@ramburagarcons.rw', 'Equipment@123', 'equipment_manager'],
@@ -264,6 +266,7 @@ await Role.insertMany([
     label: 'IT / System Administrator',
     permissions: permissions.filter((permission) => !['library', 'stock', 'equipment'].includes(permission.module)).map((permission) => permission._id),
   },
+  { name: 'developer', label: 'Developer', permissions: permissions.filter((permission) => DEFAULT_ROLE_PERMISSIONS.developer.includes(permission.key)).map((permission) => permission._id) },
   { name: 'librarian', label: 'Librarian', permissions: permissions.filter((permission) => ['library', 'events'].includes(permission.module) && permission.key !== 'library.books.archive.approve').map((permission) => permission._id) },
   { name: 'stock_manager', label: 'Stock Manager', permissions: permissions.filter((p) => ['stock'].includes(p.module) && !['stock.dispose.approve','stock.archive.approve','stock.reconcile.approve'].includes(p.key)).map((p) => p._id) },
   { name: 'equipment_manager', label: 'Equipment Manager', permissions: permissions.filter((p) => ['equipment'].includes(p.module) && !['equipment.retire.approve','equipment.archive.approve'].includes(p.key)).map((p) => p._id) },
@@ -283,7 +286,7 @@ if (isProduction) {
   console.log('Generated passwords (shown only once - save them now, then change them after the first login):');
   for (const [, username, , password] of users) console.log(`  ${username}: ${password}`);
 } else {
-  console.log('Development demo logins: admin / Admin@123, librarian / Library@123, stock / Stock@123, equipment / Equipment@123, director / Director@123');
+  console.log('Development demo logins: admin / Admin@123, developer / Developer@123, librarian / Library@123, stock / Stock@123, equipment / Equipment@123, director / Director@123');
   if (withDemo) console.log('Extra demo accounts (password Demo@12345): librarian2, registrar (management), stock2 (inactive)');
 }
 process.exit(0);

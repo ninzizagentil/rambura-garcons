@@ -4,6 +4,15 @@ export const DEFAULT_ROLE_PERMISSIONS = {
     'website.view', 'website.create', 'website.update', 'website.delete',
     'audit.view', 'settings.view', 'settings.update',
   ],
+  developer: [
+    'users.view', 'users.create', 'users.update', 'users.delete',
+    'audit.view', 'settings.view', 'settings.update',
+    'website.view', 'website.update',
+    'stock.view', 'stock.reports',
+    'equipment.view', 'equipment.reports',
+    'library.view', 'library.reports',
+    'applications.view', 'applications.update', 'reports.view',
+  ],
   librarian: [
     'library.view', 'library.books.create', 'library.books.update',
     'library.books.archive.request', 'library.borrow', 'library.return',

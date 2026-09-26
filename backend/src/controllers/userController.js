@@ -3,7 +3,7 @@ import User from '../models/User.js';
 import { fail, list, ok } from '../utils/api.js';
 import { recordAudit } from '../services/auditService.js';
 
-const roles = ['admin', 'librarian', 'stock_manager', 'equipment_manager', 'management'];
+const roles = ['admin', 'developer', 'librarian', 'stock_manager', 'equipment_manager', 'management'];
 const publicFields = '-passwordHash -refreshTokens';
 const safeRegex = (value) => new RegExp(String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
 

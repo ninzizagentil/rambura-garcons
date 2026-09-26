@@ -11,7 +11,7 @@ import { EmptyState } from '../../components/feedback/States';
 import { useToast } from '../../context/ToastContext';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
-import { ROLE_LABELS } from '../../data/roles';
+import { ROLES, ROLE_LABELS } from '../../data/roles';
 import { getUsers, setUserStatus, deleteUser } from '../../services/userService';
 import UserFormModal from './UserFormModal';
 
@@ -37,6 +37,7 @@ export default function Users() {
 
   const filtered = useMemo(() => {
     return users.filter((u) => {
+      if (u.role === ROLES.DEVELOPER) return false;
       const matchesSearch =
         !search ||
         u.fullName.toLowerCase().includes(search.toLowerCase()) ||
@@ -126,7 +127,9 @@ export default function Users() {
           label={t('allRoles')}
           value={roleFilter}
           onChange={setRoleFilter}
-          options={Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }))}
+          options={Object.entries(ROLE_LABELS)
+            .filter(([value]) => value !== ROLES.DEVELOPER)
+            .map(([value, label]) => ({ value, label }))}
         />
         <FilterDropdown
           label={t('allStatus')}

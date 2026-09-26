@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import PageHeader from '../../components/layout/PageHeader';
 import Button from '../../components/common/Button';
 import { Input, Textarea } from '../../components/forms/FormField';
@@ -6,12 +7,16 @@ import ImageField from '../../components/forms/ImageField';
 import { Globe, Plus, Save, Trash2 } from 'lucide-react';
 import { getDevelopersPage, updateDevelopersPage } from '../../services/contentService';
 import { useToast } from '../../context/ToastContext';
-import { applyKindErrors } from '../../utils/validators';
 
 export default function DevelopersManagement() {
+  const location = useLocation();
   const [form, setForm] = useState(getDevelopersPage());
   const [saving, setSaving] = useState(false);
   const { showToast } = useToast();
+  const isDeveloperPanel = location.pathname.startsWith('/developer');
+  const breadcrumb = isDeveloperPanel
+    ? [{ label: 'Developer Panel', to: '/developer' }, { label: 'Developers Page' }]
+    : [{ label: 'School Management', to: '/management' }, { label: 'Developers Page' }];
   const update = (changes) => setForm((current) => ({ ...current, ...changes }));
   const updateDeveloper = (index, changes) => update({ developers: form.developers.map((item, itemIndex) => itemIndex === index ? { ...item, ...changes } : item) });
   const addDeveloper = () => update({ developers: [...form.developers, { name: '', role: '', bio: '', skills: [], photo: '', socials: { facebook: '', instagram: '', whatsapp: '', twitter: '', github: '' } }] });
@@ -20,8 +25,6 @@ export default function DevelopersManagement() {
 
   const save = async (event) => {
     event.preventDefault();
-    const problem = (form.developers || []).flatMap((d) => Object.values(applyKindErrors({}, d, { name: 'lettersOnly', role: 'lettersOnly' })))[0];
-    if (problem) { showToast(problem, 'error'); return; }
     setSaving(true);
     const result = await updateDevelopersPage(form);
     setSaving(false);
@@ -31,7 +34,7 @@ export default function DevelopersManagement() {
 
   return (
     <div>
-      <PageHeader title="Developers Page" description="Manage the developer information shown on the public Developers page." breadcrumb={[{ label: 'School Management', to: '/management' }, { label: 'Developers Page' }]} />
+      <PageHeader title="Developers Page" description="Manage the developer information shown on the public Developers page." breadcrumb={breadcrumb} />
       <form onSubmit={save} className="max-w-5xl space-y-8">
         <section className="space-y-4">
           <div><h2 className="font-display text-xl font-semibold text-[var(--text-primary)]">Developer profiles</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">Manage the people shown on the public Developers page. Keep each profile focused and current.</p></div>
@@ -42,7 +45,7 @@ export default function DevelopersManagement() {
             {form.developers.map((developer, index) => {
               const socials = developer.socials || {};
               return (
-                <article key={index} className="relative rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(12,34,30,0.96),rgba(8,22,20,0.96))] p-4 shadow-[0_16px_32px_rgba(0,0,0,0.18)] md:p-5">
+                <article key={index} className="relative rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[0_12px_30px_rgba(23,59,49,0.1)] transition-colors md:p-5">
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5">
                       <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--color-gold)] text-[11px] font-bold text-[var(--color-deep-green)]">{index + 1}</span>
@@ -51,22 +54,22 @@ export default function DevelopersManagement() {
                     <Button type="button" variant="ghost" size="sm" icon={Trash2} aria-label={`Remove developer ${index + 1}`} onClick={() => removeDeveloper(index)}>Remove</Button>
                   </div>
                   <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
-                    <div className="rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.02)] p-3">
-                      <ImageField label="Profile picture" value={developer.photo || ''} onChange={(photo) => updateDeveloper(index, { photo })} hint="Use a clear headshot or professional portrait." maxDimension={800} preserveTransparency={false} dark />
+                    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-hover)] p-3">
+                      <ImageField label="Profile picture" value={developer.photo || ''} onChange={(photo) => updateDeveloper(index, { photo })} hint="Use a clear headshot or professional portrait." maxDimension={800} preserveTransparency={false} />
                     </div>
                     <div className="space-y-4">
-                      <Input kind="lettersOnly" label={`Developer ${index + 1} name`} required value={developer.name} onChange={(e) => updateDeveloper(index, { name: e.target.value })} className="h-12 text-base" dark />
-                      <Input kind="lettersOnly" label="Role" required value={developer.role} onChange={(e) => updateDeveloper(index, { role: e.target.value })} className="h-12 text-base" dark />
-                      <Textarea label="Short biography" value={developer.bio || ''} onChange={(e) => updateDeveloper(index, { bio: e.target.value })} placeholder="Describe this person's responsibility in one or two sentences." rows={3} dark />
-                      <Input label="Skills or technologies" value={(developer.skills || []).join(', ')} onChange={(e) => updateDeveloper(index, { skills: e.target.value.split(',').map((skill) => skill.trim()).filter(Boolean) })} placeholder="e.g. React, APIs, UX" dark />
+                      <Input label={`Developer ${index + 1} name`} required value={developer.name} onChange={(e) => updateDeveloper(index, { name: e.target.value })} className="h-12 text-base" />
+                      <Input label="Role" required value={developer.role} onChange={(e) => updateDeveloper(index, { role: e.target.value })} className="h-12 text-base" />
+                      <Textarea label="Short biography" value={developer.bio || ''} onChange={(e) => updateDeveloper(index, { bio: e.target.value })} placeholder="Describe this person's responsibility in one or two sentences." rows={3} />
+                      <Input label="Skills or technologies" value={(developer.skills || []).join(', ')} onChange={(e) => updateDeveloper(index, { skills: e.target.value.split(',').map((skill) => skill.trim()).filter(Boolean) })} placeholder="e.g. React, APIs, UX" />
                     </div>
                   </div>
-                  <div className="mt-5 grid gap-3 border-t border-white/10 pt-4 md:grid-cols-2 xl:grid-cols-5">
-                    <Input label="Facebook" type="url" icon={Globe} value={socials.facebook || ''} onChange={(e) => updateSocial(index, 'facebook', e.target.value)} placeholder="https://facebook.com/..." className="h-11" dark />
-                    <Input label="Instagram" type="url" icon={Globe} value={socials.instagram || ''} onChange={(e) => updateSocial(index, 'instagram', e.target.value)} placeholder="https://instagram.com/..." className="h-11" dark />
-                    <Input label="WhatsApp" type="url" icon={Globe} value={socials.whatsapp || ''} onChange={(e) => updateSocial(index, 'whatsapp', e.target.value)} placeholder="https://wa.me/..." className="h-11" dark />
-                    <Input label="Twitter" type="url" icon={Globe} value={socials.twitter || ''} onChange={(e) => updateSocial(index, 'twitter', e.target.value)} placeholder="https://x.com/..." className="h-11" dark />
-                    <Input label="GitHub" type="url" icon={Globe} value={socials.github || ''} onChange={(e) => updateSocial(index, 'github', e.target.value)} placeholder="https://github.com/..." className="h-11" dark />
+                  <div className="mt-5 grid gap-3 border-t border-[var(--border)] pt-4 md:grid-cols-2 xl:grid-cols-5">
+                    <Input label="Facebook" type="url" icon={Globe} value={socials.facebook || ''} onChange={(e) => updateSocial(index, 'facebook', e.target.value)} placeholder="https://facebook.com/..." className="h-11" />
+                    <Input label="Instagram" type="url" icon={Globe} value={socials.instagram || ''} onChange={(e) => updateSocial(index, 'instagram', e.target.value)} placeholder="https://instagram.com/..." className="h-11" />
+                    <Input label="WhatsApp" type="url" icon={Globe} value={socials.whatsapp || ''} onChange={(e) => updateSocial(index, 'whatsapp', e.target.value)} placeholder="https://wa.me/..." className="h-11" />
+                    <Input label="Twitter" type="url" icon={Globe} value={socials.twitter || ''} onChange={(e) => updateSocial(index, 'twitter', e.target.value)} placeholder="https://x.com/..." className="h-11" />
+                    <Input label="GitHub" type="url" icon={Globe} value={socials.github || ''} onChange={(e) => updateSocial(index, 'github', e.target.value)} placeholder="https://github.com/..." className="h-11" />
                   </div>
                 </article>
               );

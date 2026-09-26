@@ -120,7 +120,7 @@ function MobileItem({ item, onNavigate }) {
         onClick={onNavigate}
         className={({ isActive }) =>
           cn(
-            'block rounded-lg px-3 py-2.5 text-sm font-medium',
+            'block rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors',
             item.featured
               ? 'font-semibold text-[var(--button-primary)] hover:bg-[var(--button-primary-soft)]'
               : isActive
@@ -140,7 +140,7 @@ function MobileItem({ item, onNavigate }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--button-primary-soft)] hover:text-[var(--button-primary)]"
+        className="w-full flex items-center justify-between px-3 py-1.5 rounded-md text-[13px] font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--button-primary-soft)] hover:text-[var(--button-primary)]"
       >
         {item.label}
         <ChevronDown className={cn('w-4 h-4 transition-transform', open && 'rotate-180')} aria-hidden="true" />
@@ -154,7 +154,7 @@ function MobileItem({ item, onNavigate }) {
               onClick={onNavigate}
               className={({ isActive }) =>
                 cn(
-                  'block px-3 py-2 rounded-md text-sm',
+                  'block rounded-md px-3 py-1 text-xs',
                   isActive
                     ? 'text-[var(--button-primary)] bg-[var(--button-primary-soft)]'
                     : 'text-[var(--text-secondary)] hover:bg-[var(--button-primary-soft)] hover:text-[var(--button-primary)]'
@@ -261,19 +261,21 @@ export default function PublicNavbar() {
 
       {open && (
         <nav
-          className="xl:hidden max-h-[75vh] space-y-0.5 overflow-y-auto border-t border-white/20 bg-[color-mix(in_srgb,var(--navbar)_82%,transparent)] px-4 py-3 shadow-lg backdrop-blur-2xl"
+          className="xl:hidden max-h-[min(60vh,30rem)] space-y-0 overflow-y-auto border-t border-white/20 bg-[color-mix(in_srgb,var(--navbar)_88%,transparent)] px-3 py-2 shadow-lg backdrop-blur-2xl"
           aria-label="Primary mobile"
         >
           {NAV.map((item) => (
             <MobileItem key={item.label} item={item} onNavigate={() => setOpen(false)} />
           ))}
-          <Link
-            to="/login"
-            onClick={() => setOpen(false)}
-            className="block mt-2 text-center px-4 py-2.5 rounded-full border border-[var(--button-primary)] bg-[rgba(255,255,255,0.8)] text-[var(--color-dark-gray)] text-sm font-semibold shadow-[0_10px_20px_rgba(31,41,55,0.08)] backdrop-blur-xl transition-colors hover:bg-[var(--button-primary)] hover:text-white"
-          >
-            Login
-          </Link>
+          <div className="mt-1.5 flex justify-end border-t border-[var(--border)]/70 pt-1.5">
+            <Link
+              to="/login"
+              onClick={() => setOpen(false)}
+              className="inline-flex min-h-8 min-w-24 items-center justify-center rounded-lg border border-[var(--button-primary)] bg-[var(--button-primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:border-[var(--button-primary-hover)] hover:bg-[var(--button-primary-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--button-primary)]"
+            >
+              Login
+            </Link>
+          </div>
         </nav>
       )}
     </header>

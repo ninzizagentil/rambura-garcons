@@ -5,7 +5,10 @@ import Notification from '../models/Notification.js';
 import { fail, ok } from '../utils/api.js';
 import { recordAudit } from '../services/auditService.js';
 
-export async function getRoles(_req, res) { return ok(res, await Role.find().populate('permissions')); }
+export async function getRoles(req, res) {
+  const filter = req.user?.role === 'developer' ? { name: { $ne: 'admin' } } : {};
+  return ok(res, await Role.find(filter).populate('permissions'));
+}
 export async function getPermissions(_req, res) { return ok(res, await Permission.find().sort('module key')); }
 export async function updateRole(req, res) {
   const existingRole = await Role.findOne({ name: req.params.name }).populate('permissions', 'key');

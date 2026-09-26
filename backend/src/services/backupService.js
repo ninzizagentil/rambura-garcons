@@ -18,7 +18,7 @@ const STRIP_FIELDS = {
 
 export const backupDirectory = () => process.env.BACKUP_DIR || DEFAULT_DIR;
 
-async function listBackups(directory) {
+export async function listBackups(directory = backupDirectory()) {
   try {
     const names = (await fsp.readdir(directory)).filter((name) => FILE_PATTERN.test(name));
     return names.sort().reverse(); // names contain a timestamp, so newest first
@@ -78,6 +78,34 @@ export async function backupDatabase(directory = backupDirectory()) {
 
   const removed = await pruneBackups(directory).catch(() => 0);
   if (removed) console.log(`[backup] removed ${removed} old backup file(s)`);
+  return filePath;
+}
+
+export async function restoreDatabaseBackup(fileName, directory = backupDirectory()) {
+  if (!fileName) throw new Error('Backup file is required');
+  const filePath = path.join(directory, fileName);
+  const raw = await fsp.readFile(filePath, 'utf8');
+  const payload = JSON.parse(raw);
+  const collections = payload.collections || {};
+  const models = Object.values(mongoose.models);
+  const restoredCollections = Object.entries(collections).map(([collectionName, documents]) => {
+    const model = models.find((candidate) => candidate.collection.collectionName === collectionName);
+    if (!model) throw new Error(`No schema is registered for backup collection "${collectionName}"`);
+    if (!Array.isArray(documents)) throw new Error(`Backup collection "${collectionName}" is invalid`);
+    return {
+      collectionName,
+      collection: mongoose.connection.db.collection(collectionName),
+      documents: documents.map((document) => model.hydrate(document).toObject()),
+    };
+  });
+
+  for (const { collection, documents } of restoredCollections) {
+    await collection.deleteMany({});
+    if (documents.length) {
+      await collection.insertMany(documents);
+    }
+  }
+
   return filePath;
 }
 

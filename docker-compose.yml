@@ -27,7 +27,6 @@ services:
       # These win over backend/.env, so a development .env can never switch the live site to development mode.
       NODE_ENV: production
       TRUST_PROXY: "1" # the API sits behind the nginx container
-      MONGODB_URI: mongodb://mongo:27017/rambura_garcons
       CLIENT_URL: ${CLIENT_URL:-http://localhost}
       BACKUP_DIR: /app/backups
     depends_on:

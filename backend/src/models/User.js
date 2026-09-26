@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true, trim: true, lowercase: true, maxlength: 50 },
   email: { type: String, required: true, unique: true, trim: true, lowercase: true, match: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
   passwordHash: { type: String, required: true, select: false },
-  role: { type: String, enum: ['admin', 'librarian', 'stock_manager', 'equipment_manager', 'management'], required: true },
+  role: { type: String, enum: ['admin', 'developer', 'librarian', 'stock_manager', 'equipment_manager', 'management'], required: true },
   permissions: { type: [String], default: [] },
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   profileImage: { imageUrl: String, publicId: String },

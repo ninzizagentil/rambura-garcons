@@ -33,9 +33,8 @@ export async function connectDatabase() {
     return mongoose.connection;
   } catch (err) {
     console.error('\n[db] Could not connect to MongoDB.');
-    console.error(`[db] Tried: ${mongoUri}`);
     console.error(`[db] Reason: ${err.message}`);
-    console.error('[db] Fix: make sure MongoDB is running locally (open MongoDB Compass, or start the "MongoDB" service / `docker compose up -d`) and that MONGODB_URI in backend/.env points to it, e.g. mongodb://localhost:27017/rambura_garcons.');
+    console.error('[db] Fix: check the configured Atlas URI, database credentials, and Atlas Network Access IP allowlist.');
     console.error('[db] The API will remain available and report database-dependent requests as 503.\n');
     return null;
   }

@@ -4,11 +4,11 @@ Express + Mongoose backend for the Rambura Garçons TVET School MIS.
 
 ## Setup
 
-1. Install MongoDB locally or provide an Atlas URI.
-2. Copy `.env.example` to `.env` and set secrets.
+1. Create a MongoDB Atlas cluster and database user; allow your development machine's IP in Atlas Network Access.
+2. Copy `.env.example` to `.env`, set `MONGODB_URI` to your Atlas connection string, and set secrets.
 3. From the repository root run `npm install` and `npm --prefix backend install`.
 4. Seed demo data with `npm --prefix backend run seed`.
-5. Ensure `MONGODB_URI` in `.env` points to the MongoDB instance you want to use.
+5. Use `MONGODB_URI` for development and `MONGODB_URI_PRODUCTION` for hosting. Production mode selects the latter.
 6. Run the API with `npm --prefix backend run dev`.
 
 The API listens on `http://localhost:5000` and uses database `rambura_garcons`.

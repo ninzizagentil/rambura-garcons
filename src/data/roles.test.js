@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { ADMIN_NAV, getNavForUser } from './roles.js';
+import { ADMIN_NAV, getNavForUser, ROLE_LABELS } from './roles.js';
 
 function hasPermission(permission) {
   return permission === 'users.view';
@@ -28,4 +28,25 @@ test('admin navigation items still respect the permission filter', () => {
   assert.deepEqual(visible, ['Users & Roles', 'Roles & Permissions', 'Website Management']);
   const websiteGroup = ADMIN_NAV.find((item) => item.label === 'Website');
   assert.equal(websiteGroup.children.filter((child) => child.permission === 'website.view').length, 1);
+});
+
+test('developer navigation exposes the Developers Page with website access alone', () => {
+  const permissions = ['users.view', 'website.view', 'website.update'];
+  const nav = getNavForUser({ role: 'developer', permissions }, (permission) => permissions.includes(permission));
+  const developersPage = nav.find((item) => item.label === 'Developers Page');
+
+  assert.equal(developersPage?.to, '/developer/developers');
+  assert.equal(developersPage?.children, undefined);
+});
+
+test('management navigation no longer includes the Developers Page', () => {
+  const permissions = ['applications.view', 'applications.update'];
+  const nav = getNavForUser({ role: 'management', permissions }, (permission) => permissions.includes(permission));
+  const labels = nav.flatMap((item) => [item.label, ...(item.children || []).map((child) => child.label)]);
+
+  assert.ok(!labels.includes('Developers Page'));
+});
+
+test('Developer is available as a role when adding a user', () => {
+  assert.equal(ROLE_LABELS.developer, 'Developer');
 });

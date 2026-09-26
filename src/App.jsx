@@ -70,6 +70,12 @@ const Notifications = lazyPage(() => import('./pages/shared/Notifications'));
 const Profile = lazyPage(() => import('./pages/shared/Profile'));
 const ChangePassword = lazyPage(() => import('./pages/shared/ChangePassword'));
 const AccessRestricted = lazyPage(() => import('./pages/shared/AccessRestricted'));
+const DeveloperDashboard = lazyPage(() => import('./pages/developer/DeveloperDashboard'));
+const DeveloperUsers = lazyPage(() => import('./pages/developer/DeveloperUsers'));
+const DeveloperRoles = lazyPage(() => import('./pages/developer/DeveloperRoles'));
+const DeveloperAccessTroubleshooter = lazyPage(() => import('./pages/developer/DeveloperAccessTroubleshooter'));
+const DeveloperRecovery = lazyPage(() => import('./pages/developer/DeveloperRecovery'));
+const DeveloperDiagnostics = lazyPage(() => import('./pages/developer/DeveloperDiagnostics'));
 const SuccessPage = lazyPage(() => import('./pages/shared/StatusPages').then((module) => ({ default: module.SuccessPage })));
 const ErrorPage = lazyPage(() => import('./pages/shared/StatusPages').then((module) => ({ default: module.ErrorPage })));
 const NotFoundPage = lazyPage(() => import('./pages/shared/StatusPages').then((module) => ({ default: module.NotFoundPage })));
@@ -115,6 +121,18 @@ export default function App() {
         <Route element={<DashboardLayout />}>
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/reports" element={<Navigate to="/management/insights" replace />} />
+        </Route>
+      </Route>
+
+      <Route element={<RoleProtectedRoute allow={[ROLES.DEVELOPER]} />}>
+        <Route element={<DashboardLayout />}>
+          <Route path="/developer" element={<DeveloperDashboard />} />
+          <Route path="/developer/users" element={<DeveloperUsers />} />
+          <Route path="/developer/roles" element={<DeveloperRoles />} />
+          <Route path="/developer/access-troubleshooter" element={<DeveloperAccessTroubleshooter />} />
+          <Route path="/developer/developers" element={<DevelopersManagement />} />
+          <Route path="/developer/recovery" element={<DeveloperRecovery />} />
+          <Route path="/developer/diagnostics" element={<DeveloperDiagnostics />} />
         </Route>
       </Route>
 
@@ -233,7 +251,6 @@ export default function App() {
         <Route element={<PermissionProtectedRoute permissions={['applications.view']} />}>
           <Route path="/management/applications" element={<ManagementApplications />} />
           <Route path="/management/contact-messages" element={<ContactMessages />} />
-          <Route path="/management/developers" element={<DevelopersManagement />} />
         </Route>
         <Route
           element={<PermissionProtectedRoute permissions={[

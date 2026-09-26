@@ -4,6 +4,19 @@ import User from '../models/User.js';
 import Role from '../models/Role.js';
 import { fail } from '../utils/api.js';
 import { DEFAULT_ROLE_PERMISSIONS } from '../config/defaultPermissions.js';
+import { isMaintenanceMode } from '../services/developerService.js';
+
+export async function requireMaintenanceAccess(req, res, next) {
+  if (!req.user || req.user.role === 'developer') return next();
+
+  try {
+    const maintenanceEnabled = await isMaintenanceMode();
+    if (!maintenanceEnabled) return next();
+    return fail(res, 'System is in maintenance mode. Only developers can access the system right now.', 503);
+  } catch {
+    return next();
+  }
+}
 
 export async function authenticate(req, res, next) {
   try {
@@ -29,7 +42,7 @@ export async function authenticate(req, res, next) {
       : rolePermissions;
     user.permissions = Array.isArray(normalizedPermissions) ? normalizedPermissions : [];
     req.user = user;
-    next();
+    return requireMaintenanceAccess(req, res, next);
   } catch {
     return fail(res, 'Invalid or expired access token', 401);
   }
@@ -50,5 +63,12 @@ export function requireAnyPermission(...permissions) {
   return (req, res, next) => {
     if (permissions.some((permission) => req.user?.permissions?.includes(permission))) return next();
     return fail(res, `One of these permissions is required: ${permissions.join(', ')}`, 403);
+  };
+}
+
+export function requireAnyPermissionOrRole(roles, ...permissions) {
+  return (req, res, next) => {
+    if (roles.includes(req.user?.role) || permissions.some((permission) => req.user?.permissions?.includes(permission))) return next();
+    return fail(res, 'You do not have permission to perform this action', 403);
   };
 }
