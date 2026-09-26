@@ -22,7 +22,7 @@ const assignmentSchema = new mongoose.Schema({
 const schema = new mongoose.Schema({
   assetNumber: { type: String, required: true, unique: true, trim: true, uppercase: true },
   name: { type: String, required: true, trim: true, maxlength: 160 },
-  type: { type: String, enum: ['laptop', 'desktop', 'printer', 'projector', 'network', 'electrical_material', 'other'], required: true },
+  type: { type: String, required: true, trim: true, maxlength: 100 },
   brand: { type: String, trim: true, maxlength: 100 },
   model: { type: String, trim: true, maxlength: 100 },
   serialNumber: { type: String, trim: true, maxlength: 120 },

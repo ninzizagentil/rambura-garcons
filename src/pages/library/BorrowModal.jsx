@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Input, Select } from '../../components/forms/FormField';
+import CreatableSelect from '../../components/forms/CreatableSelect';
 import Modal from '../../components/modals/Modal';
 import Button from '../../components/common/Button';
 import Alert from '../../components/feedback/Alert';
-import { borrowBook } from '../../services/bookService';
+import { borrowBook, getLoans } from '../../services/bookService';
 import { useToast } from '../../context/ToastContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useApp } from '../../context/AppContext';
@@ -63,6 +64,8 @@ export default function BorrowModal({ open, onClose, book, onBorrowed }) {
   };
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const classOptions = [...new Set([...getLoans().map((loan) => loan.studentClassYear), form.studentClassYear].filter(Boolean))]
+    .map((classLevel) => ({ value: classLevel, label: classLevel }));
 
   const validate = () => {
     const next = {};
@@ -131,14 +134,14 @@ export default function BorrowModal({ open, onClose, book, onBorrowed }) {
             options={[{ value: 'Student', label: t('student') }, { value: 'Staff', label: t('staff') }]}
           />
           {form.borrowerType === 'Student' && (
-            <Input
-              kind="alnum"
+            <CreatableSelect
               label={t('classLevel')}
               required
               value={form.studentClassYear}
               onChange={update('studentClassYear')}
               error={errors.studentClassYear}
-              placeholder="e.g. S4 or L5"
+              options={classOptions}
+              addLabel="+ Other"
             />
           )}
           <div className="grid sm:grid-cols-2 gap-4">

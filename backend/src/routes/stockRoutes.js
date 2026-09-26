@@ -6,11 +6,10 @@ import { validateBody } from '../middleware/validate.js';
 import { rules } from '../utils/validators.js';
 const router = Router();
 router.use(authenticate);
-const STOCK_CATEGORIES = ['Foods', 'Other School Materials'];
 const STOCK_UNITS = ['kg', 'litres', 'bags', 'cartons', 'boxes', 'pieces', 'units', 'sets'];
 const itemValidation = validateBody({
   name: { ...rules.alnum('Item name'), required: true, maxLength: 100 },
-  category: { enum: STOCK_CATEGORIES },
+  category: { ...rules.alnum('Category'), required: true, maxLength: 100 },
   unit: { enum: STOCK_UNITS },
   quantity: { ...rules.number('Quantity'), required: true },
   minLevel: { ...rules.number('Minimum level'), required: true },

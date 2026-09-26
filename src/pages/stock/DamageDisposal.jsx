@@ -598,7 +598,7 @@ function ReconciliationTab({ viewOnly, showToast, user }) {
                 placeholder={t('reconciliation')} required />
               <Select label={t('location')} value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
-                options={LOCATIONS.map((l) => ({ value: l, label: t(`stockLocation.${l}`) }))} required />
+                options={[...new Set([...LOCATIONS, ...getItems().map((item) => item.location)])].filter(Boolean).map((location) => ({ value: location, label: LOCATIONS.includes(location) ? t(`stockLocation.${location}`) : location }))} required />
               <Input label={t('date')} type="date" value={form.scheduledDate}
                 onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })} required />
             </div>

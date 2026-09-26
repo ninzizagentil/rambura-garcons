@@ -94,7 +94,7 @@ export function getOutOfStockItems() { return items.filter((item) => item.quanti
 export function getExpiredItems() { return items.filter((item) => getExpiryStatus(item.expiryDate)?.status === 'expired'); }
 export function getExpiringSoonItems() { return items.filter((item) => getExpiryStatus(item.expiryDate)?.status === 'expiring-soon'); }
 export function getTotalStockValue() { return items.reduce((sum, item) => sum + item.quantity * (item.unitPrice || 0), 0); }
-export function getStockValueByCategory() { return STOCK_CATEGORIES.map((category) => ({ category, value: items.filter((item) => item.category === category).reduce((sum, item) => sum + item.quantity * (item.unitPrice || 0), 0), count: items.filter((item) => item.category === category).length })); }
+export function getStockValueByCategory() { return [...new Set([...STOCK_CATEGORIES, ...items.map((item) => item.category)])].map((category) => ({ category, value: items.filter((item) => item.category === category).reduce((sum, item) => sum + item.quantity * (item.unitPrice || 0), 0), count: items.filter((item) => item.category === category).length })); }
 export function getDamagedItems() { return damaged.filter((record) => record.status === 'reported'); }
 export function getRemovedItems() { return removed; }
 export function getUsageByItem() {
@@ -118,7 +118,7 @@ async function mutate(method, path, data, key) {
     return { success: false, error: detail ? `${error.message}: ${detail}` : error.message };
   }
 }
-export function createItem(data) { if (!STOCK_CATEGORIES.includes(data.category)) return Promise.resolve({ success: false, error: 'Select a valid stock category.' }); return mutate('post', '/stock/items', data, 'item'); }
+export function createItem(data) { if (!data.category?.trim()) return Promise.resolve({ success: false, error: 'Select a valid stock category.' }); return mutate('post', '/stock/items', data, 'item'); }
 export function updateItem(id, data) { return mutate('put', `/stock/items/${id}`, data, 'item'); }
 export function deleteItem(id) { return mutate('delete', `/stock/items/${id}`, {}, 'item'); }
 export function stockIn(data) { return mutate('post', '/stock/transactions/in', data, 'transaction'); }

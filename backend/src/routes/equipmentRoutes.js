@@ -8,7 +8,7 @@ import { rules } from '../utils/validators.js';
 const router = Router();
 const equipmentValidation = validateBody({
   assetNumber: { ...rules.code('Asset number'), maxLength: 120 }, name: { ...rules.alnum('Name'), maxLength: 160 },
-  type: { enum: ['laptop', 'desktop', 'printer', 'projector', 'network', 'electrical_material', 'other'] },
+  type: { ...rules.alnum('Equipment type'), required: true, maxLength: 100 },
   brand: { ...rules.alnum('Brand'), maxLength: 100 }, model: { ...rules.alnum('Model'), maxLength: 100 },
   serialNumber: { ...rules.code('Serial number'), maxLength: 120 }, location: { ...rules.alnum('Location'), maxLength: 160 },
   condition: { enum: ['new', 'good', 'fair', 'damaged', 'under_repair', 'retired'] },

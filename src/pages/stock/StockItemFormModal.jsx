@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import Modal from '../../components/modals/Modal';
 import { Input, Select, Textarea } from '../../components/forms/FormField';
+import CreatableSelect from '../../components/forms/CreatableSelect';
 import Button from '../../components/common/Button';
 import Alert from '../../components/feedback/Alert';
 import { useToast } from '../../context/ToastContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useAuth } from '../../context/AuthContext';
-import { STOCK_CATEGORIES, STOCK_UNITS } from '../../data/stock';
-import { createItem, updateItem, getSuppliers } from '../../services/stockService';
+import { STOCK_CATEGORIES, STOCK_LOCATIONS, STOCK_UNITS } from '../../data/stock';
+import { createItem, updateItem, getItems, getSuppliers } from '../../services/stockService';
 import { logActivity } from '../../services/activityService';
 import { useApp } from '../../context/AppContext';
 import { applyKindErrors } from '../../utils/validators';
@@ -55,12 +56,14 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
   }
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const categoryOptions = [...new Set([...STOCK_CATEGORIES, ...getItems().map((entry) => entry.category), form.category].filter(Boolean))];
+  const locationOptions = [...new Set([...STOCK_LOCATIONS, ...getItems().map((entry) => entry.location), form.location].filter(Boolean))];
 
   const validate = () => {
     const next = {};
     if (!form.name?.trim()) next.name = t('itemNameRequired');
     else if (form.name.trim().length > 100) next.name = t('itemNameTooLong');
-    if (!STOCK_CATEGORIES.includes(form.category)) next.category = t('categoryRequired');
+    if (!form.category?.trim()) next.category = t('categoryRequired');
     if (!STOCK_UNITS.includes(form.unit)) next.unit = t('unitRequired');
     const qty = Number(form.quantity);
     if (form.quantity === '' || Number.isNaN(qty) || qty < 0) next.quantity = t('validQuantityRequired');
@@ -68,13 +71,8 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
     if (form.minLevel === '' || Number.isNaN(min) || min < 0) next.minLevel = t('validMinimumLevelRequired');
     const price = Number(form.unitPrice);
     if (form.unitPrice === '' || Number.isNaN(price) || price < 0) next.unitPrice = t('validUnitValueRequired');
-    // NEW: Validate batch number for Foods
-    if (form.category === 'Foods' && !form.batchNumber?.trim()) {
-      next.batchNumber = t('batchNumberRequired');
-    }
-    if (form.expiryDate && Number.isNaN(new Date(form.expiryDate).getTime())) {
-      next.expiryDate = t('validExpiryDateRequired');
-    }
+    if (form.category === 'Foods' && !form.batchNumber?.trim()) next.batchNumber = t('batchNumberRequired');
+    if (form.expiryDate && Number.isNaN(new Date(form.expiryDate).getTime())) next.expiryDate = t('validExpiryDateRequired');
     applyKindErrors(next, form, FIELD_KINDS, t);
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -139,14 +137,15 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
         {serverError && <Alert type="error">{serverError}</Alert>}
         <Input kind="itemName" label={t('itemName')} required maxLength={100} value={form.name} onChange={update('name')} error={errors.name} />
         <div className="grid sm:grid-cols-2 gap-4">
-          <Select
+          <CreatableSelect
             label={t('category')}
             required
             value={form.category}
             onChange={update('category')}
             error={errors.category}
             hint={t('stockCategoryHint')}
-            options={STOCK_CATEGORIES.map((c) => ({ value: c, label: t(`stockCategory.${c}`) }))}
+            options={categoryOptions.map((category) => ({ value: category, label: STOCK_CATEGORIES.includes(category) ? t(`stockCategory.${category}`) : category }))}
+            addLabel="+ Other"
           />
           <Select
             label={t('unit')}
@@ -223,14 +222,13 @@ export default function StockItemFormModal({ open, onClose, item, onSaved }) {
               ...suppliers.map((s) => ({ value: s.id, label: s.name })),
             ]}
           />
-          <Select
+          <CreatableSelect
             label={t('location')}
             value={form.location}
             onChange={update('location')}
-            options={[
-              { value: '', label: `— ${t('selectAnOption')} —` },
-              ...['Main Store', 'Kitchen Store', 'ICT Lab Store', 'Admin Store'].map((location) => ({ value: location, label: t(`stockLocation.${location}`) })),
-            ]}
+            placeholder={`— ${t('selectAnOption')} —`}
+            options={locationOptions.map((location) => ({ value: location, label: STOCK_LOCATIONS.includes(location) ? t(`stockLocation.${location}`) : location }))}
+            addLabel="+ Other"
           />
         </div>
       </form>
