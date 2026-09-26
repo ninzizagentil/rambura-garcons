@@ -1,9 +1,25 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { api } from '../services/api';
 import { getNotifications, markNotificationRead, markAllNotificationsRead, deleteNotification as removeNotification } from '../services/notificationService';
+import { useAuth } from './AuthContext';
 
 const NotificationContext = createContext(null);
 const SOUND_KEY = 'rg_notification_sound_enabled';
+const MODULE_PERMISSION_MAP = {
+  Library: ['library.view', 'library.books.create', 'library.books.update', 'library.books.delete', 'library.borrow', 'library.return', 'library.reports'],
+  Stock: ['stock.view', 'stock.create', 'stock.update', 'stock.in', 'stock.out', 'stock.adjust', 'stock.transfer', 'stock.damage', 'stock.dispose.request', 'stock.dispose.approve', 'stock.archive.request', 'stock.archive.approve', 'stock.suppliers', 'stock.reports'],
+  Admissions: ['applications.view', 'applications.update'],
+};
+
+function isRelevantToUser(notification, user) {
+  if (!notification?.module || !user) return true;
+  const permissionHints = MODULE_PERMISSION_MAP[notification.module] || [];
+  if (!permissionHints.length) return true;
+
+  const userPermissions = Array.isArray(user.permissions) ? user.permissions : [];
+  const hasMatchingPermission = permissionHints.some((permission) => userPermissions.includes(permission));
+  return hasMatchingPermission || (notification.module === 'Library' && user.role === 'librarian') || (notification.module === 'Stock' && user.role === 'stock_manager') || (notification.module === 'Admissions' && user.role === 'management');
+}
 
 function normalizeNotification(notification) {
   return { ...notification, id: notification.id || notification._id, to: notification.to || notification.link, date: notification.date || notification.createdAt };
@@ -40,6 +56,7 @@ function playChime() {
 }
 
 export function NotificationProvider({ children }) {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     try {
@@ -50,6 +67,7 @@ export function NotificationProvider({ children }) {
     }
   });
   const hydrated = useRef(false);
+  const relevantNotifications = useMemo(() => notifications.filter((notification) => isRelevantToUser(notification, user)), [notifications, user]);
 
   const addNotification = useCallback(({ type = 'system', message, to }) => {
     const notification = {
@@ -130,11 +148,11 @@ export function NotificationProvider({ children }) {
     }
   }, []);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = relevantNotifications.filter((n) => !n.read).length;
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, addNotification, soundEnabled, toggleSound }}
+      value={{ notifications: relevantNotifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, addNotification, soundEnabled, toggleSound }}
     >
       {children}
     </NotificationContext.Provider>

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate, authorize, requireAnyPermission, requirePermission } from '../middleware/auth.js';
 import { asyncHandler, fail, ok } from '../utils/api.js';
-import { publicList, publicDetail, adminList, adminCreate, adminUpdate, adminDelete, publishNews, getSettings, updateSettings, updateDevelopersPageSettings, getHero, updateHero, getEmailSettings, updateEmailSettings } from '../controllers/contentController.js';
+import { publicList, publicDetail, adminList, adminCreate, adminUpdate, adminDelete, publishNews, getSettings, updateSettings, updateDevelopersPageSettings, getHero, updateHero } from '../controllers/contentController.js';
 import { submit, getApplications, getApplication, updateStatus, remove, trackApplication, downloadAdminAttachment } from '../controllers/admissionController.js';
 import { submitContact } from '../controllers/contactController.js';
 import ContactMessage from '../models/ContactMessage.js';
@@ -69,8 +69,6 @@ adminRouter.get('/settings', requireAnyPermission('settings.view', 'website.view
 adminRouter.put('/settings', requireAnyPermission('settings.update', 'website.update'), asyncHandler(updateSettings));
 adminRouter.get('/website/hero', requireAnyPermission('website.view'), asyncHandler(getHero));
 adminRouter.put('/website/hero', requireAnyPermission('website.update'), asyncHandler(updateHero));
-adminRouter.get('/email-settings', authorize('admin'), asyncHandler(getEmailSettings));
-adminRouter.put('/email-settings', authorize('admin'), asyncHandler(updateEmailSettings));
 adminRouter.post('/news/:id/publish', requireAnyPermission('website.update'), asyncHandler((req, res) => publishNews({ ...req, body: { ...req.body, published: true } }, res)));
 adminRouter.post('/news/:id/unpublish', requireAnyPermission('website.update'), asyncHandler((req, res) => publishNews({ ...req, body: { ...req.body, published: false } }, res)));
 adminRouter.get('/:resource', requireAnyPermission('website.view'), asyncHandler(adminList));

@@ -20,27 +20,12 @@ function loginErrorMessage(error) {
 export async function login({ identifier, password }) {
   try {
     const result = await api.post('/auth/login', { identifier, password });
-    if (result.data.requiresTwoFactor) {
-      return { success: false, requiresTwoFactor: true, challengeToken: result.data.challengeToken };
-    }
     setTokens(result.data);
     persistSession(result.data.user);
     window.dispatchEvent(new Event('rg:authenticated'));
     return { success: true, user: result.data.user };
   } catch (error) {
     return { success: false, error: loginErrorMessage(error), errors: error?.errors || [] };
-  }
-}
-
-export async function verifyLoginTwoFactor(challengeToken, code) {
-  try {
-    const result = await api.post('/auth/login/2fa', { challengeToken, code });
-    setTokens(result.data);
-    persistSession(result.data.user);
-    window.dispatchEvent(new Event('rg:authenticated'));
-    return { success: true, user: result.data.user };
-  } catch (error) {
-    return { success: false, error: error?.message || 'Invalid verification code.' };
   }
 }
 
@@ -53,10 +38,6 @@ export async function resetPassword(token, newPassword) {
   const result = await api.post('/auth/password-reset/confirm', { token, newPassword });
   return result.data;
 }
-
-export async function setupTwoFactor() { return (await api.post('/auth/2fa/setup', {})).data; }
-export async function enableTwoFactor(secret, code, recoveryCodes) { return (await api.post('/auth/2fa/enable', { secret, code, recoveryCodes })).data; }
-export async function disableTwoFactor(password, code) { return (await api.post('/auth/2fa/disable', { password, code })).data; }
 
 export async function logout() {
   // Send this device's refresh token so only THIS device is signed out (other devices stay signed in).
@@ -96,5 +77,5 @@ export function persistSession(user) {
  * without changing the call sites that use hasPermission().
  */
 export function hasPermission(user, permission) {
-  return !!user && (user.role === 'admin' || user.permissions?.includes(permission));
+  return !!user && !!permission && user.permissions?.includes(permission);
 }

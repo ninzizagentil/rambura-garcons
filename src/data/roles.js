@@ -32,62 +32,46 @@ export const ROLE_HOME = {
 };
 
 /**
- * The IT / System Administrator always sees the full menu.
- * Every other user gets a menu built from the permissions they currently hold
- * (see MASTER_NAV + getNavForUser below), NOT from their role name.
+ * The IT / System Administrator keeps the administration area focused on system
+ * controls and does not inherit module-level access to Equipment, Library MIS,
+ * or Stock MIS by default.
  */
 export const ADMIN_NAV = [
-    { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
-    {
-      label: 'School Modules',
-      to: '/admin',
-      icon: LayoutList,
-      children: [
-        { label: 'Website Management', to: '/admin/website', icon: Globe },
-        { label: 'Equipment MIS', to: '/equipment', icon: Laptop, permission: 'equipment.view' },
-        { label: 'Equipment Reports', to: '/equipment/reports', icon: FileBarChart, permission: 'equipment.view' },
-      ],
-    },
-    {
-      label: 'Stock MIS',
-      to: '/stock',
-      icon: Package,
-      children: [
-        { label: 'Items', to: '/stock/items', icon: Boxes, permission: 'stock.view' },
-        { label: 'Alerts', to: '/stock/alerts', icon: AlertTriangle, permission: 'stock.view' },
-        { label: 'Receive Stock', to: '/stock/stock-in', icon: PackagePlus, permission: 'stock.in' },
-        { label: 'Issue Stock', to: '/stock/stock-out', icon: PackageMinus, permission: 'stock.out' },
-        { label: 'Transfer Stock', to: '/stock/transfer', icon: ArrowLeftRight, permission: 'stock.transfer' },
-        { label: 'Adjust Stock', to: '/stock/adjustment', icon: ClipboardEdit, permission: 'stock.adjust' },
-        { label: 'Stock Reports', to: '/stock/reports', icon: FileBarChart, permission: 'stock.reports' },
-      ],
-    },
-    {
-      label: 'Library MIS',
-      to: '/library',
-      icon: BookOpen,
-      permission: 'library.view',
-      children: [
-        { label: 'Books', to: '/library/books', icon: BookOpen, permission: 'library.view' },
-        { label: 'Borrowed Books', to: '/library/borrowed', icon: BookMarked, permission: 'library.view' },
-        { label: 'Overdue Books', to: '/library/overdue', icon: AlertTriangle, permission: 'library.view' },
-        { label: 'Returns', to: '/library/returns', icon: RotateCcw, permission: 'library.return' },
-        { label: 'Borrowing History', to: '/library/history', icon: HistoryIcon, permission: 'library.reports' },
-        { label: 'Library Reports', to: '/library/reports', icon: FileBarChart, permission: 'library.reports' },
-      ],
-    },
-    {
-      label: 'Administration',
-      to: '/admin/users',
-      icon: ShieldCheck,
-      children: [
-        { label: 'Users & Roles',       to: '/admin/users',    icon: Users },
-        { label: 'Roles & Permissions', to: '/admin/roles',    icon: ShieldCheck },
-        { label: 'Activity / Audit',    to: '/admin/activity', icon: Activity },
-        { label: 'Settings',            to: '/admin/settings', icon: Settings },
-      ],
-    },
-  ];
+  { label: 'Dashboard', to: '/admin', icon: LayoutDashboard },
+  {
+    label: 'Users & Access',
+    to: '/admin/users',
+    icon: ShieldCheck,
+    children: [
+      { label: 'Users & Roles', to: '/admin/users', icon: Users, permission: 'users.view' },
+      { label: 'Roles & Permissions', to: '/admin/roles', icon: ShieldCheck, permission: 'users.update' },
+    ],
+  },
+  {
+    label: 'Website',
+    to: '/admin/website',
+    icon: Globe,
+    children: [
+      { label: 'Website Management', to: '/admin/website', icon: Globe, permission: 'website.view' },
+    ],
+  },
+  {
+    label: 'Oversight',
+    to: '/admin/activity',
+    icon: Activity,
+    children: [
+      { label: 'Activity / Audit', to: '/admin/activity', icon: Activity, permission: 'audit.view' },
+    ],
+  },
+  {
+    label: 'System',
+    to: '/admin/settings',
+    icon: Settings,
+    children: [
+      { label: 'Settings', to: '/admin/settings', icon: Settings, permission: 'settings.view' },
+    ],
+  },
+];
 
 /**
  * Menu shown to non-admin users. Each entry is shown only when the user holds
@@ -120,6 +104,7 @@ export const MASTER_NAV = [
     ],
   },
   { label: 'Management Dashboard', to: '/management', icon: LayoutDashboard, anyPermission: ['applications.view', 'reports.view'], dashboard: true },
+  { label: 'Website Management', to: '/admin/website', icon: Globe, permission: 'website.view' },
 
   {
     label: 'Library Catalogue',
@@ -214,7 +199,6 @@ export function canSeeNavItem(item, hasPermission, role) {
 }
 
 export function filterNavItems(items, role, hasPermission) {
-  if (role === ROLES.ADMIN) return items;
   return items
     .map((item) => {
       if (!canSeeNavItem(item, hasPermission, role)) return null;
@@ -234,7 +218,9 @@ export function filterNavItems(items, role, hasPermission) {
  */
 export function getNavForUser(user, hasPermission) {
   if (!user) return [];
-  if (user.role === ROLES.ADMIN) return ADMIN_NAV;
+  if (user.role === ROLES.ADMIN) {
+    return filterNavItems(ADMIN_NAV, user.role, hasPermission);
+  }
   const items = filterNavItems(MASTER_NAV, user.role, hasPermission);
   if (user.role === ROLES.MANAGEMENT) {
     const dashboardOrder = {

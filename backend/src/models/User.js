@@ -15,9 +15,6 @@ const userSchema = new mongoose.Schema({
   refreshTokens: { type: [{ hash: String, createdAt: Date, expiresAt: Date, _id: false }], select: false, default: [] },
   passwordResetTokenHash: { type: String, select: false },
   passwordResetExpires: { type: Date, select: false },
-  twoFactorSecret: { type: String, select: false },
-  twoFactorEnabled: { type: Boolean, default: false },
-  twoFactorRecoveryCodes: { type: [{ hash: String, usedAt: Date }], select: false, default: [] },
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

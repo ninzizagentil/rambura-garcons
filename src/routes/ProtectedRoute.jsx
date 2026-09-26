@@ -28,16 +28,16 @@ export function RoleProtectedRoute({ allow }) {
  * granting or removing one in Roles & Permissions takes effect straight away.
  */
 export function PermissionProtectedRoute({ permissions = [], mode = 'any' }) {
-  const { role, isAuthenticated, initializing, hasPermission } = useAuth();
+  const { isAuthenticated, initializing, hasPermission } = useAuth();
   const location = useLocation();
 
   if (initializing) return <LoadingState label="Checking your session…" className="min-h-screen" />;
   if (!isAuthenticated) return <Navigate to="/login" state={{ from: location }} replace />;
-  if (role !== 'admin') {
-    const allowed = mode === 'all'
-      ? permissions.every((permission) => hasPermission(permission))
-      : permissions.some((permission) => hasPermission(permission));
-    if (!allowed) return <Navigate to="/access-restricted" replace />;
-  }
+
+  const allowed = mode === 'all'
+    ? permissions.every((permission) => hasPermission(permission))
+    : permissions.some((permission) => hasPermission(permission));
+
+  if (!allowed) return <Navigate to="/access-restricted" replace />;
   return <Outlet />;
 }

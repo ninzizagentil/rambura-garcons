@@ -9,10 +9,13 @@ export async function getRoles(_req, res) { return ok(res, await Role.find().pop
 export async function getPermissions(_req, res) { return ok(res, await Permission.find().sort('module key')); }
 export async function updateRole(req, res) {
   const existingRole = await Role.findOne({ name: req.params.name }).populate('permissions', 'key');
-  const permissions = req.params.name === 'admin'
-    ? (await Permission.find({}, '_id')).map((permission) => permission._id)
-    : (req.body.permissions || []);
-  const role = await Role.findOneAndUpdate({ name: req.params.name }, { permissions }, { new: true, runValidators: true }).populate('permissions');
+  const requested = req.body.permissions || [];
+  const adminAllowedIds = (await Permission.find({ module: { $nin: ['library', 'stock', 'equipment', 'events', 'applications', 'reports'] } }, '_id')).map((permission) => permission._id.toString());
+  const allowedIds = new Set(adminAllowedIds);
+  const permissionIds = req.params.name === 'admin'
+    ? requested.filter((id) => allowedIds.has(String(id)))
+    : requested;
+  const role = await Role.findOneAndUpdate({ name: req.params.name }, { permissions: permissionIds }, { new: true, runValidators: true }).populate('permissions');
   if (role && existingRole) {
     const previousKeys = new Set(existingRole.permissions.map((permission) => permission.key));
     const currentKeys = new Set(role.permissions.map((permission) => permission.key));

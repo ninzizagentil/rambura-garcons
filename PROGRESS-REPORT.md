@@ -53,7 +53,7 @@ Ubutumwa buri mu ndimi 3 (en/fr/rw).
 
 **Guhindura amategeko ya telefoni** (ubu ni 10; ushobora kuyihindura): `PHONE_MIN_DIGITS` muri `src/utils/validators.js` na `backend/src/utils/validators.js`.
 
-**Ifishi zasuzumwe:** Stock (Item, Supplier, In, Out, Adjustment, Transfer, Damage, Dispose, Reconciliation), Library (Book, Borrow), Admin (User, Settings, Website: contact, developers, staff, programs, departments, news, gallery, hero testimonials), Equipment (register, assign, maintenance), Events, Public (Admissions, Contact), 2FA code, Forgot password.
+**Ifishi zasuzumwe:** Stock (Item, Supplier, In, Out, Adjustment, Transfer, Damage, Dispose, Reconciliation), Library (Book, Borrow), Admin (User, Settings, Website: contact, developers, staff, programs, departments, news, gallery, hero testimonials), Equipment (register, assign, maintenance), Events, Public (Admissions, Contact), Forgot password.
 Ntizihinduwe ku bushake: ijambobanga, ubushakashatsi (search), ibisobanuro/notes/messages (ni inyandiko y'ubuntu), amatariki.
 
 **Tests:** `npm test` (frontend, 15) na `cd backend && npm test` (19).

@@ -114,10 +114,30 @@ export default function App() {
       <Route element={<RoleProtectedRoute allow={[ROLES.ADMIN]} />}>
         <Route element={<DashboardLayout />}>
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/website" element={<WebsiteManagement />} />
           <Route path="/admin/reports" element={<Navigate to="/management/insights" replace />} />
+        </Route>
+      </Route>
+
+      <Route element={<PermissionProtectedRoute permissions={['users.view']} />}>
+        <Route element={<DashboardLayout />}>
           <Route path="/admin/users" element={<Users />} />
+        </Route>
+      </Route>
+
+      <Route element={<PermissionProtectedRoute permissions={['users.update']} />}>
+        <Route element={<DashboardLayout />}>
           <Route path="/admin/roles" element={<RolesPermissions />} />
+        </Route>
+      </Route>
+
+      <Route element={<PermissionProtectedRoute permissions={['website.view']} />}>
+        <Route element={<DashboardLayout />}>
+          <Route path="/admin/website" element={<WebsiteManagement />} />
+        </Route>
+      </Route>
+
+      <Route element={<PermissionProtectedRoute permissions={['settings.view']} />}>
+        <Route element={<DashboardLayout />}>
           <Route path="/admin/settings" element={<Settings />} />
         </Route>
       </Route>

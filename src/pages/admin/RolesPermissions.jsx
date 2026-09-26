@@ -25,7 +25,7 @@ export default function RolesPermissions() {
   const { showToast } = useToast();
   const { t } = useApp();
   const { role: currentRole, syncPermissions, updatePermissions } = useAuth();
-  const [activeRole, setActiveRole] = useState('librarian');
+  const [activeRole, setActiveRole] = useState('admin');
   const [permissions, setPermissions] = useState([]);
   // roleName -> Set of permission ids currently checked for that role (pending save)
   const [selections, setSelections] = useState({});
@@ -36,8 +36,17 @@ export default function RolesPermissions() {
     (async () => {
       try {
         const [rolesData, permissionsData] = await Promise.all([getRoles(), getPermissions()]);
+        const adminAllowedIds = permissionsData
+          .filter((permission) => !['library', 'stock', 'equipment', 'events', 'applications', 'reports'].includes(permission.module))
+          .map((permission) => permission._id);
         setPermissions(permissionsData);
-        setSelections(Object.fromEntries(rolesData.map((role) => [role.name, new Set(role.permissions.map((p) => p._id || p))])));
+        setSelections(Object.fromEntries(rolesData.map((role) => {
+          const permissionIds = (role.permissions || []).map((p) => p._id || p);
+          const selectedIds = role.name === 'admin'
+            ? permissionIds.filter((id) => adminAllowedIds.includes(id))
+            : permissionIds;
+          return [role.name, new Set(selectedIds)];
+        })));
       } catch {
         showToast(t('couldNotLoadRoles'), 'error');
       } finally {
@@ -53,13 +62,18 @@ export default function RolesPermissions() {
       if (!byModule[permission.module]) byModule[permission.module] = [];
       byModule[permission.module].push(permission);
     }
+    if (activeRole === 'admin') {
+      const adminModules = new Set(['users', 'website', 'audit', 'settings']);
+      Object.keys(byModule).forEach((module) => {
+        if (!adminModules.has(module)) delete byModule[module];
+      });
+    }
     return byModule;
-  }, [permissions]);
+  }, [permissions, activeRole]);
 
   const activeSelection = selections[activeRole] || new Set();
 
   const toggleModule = (module) => {
-    if (activeRole === 'admin') return;
     const modulePermissionIds = (modules[module] || []).map((p) => p._id);
     const allSelected = modulePermissionIds.every((id) => activeSelection.has(id));
     setSelections((prev) => {
@@ -70,7 +84,6 @@ export default function RolesPermissions() {
   };
 
   const togglePermission = (permissionId) => {
-    if (activeRole === 'admin') return;
     setSelections((prev) => {
       const next = new Set(prev[activeRole] || []);
       if (next.has(permissionId)) next.delete(permissionId);
@@ -80,9 +93,14 @@ export default function RolesPermissions() {
   };
 
   const handleSave = async () => {
-    if (activeRole === 'admin') return;
     setSaving(true);
-    const result = await updateRolePermissions(activeRole, Array.from(activeSelection));
+    const adminAllowedIds = permissions
+      .filter((permission) => !['library', 'stock', 'equipment', 'events', 'applications', 'reports'].includes(permission.module))
+      .map((permission) => permission._id);
+    const payload = activeRole === 'admin'
+      ? Array.from(activeSelection).filter((id) => adminAllowedIds.includes(id))
+      : Array.from(activeSelection);
+    const result = await updateRolePermissions(activeRole, payload);
     setSaving(false);
     if (!result.success) { showToast(result.error || t('couldNotSavePermissions'), 'error'); return; }
     if (result.role?.name === currentRole) {
@@ -139,9 +157,7 @@ export default function RolesPermissions() {
                     </span>
                     <div className="min-w-0">
                       <div className="text-sm font-semibold">{label}</div>
-                      <div className="text-[11px] opacity-75">
-                        {value === 'admin' ? t('fullAccess') : t('customAccess')}
-                      </div>
+                      <div className="text-[11px] opacity-75">{t('customAccess')}</div>
                     </div>
                   </div>
                 </button>
@@ -160,17 +176,15 @@ export default function RolesPermissions() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-full border border-[var(--color-border-gray)] bg-[var(--color-off-white)] px-3 py-1.5 text-xs font-medium text-[var(--color-mid-gray)]">
-                {activeRole === 'admin' ? t('fullSystemAccess') : t('permissionsCount', { count: activeSelection.size })}
+                {t('permissionsCount', { count: activeSelection.size })}
               </span>
               <span className="inline-flex items-center rounded-full bg-[var(--color-gold-100)] px-3 py-1.5 text-xs font-medium text-[var(--color-heading)]">
-                {activeRole === 'admin' ? t('protected') : t('editable')}
+                {t('editable')}
               </span>
             </div>
           </div>
 
-          <p className="mt-5 text-sm text-[var(--color-mid-gray)]">
-            {activeRole === 'admin' ? t('administratorsUnrestricted') : t('choosePermissionGroups')}
-          </p>
+          <p className="mt-5 text-sm text-[var(--color-mid-gray)]">{t('choosePermissionGroups')}</p>
 
           <div className="mt-6 space-y-4">
             {Object.keys(modules).length === 0 && (
@@ -181,7 +195,7 @@ export default function RolesPermissions() {
 
             {Object.entries(modules).map(([module, modulePermissions]) => {
               const moduleIds = modulePermissions.map((p) => p._id);
-              const isOn = activeRole === 'admin' || moduleIds.every((id) => activeSelection.has(id));
+              const isOn = moduleIds.every((id) => activeSelection.has(id));
 
               return (
                 <div key={module} className="rounded-2xl border border-[var(--color-border-gray)] bg-[var(--color-off-white)] p-4">
@@ -198,8 +212,7 @@ export default function RolesPermissions() {
                       role="switch"
                       aria-checked={isOn}
                       onClick={() => toggleModule(module)}
-                      disabled={activeRole === 'admin'}
-                      className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors disabled:opacity-60 ${
+                      className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${
                         isOn ? 'bg-[var(--color-medium-green)]' : 'bg-[var(--color-border-gray)]'
                       }`}
                     >
@@ -213,7 +226,7 @@ export default function RolesPermissions() {
 
                   <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                     {modulePermissions.map((permission) => {
-                      const checked = activeRole === 'admin' || activeSelection.has(permission._id);
+                      const checked = activeSelection.has(permission._id);
                       const keyName = permission.key.split('.').pop();
                       const label = t(PERMISSION_LABELS[keyName] || keyName);
 
@@ -222,7 +235,6 @@ export default function RolesPermissions() {
                           type="button"
                           key={permission._id}
                           onClick={() => togglePermission(permission._id)}
-                          disabled={activeRole === 'admin'}
                           aria-pressed={checked}
                           className={`flex items-center justify-between rounded-xl border px-3 py-2.5 ${
                             checked
@@ -244,7 +256,7 @@ export default function RolesPermissions() {
           </div>
 
           <div className="mt-6 flex justify-end">
-            <Button variant="primary" onClick={handleSave} loading={saving} disabled={activeRole === 'admin'}>
+            <Button variant="primary" onClick={handleSave} loading={saving}>
               {t('savePermissions')}
             </Button>
           </div>

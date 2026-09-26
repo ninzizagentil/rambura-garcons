@@ -18,8 +18,13 @@ import { getNews, refreshContent } from '../../services/contentService';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { t } = useApp();
+
+  const canViewLibrary = hasPermission('library.view');
+  const canViewStock = hasPermission('stock.view');
+  const canViewEquipment = hasPermission('equipment.view');
+  const canViewWebsite = hasPermission('website.view');
 
   const [users, setUsers] = useState([]);
   const [equipment, setEquipment] = useState([]);
@@ -28,34 +33,69 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
+    const tasks = [
       getUsers().then((data) => { if (!cancelled) setUsers(data || []); }),
-      refreshLibrary().catch(() => {}),
-      refreshStock().catch(() => {}),
       refreshActivity().catch(() => {}),
-      refreshEquipment().then((data) => { if (!cancelled) setEquipment(data || getEquipment()); }).catch(() => {}),
-      refreshContent().catch(() => {}),
-    ])
-      .then(() => { if (!cancelled) setRefreshTick((t) => t + 1); })
+      ...(canViewWebsite ? [refreshContent().catch(() => {})] : []),
+      ...(canViewLibrary ? [refreshLibrary().catch(() => {})] : []),
+      ...(canViewStock ? [refreshStock().catch(() => {})] : []),
+      ...(canViewEquipment ? [refreshEquipment().then((data) => { if (!cancelled) setEquipment(data || getEquipment()); }).catch(() => {})] : []),
+    ];
+
+    Promise.all(tasks)
+      .then(() => { if (!cancelled) setRefreshTick((tick) => tick + 1); })
       .catch((err) => { if (!cancelled) setLoadError(err.message || t('failedLoadDashboard')); });
     return () => { cancelled = true; };
-  }, [t]);
+  }, [canViewEquipment, canViewLibrary, canViewStock, canViewWebsite, t]);
 
-  const loans = useMemo(() => { void refreshTick; return getLoans(); }, [refreshTick]);
-  const transactions = useMemo(() => { void refreshTick; return getTransactions(); }, [refreshTick]);
-  const lowStock = useMemo(() => { void refreshTick; return getLowStockItems(); }, [refreshTick]);
-  const news = useMemo(() => { void refreshTick; return getNews(); }, [refreshTick]);
+  const loans = useMemo(() => {
+    if (!canViewLibrary) return [];
+    void refreshTick;
+    return getLoans();
+  }, [canViewLibrary, refreshTick]);
+
+  const transactions = useMemo(() => {
+    if (!canViewStock) return [];
+    void refreshTick;
+    return getTransactions();
+  }, [canViewStock, refreshTick]);
+
+  const lowStock = useMemo(() => {
+    if (!canViewStock) return [];
+    void refreshTick;
+    return getLowStockItems();
+  }, [canViewStock, refreshTick]);
+
+  const news = useMemo(() => {
+    if (!canViewWebsite) return [];
+    void refreshTick;
+    return getNews();
+  }, [canViewWebsite, refreshTick]);
 
   const activeUsers = users.filter((u) => u.status === 'active').length;
   const lowStockPreview = useMemo(() => lowStock.slice(0, 3), [lowStock]);
 
+  const adminQuickActions = [
+    { label: t('addUser'), to: '/admin/users', icon: UserPlus, permission: 'users.view' },
+    { label: t('manageWebsite'), to: '/admin/website', icon: Globe2, permission: 'website.view' },
+    { label: t('viewReports'), to: '/management/insights', icon: ArrowRight, permission: 'reports.view' },
+  ].filter((action) => !action.permission || hasPermission(action.permission));
+
   const systemStatus = [
     { label: t('serverStatus'), description: t('allSystemsOperational'), icon: CheckCircle2 },
     { label: t('database'), description: t('databaseConnectionHealthy'), icon: CheckCircle2 },
-    { label: t('website'), description: t('websiteRunningSmoothly'), icon: Globe },
-    { label: t('libraryMis'), description: t('librarySystemOperational'), icon: BookOpen },
-    { label: t('stockMis'), description: t('stockSystemOperational'), icon: Package },
+    ...(hasPermission('website.view') ? [{ label: t('website'), description: t('websiteRunningSmoothly'), icon: Globe }] : []),
+    ...(hasPermission('library.view') ? [{ label: t('libraryMis'), description: t('librarySystemOperational'), icon: BookOpen }] : []),
+    ...(hasPermission('stock.view') ? [{ label: t('stockMis'), description: t('stockSystemOperational'), icon: Package }] : []),
   ];
+
+  const adminCards = [
+    { label: t('usersRoles'), description: t('manageStaffAccounts'), icon: ShieldCheck, to: '/admin/users', permission: 'users.view' },
+    { label: t('rolesPermissions'), description: t('controlRoleAccess'), icon: ShieldCheck, to: '/admin/roles', permission: 'users.update' },
+    { label: t('reports'), description: t('crossModuleActivityOverview'), icon: ArrowRight, to: '/management/insights', permission: 'reports.view' },
+    { label: t('activityAudit'), description: t('activityAuditDescription'), icon: Activity, to: '/admin/activity', permission: 'audit.view' },
+    { label: t('settings'), description: t('settings'), icon: Settings, to: '/admin/settings', permission: 'settings.view' },
+  ].filter((card) => !card.permission || hasPermission(card.permission));
 
   return (
     <div className="space-y-6">
@@ -74,44 +114,61 @@ export default function AdminDashboard() {
         ]}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <QuickActions actions={[
-              { label: t('addUser'), to: '/admin/users', icon: UserPlus },
-              { label: t('manageWebsite'), to: '/admin/website', icon: Globe2 },
-              { label: t('viewReports'), to: '/management/insights', icon: ArrowRight },
-            ]} />
+            <QuickActions actions={adminQuickActions} />
           </div>
         }
       />
 
 
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard
-          label={t('totalUsers')}
-          value={users.length}
-          icon={Users}
-          onClick={() => navigate('/admin/users')}
-        />
-        <StatCard
-          label={t('activeUsers')}
-          value={activeUsers}
-          icon={Users}
-          tone="gold"
-          onClick={() => navigate('/admin/users')}
-        />
-        <StatCard
-          label={t('libraryLoans')}
-          value={loans.length}
-          icon={BookOpen}
-          onClick={() => navigate('/library/reports')}
-        />
-        <StatCard
-          label={t('stockAlerts')}
-          value={lowStock.length}
-          icon={AlertTriangle}
-          tone="amber"
-          trend={lowStock.length > 0 ? { label: t('needsRestocking'), positive: false } : { label: t('allClear'), positive: true }}
-          onClick={() => navigate('/management/stock-reports')}
-        />
+      <section className="mb-2">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-mid-gray)]">Overview</p>
+            <h3 className="mt-1 font-display text-lg font-semibold text-[var(--color-dark-gray)]">System snapshot</h3>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+          <StatCard
+            label={t('totalUsers')}
+            value={users.length}
+            icon={Users}
+            onClick={() => navigate('/admin/users')}
+          />
+          <StatCard
+            label={t('activeUsers')}
+            value={activeUsers}
+            icon={Users}
+            tone="gold"
+            onClick={() => navigate('/admin/users')}
+          />
+          {canViewWebsite && (
+            <StatCard
+              label={t('websitePosts')}
+              value={news.length}
+              icon={Globe}
+              onClick={() => navigate('/admin/website')}
+            />
+          )}
+          {canViewLibrary && (
+            <StatCard
+              label={t('libraryLoans')}
+              value={loans.length}
+              icon={BookOpen}
+              onClick={() => navigate('/library/reports')}
+            />
+          )}
+          {canViewStock && (
+            <StatCard
+              label={t('stockAlerts')}
+              value={lowStock.length}
+              icon={AlertTriangle}
+              tone="amber"
+              trend={lowStock.length > 0 ? { label: t('needsRestocking'), positive: false } : { label: t('allClear'), positive: true }}
+              onClick={() => navigate('/management/stock-reports')}
+            />
+          )}
+        </div>
       </section>
 
       <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.15fr_0.85fr]">
@@ -181,27 +238,6 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label={t('websitePosts')}
-          value={news.length}
-          icon={Globe}
-          onClick={() => navigate('/admin/website')}
-        />
-        <StatCard
-          label={t('transactions')}
-          value={transactions.length}
-          icon={Package}
-          onClick={() => navigate('/management/insights')}
-        />
-        <StatCard
-          label={t('equipmentRecords')}
-          value={equipment.length}
-          icon={Laptop}
-          onClick={() => navigate('/equipment/items')}
-        />
-      </section>
-
       <section className="rounded-[var(--radius-card)] border border-[var(--color-border-gray)] bg-[var(--color-white)] p-5 shadow-card">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
@@ -211,13 +247,7 @@ export default function AdminDashboard() {
           <ShieldCheck className="h-5 w-5 text-[var(--color-heading)]" aria-hidden="true" />
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          {[
-            { label: t('usersRoles'), description: t('manageStaffAccounts'), icon: ShieldCheck, to: '/admin/users' },
-            { label: t('rolesPermissions'), description: t('controlRoleAccess'), icon: ShieldCheck, to: '/admin/roles' },
-            { label: t('reports'), description: t('crossModuleActivityOverview'), icon: ArrowRight, to: '/management/insights' },
-            { label: t('activityAudit'), description: t('activityAuditDescription'), icon: Activity, to: '/admin/activity' },
-            { label: t('settings'), description: t('settings'), icon: Settings, to: '/admin/settings' },
-          ].map(({ label, description, icon: Icon, to }) => (
+          {adminCards.map(({ label, description, icon: Icon, to }) => (
             <button key={to} type="button" onClick={() => navigate(to)} className="group rounded-xl border border-[var(--color-border-gray)] bg-[var(--color-soft-gray)] p-4 text-left transition hover:-translate-y-0.5 hover:border-[var(--color-gold)] hover:bg-[var(--color-light-green-100)]">
               <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-white)] text-[var(--color-heading)] shadow-sm"><Icon className="h-4 w-4" aria-hidden="true" /></span>
               <span className="mt-3 block text-sm font-semibold text-[var(--color-dark-gray)]">{label}</span>

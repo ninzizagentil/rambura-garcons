@@ -1,5 +1,9 @@
 export const DEFAULT_ROLE_PERMISSIONS = {
-  admin: [],
+  admin: [
+    'users.view', 'users.create', 'users.update', 'users.delete',
+    'website.view', 'website.create', 'website.update', 'website.delete',
+    'audit.view', 'settings.view', 'settings.update',
+  ],
   librarian: [
     'library.view', 'library.books.create', 'library.books.update',
     'library.books.delete', 'library.borrow', 'library.return',

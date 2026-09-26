@@ -348,18 +348,6 @@ export function updateSystemSettings(data) {
     aboutText: data.aboutText,
   });
 }
-export async function getEmailSettings() {
-  const result = await api.get('/admin/email-settings');
-  return result.data || {};
-}
-export async function updateEmailSettings(data) {
-  try {
-    const result = await api.put('/admin/email-settings', data);
-    return { success: true, settings: result.data };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-}
 export async function updateDevelopersPage(data) {
   try {
     const developers = await Promise.all((data.developers || []).map(async (developer) => ({

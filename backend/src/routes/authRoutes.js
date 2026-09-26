@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login, logout, me, refresh, changePassword, updateAvatar, verifyLoginTwoFactor, requestPasswordReset, resetPassword, setupTwoFactor, enableTwoFactor, disableTwoFactor } from '../controllers/authController.js';
+import { login, logout, me, refresh, changePassword, updateAvatar, requestPasswordReset, resetPassword } from '../controllers/authController.js';
 import { authenticate } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/api.js';
 import rateLimit from 'express-rate-limit';
@@ -16,7 +16,6 @@ const loginValidation = validateBody({ identifier: { required: true, maxLength: 
 
 const router = Router();
 router.post('/login', authLimiter, loginValidation, asyncHandler(login));
-router.post('/login/2fa', authLimiter, asyncHandler(verifyLoginTwoFactor));
 router.post('/refresh', asyncHandler(refresh));
 router.post('/password-reset/request', authLimiter, validateBody({ email: { required: true, email: true } }), asyncHandler(requestPasswordReset));
 router.post('/password-reset/confirm', authLimiter, validateBody({ token: { required: true }, newPassword: { required: true, minLength: 8 } }), asyncHandler(resetPassword));
@@ -24,7 +23,4 @@ router.post('/logout', authenticate, asyncHandler(logout));
 router.get('/me', authenticate, asyncHandler(me));
 router.post('/change-password', authenticate, asyncHandler(changePassword));
 router.patch('/avatar', authenticate, asyncHandler(updateAvatar));
-router.post('/2fa/setup', authenticate, asyncHandler(setupTwoFactor));
-router.post('/2fa/enable', authenticate, asyncHandler(enableTwoFactor));
-router.post('/2fa/disable', authenticate, asyncHandler(disableTwoFactor));
 export default router;

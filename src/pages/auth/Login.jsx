@@ -4,14 +4,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Eye, EyeOff, GraduationCap, LogIn, ArrowLeft, AlertCircle, User, Lock,
   BookOpen, Package, Laptop, CalendarDays, ShieldCheck, Moon, Sun, HelpCircle, X,
-  ChevronDown, MessageCircle, KeyRound,
+  ChevronDown, MessageCircle,
 } from 'lucide-react';
 import { Input } from '../../components/forms/FormField';
 import Button from '../../components/common/Button';
 import HillRidgeDivider from '../../components/common/HillRidgeDivider';
 import BrandMark from '../../components/common/BrandMark';
 import { useAuth } from '../../context/AuthContext';
-import { verifyLoginTwoFactor } from '../../services/authService';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from '../../context/ToastContext';
 import { getHomePath } from '../../data/roles';
@@ -64,12 +63,9 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(() => !!readRememberedIdentifier());
   const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState({ identifier: '', password: '', verificationCode: '' });
+  const [fieldErrors, setFieldErrors] = useState({ identifier: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [adminLoading, setAdminLoading] = useState(false);
-  const [twoFactorRequired, setTwoFactorRequired] = useState(false);
-  const [challengeToken, setChallengeToken] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
   const [isLeaving, setIsLeaving] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [openFaq, setOpenFaq] = useState('getting-started');
@@ -98,49 +94,26 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const nextFieldErrors = { identifier: '', password: '', verificationCode: '' };
-    if (twoFactorRequired && !/^\d{6}$/.test(verificationCode) && !/^[A-Fa-f0-9]{8}-[A-Fa-f0-9]{8}$/.test(verificationCode)) {
-      nextFieldErrors.verificationCode = 'Enter a 6-digit authenticator code or a recovery code.';
-    } else {
-      const trimmedIdentifier = identifier.trim();
-      const identifierIsEmail = trimmedIdentifier.includes('@');
-      const validIdentifier = identifierIsEmail
-        ? LOGIN_EMAIL_PATTERN.test(trimmedIdentifier)
-        : LOGIN_USERNAME_PATTERN.test(trimmedIdentifier);
-      if (!trimmedIdentifier) nextFieldErrors.identifier = 'Enter your username or email.';
-      else if (!validIdentifier) nextFieldErrors.identifier = 'Enter a valid username or email address.';
-      if (!password) nextFieldErrors.password = 'Enter your password.';
-      else if (password.length < 8) nextFieldErrors.password = 'Password must be at least 8 characters.';
-      if (identifier.length > 120) nextFieldErrors.identifier = 'Username or email must be 120 characters or fewer.';
-      if (password.length > 200) nextFieldErrors.password = 'Password must be 200 characters or fewer.';
-    }
+    const nextFieldErrors = { identifier: '', password: '' };
+    const trimmedIdentifier = identifier.trim();
+    const identifierIsEmail = trimmedIdentifier.includes('@');
+    const validIdentifier = identifierIsEmail
+      ? LOGIN_EMAIL_PATTERN.test(trimmedIdentifier)
+      : LOGIN_USERNAME_PATTERN.test(trimmedIdentifier);
+    if (!trimmedIdentifier) nextFieldErrors.identifier = 'Enter your username or email.';
+    else if (!validIdentifier) nextFieldErrors.identifier = 'Enter a valid username or email address.';
+    if (!password) nextFieldErrors.password = 'Enter your password.';
+    else if (password.length < 8) nextFieldErrors.password = 'Password must be at least 8 characters.';
+    if (identifier.length > 120) nextFieldErrors.identifier = 'Username or email must be 120 characters or fewer.';
+    if (password.length > 200) nextFieldErrors.password = 'Password must be 200 characters or fewer.';
     setFieldErrors(nextFieldErrors);
     if (Object.values(nextFieldErrors).some(Boolean)) {
-      setError(twoFactorRequired ? 'Check the verification code and try again.' : 'Please enter your username or email and your password.');
+      setError('Please enter your username or email and your password.');
       return;
     }
     setLoading(true);
-    if (twoFactorRequired) {
-      setLoading(true);
-      const result = await verifyLoginTwoFactor(challengeToken, verificationCode);
-      setLoading(false);
-      if (!result.success) {
-        setFieldErrors((current) => ({ ...current, verificationCode: result.error }));
-        setError(result.error);
-        return;
-      }
-      showToast('Welcome back, Administrator!', 'success');
-      redirectAfterLogin(result.user);
-      return;
-    }
-    const result = await login({ identifier: identifier.trim(), password });
+    const result = await login({ identifier: trimmedIdentifier, password });
     setLoading(false);
-    if (result.requiresTwoFactor) {
-      setChallengeToken(result.challengeToken);
-      setTwoFactorRequired(true);
-      setError('Enter the 6-digit code from your authenticator app or use a recovery code.');
-      return;
-    }
     if (!result.success) {
       if (result.errors?.length) {
         setFieldErrors((current) => result.errors.reduce((next, item) => ({ ...next, [item.field]: item.message }), current));
@@ -161,12 +134,6 @@ export default function Login() {
     setAdminLoading(true);
     const result = await login({ identifier: ADMIN_ACCOUNT.identifier, password: ADMIN_ACCOUNT.password });
     setAdminLoading(false);
-    if (result.requiresTwoFactor) {
-      setChallengeToken(result.challengeToken);
-      setTwoFactorRequired(true);
-      setError('Enter the 6-digit code from your authenticator app or use a recovery code.');
-      return;
-    }
     if (!result.success) {
       setError(result.error);
       showToast(result.error || 'Administrator sign in failed.', 'error');
@@ -369,7 +336,6 @@ export default function Login() {
                               </motion.div>
                             )}
 
-                            {!twoFactorRequired && <>
                             <div>
                               <label className="block text-xs font-bold text-[var(--color-dark-gray)] uppercase tracking-wider mb-2.5 dark:text-[#F3F7F4]">
                                 Username or Email
@@ -437,27 +403,6 @@ export default function Login() {
                                 Forgot password?
                               </Link>
                             </div>
-                            </>}
-
-                            {twoFactorRequired && (
-                              <div>
-                                <label className="block text-xs font-bold text-[var(--color-dark-gray)] uppercase tracking-wider mb-2.5 dark:text-[#F3F7F4]">Authenticator code</label>
-                                <Input
-                                  icon={ShieldCheck}
-                                  inputMode="numeric"
-                                  autoComplete="one-time-code"
-                                  maxLength={6}
-                                  required
-                                  autoFocus
-                                  value={verificationCode}
-                                  onChange={(e) => { setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setFieldErrors((current) => ({ ...current, verificationCode: '' })); }}
-                                  error={fieldErrors.verificationCode}
-                                  placeholder="123456"
-                                  className="!bg-[var(--color-off-white)] !border-[var(--color-border-gray)]"
-                                />
-                                <button type="button" onClick={() => { setTwoFactorRequired(false); setChallengeToken(''); setVerificationCode(''); setError(''); }} className="mt-2 text-xs font-semibold text-[var(--color-medium-green)] hover:underline">Back to password sign in</button>
-                              </div>
-                            )}
 
                             {/* Login Button */}
                             <Button
@@ -468,7 +413,7 @@ export default function Login() {
                               loading={loading}
                               icon={LogIn}
                             >
-                              {loading ? 'Signing in...' : twoFactorRequired ? 'Verify code' : 'Sign In'}
+                              {loading ? 'Signing in...' : 'Sign In'}
                             </Button>
                           </div>
                         </form>

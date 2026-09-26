@@ -24,6 +24,6 @@ export function useModuleAccess(moduleRole, permissionPrefix, actionPermissions)
   const prefix = permissionPrefix
     || (moduleRole === ROLES.STOCK_MANAGER ? 'stock' : moduleRole === ROLES.LIBRARIAN ? 'library' : null);
   const relevant = actionPermissions || MODULE_MUTATIONS[prefix] || [];
-  const viewOnly = role === ROLES.ADMIN ? false : !relevant.some((permission) => can(permission));
+  const viewOnly = !relevant.some((permission) => can(permission));
   return { viewOnly, can };
 }

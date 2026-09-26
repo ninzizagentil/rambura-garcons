@@ -20,11 +20,32 @@ import StockItem from '../models/StockItem.js';
 import Admission from '../models/Admission.js';
 
 const DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000;
+const MODULE_PERMISSION_MAP = {
+  Library: ['library.view', 'library.books.create', 'library.books.update', 'library.books.delete', 'library.borrow', 'library.return', 'library.reports'],
+  Stock: ['stock.view', 'stock.create', 'stock.update', 'stock.in', 'stock.out', 'stock.adjust', 'stock.transfer', 'stock.damage', 'stock.dispose.request', 'stock.dispose.approve', 'stock.archive.request', 'stock.archive.approve', 'stock.suppliers', 'stock.reports'],
+  Admissions: ['applications.view', 'applications.update'],
+  Website: ['website.view', 'website.create', 'website.update', 'website.delete'],
+  Settings: ['settings.view', 'settings.update'],
+  Audit: ['audit.view'],
+  Users: ['users.view', 'users.create', 'users.update', 'users.delete'],
+};
+
+export function isUserEligibleForAlert(user, { roles = [], module } = {}) {
+  if (!user || user.status !== 'active') return false;
+
+  const permissionHints = MODULE_PERMISSION_MAP[module] || [];
+  const roleMatch = roles.includes(user.role);
+  const hasModulePermission = (user.permissions || []).some((permission) => permissionHints.includes(permission));
+
+  return roleMatch || hasModulePermission;
+}
 
 export async function dispatchAlert({ roles, title, message, type = 'warning', module, link, dedupeKey }) {
-  const users = await User.find({ role: { $in: roles }, status: 'active' }).select('fullName email');
+  const users = await User.find({ status: 'active' }).select('fullName email role permissions');
+  const recipients = users.filter((user) => isUserEligibleForAlert(user, { roles, module }));
   const since = new Date(Date.now() - DEDUPE_WINDOW_MS);
-  await Promise.all(users.map(async (user) => {
+
+  await Promise.all(recipients.map(async (user) => {
     const exists = dedupeKey && await Notification.exists({ userId: user._id, dedupeKey, createdAt: { $gte: since } });
     if (exists) return;
     await Notification.create({ userId: user._id, title, message, type, module, link, dedupeKey });

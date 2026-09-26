@@ -2,7 +2,6 @@ import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 import User from '../models/User.js';
 import Role from '../models/Role.js';
-import Permission from '../models/Permission.js';
 import { fail } from '../utils/api.js';
 import { DEFAULT_ROLE_PERMISSIONS } from '../config/defaultPermissions.js';
 
@@ -22,11 +21,13 @@ export async function authenticate(req, res, next) {
       await User.updateOne({ _id: user._id }, { $set: { lastActivity: new Date() } });
     }
     const role = await Role.findOne({ name: user.role }).populate('permissions', 'key');
-    user.permissions = user.role === 'admin'
-      ? (await Permission.find({}, 'key')).map((permission) => permission.key)
-      : role
+    const rolePermissions = role
       ? role.permissions.map((permission) => permission.key)
       : (user.permissions?.length ? user.permissions : (DEFAULT_ROLE_PERMISSIONS[user.role] || []));
+    const normalizedPermissions = user.role === 'admin'
+      ? rolePermissions.filter((permission) => !['library', 'stock', 'equipment', 'events', 'applications', 'reports'].includes(permission.split('.')[0]))
+      : rolePermissions;
+    user.permissions = Array.isArray(normalizedPermissions) ? normalizedPermissions : [];
     req.user = user;
     next();
   } catch {
@@ -47,7 +48,7 @@ export function requirePermission(permission) {
 
 export function requireAnyPermission(...permissions) {
   return (req, res, next) => {
-    if (req.user?.role === 'admin' || permissions.some((permission) => req.user?.permissions?.includes(permission))) return next();
+    if (permissions.some((permission) => req.user?.permissions?.includes(permission))) return next();
     return fail(res, `One of these permissions is required: ${permissions.join(', ')}`, 403);
   };
 }

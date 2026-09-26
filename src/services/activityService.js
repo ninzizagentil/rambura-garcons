@@ -9,7 +9,7 @@ let loading;
 function canReadActivity() {
   try {
     const user = JSON.parse(localStorage.getItem('rg_auth_session') || 'null');
-    return !!user && (user.role === 'admin' || !!user.permissions?.includes('audit.view'));
+    return !!user && !!user.permissions?.includes('audit.view');
   } catch {
     return false;
   }

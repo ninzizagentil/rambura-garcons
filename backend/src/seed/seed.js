@@ -259,7 +259,11 @@ await Event.insertMany([
 const permissionKeys = ['users.view', 'users.create', 'users.update', 'users.delete', 'website.view', 'website.create', 'website.update', 'website.delete', 'library.view', 'library.books.create', 'library.books.update', 'library.books.delete', 'library.borrow', 'library.return', 'library.reports', 'stock.view', 'stock.create', 'stock.update', 'stock.in', 'stock.out', 'stock.adjust', 'stock.transfer', 'stock.damage', 'stock.dispose.request', 'stock.dispose.approve', 'stock.archive.request', 'stock.archive.approve', 'stock.reconcile.approve', 'stock.suppliers', 'stock.reports', 'equipment.view', 'equipment.create', 'equipment.update', 'equipment.assign', 'equipment.maintenance', 'equipment.retire.request', 'equipment.retire.approve', 'equipment.archive.request', 'equipment.archive.approve', 'events.view', 'events.manage', 'applications.view', 'applications.update', 'reports.view', 'audit.view', 'settings.view', 'settings.update'];
 const permissions = await Permission.insertMany(permissionKeys.map((key) => ({ key, label: key, module: key.split('.')[0] })));
 await Role.insertMany([
-  { name: 'admin', label: 'IT / System Administrator', permissions: permissions.map((permission) => permission._id) },
+  {
+    name: 'admin',
+    label: 'IT / System Administrator',
+    permissions: permissions.filter((permission) => !['library', 'stock', 'equipment'].includes(permission.module)).map((permission) => permission._id),
+  },
   { name: 'librarian', label: 'Librarian', permissions: permissions.filter((permission) => ['library', 'events'].includes(permission.module)).map((permission) => permission._id) },
   { name: 'stock_manager', label: 'Stock Manager', permissions: permissions.filter((p) => ['stock'].includes(p.module) && !['stock.dispose.approve','stock.archive.approve','stock.reconcile.approve'].includes(p.key)).map((p) => p._id) },
   { name: 'equipment_manager', label: 'Equipment Manager', permissions: permissions.filter((p) => ['equipment'].includes(p.module) && !['equipment.retire.approve','equipment.archive.approve'].includes(p.key)).map((p) => p._id) },

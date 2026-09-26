@@ -3,58 +3,11 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import User from '../models/User.js';
 import Role from '../models/Role.js';
-import Permission from '../models/Permission.js';
 import { env } from '../config/env.js';
 import { fail, ok } from '../utils/api.js';
 import { recordAudit } from '../services/auditService.js';
 import { sendPasswordResetEmail } from '../services/emailService.js';
 import { DEFAULT_ROLE_PERMISSIONS } from '../config/defaultPermissions.js';
-
-const BASE32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-
-function base32(value) {
-  let bits = ''; let output = '';
-  for (const byte of value) bits += byte.toString(2).padStart(8, '0');
-  for (let i = 0; i + 5 <= bits.length; i += 5) output += BASE32[parseInt(bits.slice(i, i + 5), 2)];
-  if (bits.length % 5) output += BASE32[parseInt(bits.slice(-5).padEnd(5, '0'), 2)];
-  return output;
-}
-
-function decodeBase32(value) {
-  const bits = value.toUpperCase().replace(/=+$/, '').split('').map((char) => BASE32.indexOf(char).toString(2).padStart(5, '0')).join('');
-  const bytes = [];
-  for (let i = 0; i + 8 <= bits.length; i += 8) bytes.push(parseInt(bits.slice(i, i + 8), 2));
-  return Buffer.from(bytes);
-}
-
-function totp(secret, timestamp = Date.now()) {
-  const counter = Math.floor(timestamp / 30000);
-  const buffer = Buffer.alloc(8); buffer.writeUInt32BE(Math.floor(counter / 0x100000000), 0); buffer.writeUInt32BE(counter >>> 0, 4);
-  const digest = crypto.createHmac('sha1', decodeBase32(secret)).update(buffer).digest();
-  const offset = digest[digest.length - 1] & 15;
-  return String((digest.readUInt32BE(offset) & 0x7fffffff) % 1000000).padStart(6, '0');
-}
-
-function verifyTotp(secret, code) {
-  return [-1, 0, 1].some((offset) => totp(secret, Date.now() + offset * 30000) === String(code || '').trim());
-}
-
-async function verifySecondFactor(user, code) {
-  if (verifyTotp(user.twoFactorSecret, code)) return true;
-  const normalized = String(code || '').trim().toUpperCase();
-  for (const recoveryCode of user.twoFactorRecoveryCodes || []) {
-    if (!recoveryCode.usedAt && await bcrypt.compare(normalized, recoveryCode.hash)) {
-      recoveryCode.usedAt = new Date();
-      await user.save();
-      return true;
-    }
-  }
-  return false;
-}
-
-function createRecoveryCodes() {
-  return Array.from({ length: 8 }, () => `${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`);
-}
 
 // A refresh token is stored as a SHA-256 of the WHOLE token (bcrypt only reads the first 72 bytes,
 // which are identical for every token of the same user, so it could not tell tokens apart).
@@ -87,11 +40,13 @@ function safeUser(user) {
 
 async function safeUserWithPermissions(user) {
   const role = await Role.findOne({ name: user.role }).populate('permissions', 'key');
-  user.permissions = user.role === 'admin'
-    ? (await Permission.find({}, 'key')).map((permission) => permission.key)
-    : role
+  const rolePermissions = role
     ? role.permissions.map((permission) => permission.key)
     : (user.permissions?.length ? user.permissions : (DEFAULT_ROLE_PERMISSIONS[user.role] || []));
+  const normalizedPermissions = user.role === 'admin'
+    ? rolePermissions.filter((permission) => !['library', 'stock', 'equipment', 'events', 'applications', 'reports'].includes(permission.split('.')[0]))
+    : rolePermissions;
+  user.permissions = Array.isArray(normalizedPermissions) ? normalizedPermissions : [];
   return safeUser(user);
 }
 
@@ -103,10 +58,6 @@ export async function login(req, res) {
   const passwordMatches = await bcrypt.compare(password, user?.passwordHash || DUMMY_PASSWORD_HASH);
   if (!user || !passwordMatches) return fail(res, 'Invalid username or password', 401);
   if (user.status !== 'active') return fail(res, 'This account has been deactivated. Contact the administrator.', 403);
-  if (user.role === 'admin' && user.twoFactorEnabled) {
-    const challengeToken = jwt.sign({ sub: user._id.toString(), purpose: 'login-2fa' }, env.accessSecret, { expiresIn: '5m' });
-    return ok(res, { requiresTwoFactor: true, challengeToken }, 'Verification code required');
-  }
   const { accessToken, refreshToken } = tokens(user);
   user.lastLogin = new Date();
   user.lastActivity = new Date();
@@ -114,19 +65,6 @@ export async function login(req, res) {
   await user.save();
   await recordAudit(req, { action: 'Login', module: 'Auth', description: 'User logged in' });
   return ok(res, { user: await safeUserWithPermissions(user), accessToken, refreshToken }, 'Login successful');
-}
-
-export async function verifyLoginTwoFactor(req, res) {
-  try {
-    const payload = jwt.verify(req.body.challengeToken, env.accessSecret);
-    if (payload.purpose !== 'login-2fa') return fail(res, 'Invalid verification session', 401);
-    const user = await User.findById(payload.sub).select('+twoFactorSecret +twoFactorRecoveryCodes +refreshTokens');
-    if (!user || user.role !== 'admin' || !user.twoFactorEnabled || !(await verifySecondFactor(user, req.body.code))) return fail(res, 'Invalid verification code', 401);
-    const issued = tokens(user);
-    user.lastLogin = new Date(); user.lastActivity = new Date(); addRefreshToken(user, issued.refreshToken); await user.save();
-    await recordAudit(req, { userId: user._id, userName: user.fullName, action: 'Login', module: 'Auth', description: 'User logged in with two-factor authentication' });
-    return ok(res, { user: await safeUserWithPermissions(user), ...issued }, 'Login successful');
-  } catch { return fail(res, 'Verification session expired. Sign in again.', 401); }
 }
 
 export async function requestPasswordReset(req, res) {
@@ -153,32 +91,6 @@ export async function resetPassword(req, res) {
   if (!req.body.newPassword || req.body.newPassword.length < 8) return fail(res, 'Password must be at least 8 characters.', 422);
   user.passwordHash = await bcrypt.hash(req.body.newPassword, 12); user.refreshTokens = []; user.passwordResetTokenHash = undefined; user.passwordResetExpires = undefined; await user.save();
   return ok(res, {}, 'Password reset successfully.');
-}
-
-export async function setupTwoFactor(req, res) {
-  if (req.user.role !== 'admin') return fail(res, 'Administrator access required', 403);
-  const secret = base32(crypto.randomBytes(20));
-  const issuer = encodeURIComponent('Rambura Garçons');
-  const account = encodeURIComponent(req.user.email);
-  return ok(res, { secret, otpauthUrl: `otpauth://totp/${issuer}:${account}?secret=${secret}&issuer=${issuer}`, recoveryCodes: createRecoveryCodes() }, 'Scan this secret with an authenticator app');
-}
-
-export async function enableTwoFactor(req, res) {
-  if (req.user.role !== 'admin') return fail(res, 'Administrator access required', 403);
-  const secret = String(req.body.secret || '');
-  if (!secret || !verifyTotp(secret, req.body.code)) return fail(res, 'Invalid authenticator code', 422);
-  const recoveryCodes = Array.isArray(req.body.recoveryCodes) ? req.body.recoveryCodes.filter((code) => /^[A-F0-9]{8}-[A-F0-9]{8}$/.test(String(code))) : [];
-  if (recoveryCodes.length < 8) return fail(res, 'Recovery codes are required', 422);
-  await User.findByIdAndUpdate(req.user._id, { twoFactorSecret: secret, twoFactorEnabled: true, twoFactorRecoveryCodes: await Promise.all(recoveryCodes.map(async (code) => ({ hash: await bcrypt.hash(code, 10) }))) });
-  return ok(res, { enabled: true }, 'Two-factor authentication enabled');
-}
-
-export async function disableTwoFactor(req, res) {
-  if (req.user.role !== 'admin') return fail(res, 'Administrator access required', 403);
-  const user = await User.findById(req.user._id).select('+passwordHash +twoFactorSecret +twoFactorRecoveryCodes');
-  if (!user || !(await bcrypt.compare(req.body.password || '', user.passwordHash)) || !(await verifySecondFactor(user, req.body.code))) return fail(res, 'Password and authenticator code are required', 422);
-  user.twoFactorEnabled = false; user.twoFactorSecret = undefined; await user.save();
-  return ok(res, { enabled: false }, 'Two-factor authentication disabled');
 }
 
 export async function me(req, res) { return ok(res, safeUser(req.user)); }
