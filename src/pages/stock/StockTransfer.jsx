@@ -56,6 +56,7 @@ export default function StockTransfer() {
   const [saving, setSaving] = useState(false);
 
   const selectedItem = items.find((i) => i.id === form.itemId) || null;
+  const locationOptions = [...new Set([...STOCK_LOCATIONS, ...items.map((item) => item.location)].filter(Boolean))];
   const update = (field) => (e) => {
     const value = e.target.value;
     setForm((f) => {
@@ -174,8 +175,8 @@ export default function StockTransfer() {
             {selectedItem && <p className="text-xs text-[var(--color-mid-gray)] -mt-2">{t('currentlyStoredAt', { location: selectedItem.location })}</p>}
             <Input kind="decimal" label={t('quantity')} type="number" min="1" required value={form.quantity} onChange={update('quantity')} error={errors.quantity} />
             <div className="grid sm:grid-cols-2 gap-4">
-              <Select label={t('fromLocation')} required value={form.fromLocation} onChange={update('fromLocation')} error={errors.fromLocation} options={STOCK_LOCATIONS.map((l) => ({ value: l, label: t(`stockLocation.${l}`) }))} />
-              <Select label={t('toLocation')} required value={form.toLocation} onChange={update('toLocation')} error={errors.toLocation} options={STOCK_LOCATIONS.map((l) => ({ value: l, label: t(`stockLocation.${l}`) }))} />
+              <Select label={t('fromLocation')} required value={form.fromLocation} onChange={update('fromLocation')} error={errors.fromLocation} options={locationOptions.map((location) => ({ value: location, label: STOCK_LOCATIONS.includes(location) ? t(`stockLocation.${location}`) : location }))} />
+              <Select label={t('toLocation')} required value={form.toLocation} onChange={update('toLocation')} error={errors.toLocation} options={locationOptions.map((location) => ({ value: location, label: STOCK_LOCATIONS.includes(location) ? t(`stockLocation.${location}`) : location }))} />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <Select label={t('reason')} value={form.reason} onChange={update('reason')} options={TRANSFER_REASONS.map((r) => ({ value: r, label: t(`transferReason.${r}`) }))} />

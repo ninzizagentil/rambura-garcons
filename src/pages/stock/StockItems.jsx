@@ -330,7 +330,7 @@ export default function StockItems() {
                 label={t('allCategories')}
                 value={categoryFilter}
                 onChange={setCategoryFilter}
-                options={STOCK_CATEGORIES.map((c) => ({ value: c, label: t(`stockCategory.${c}`) }))}
+                options={[...new Set([...STOCK_CATEGORIES, ...items.map((item) => item.category)])].map((category) => ({ value: category, label: STOCK_CATEGORIES.includes(category) ? t(`stockCategory.${category}`) : category }))}
               />
               <FilterDropdown
                 label={t('allUnits')}

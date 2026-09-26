@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import Modal from '../../components/modals/Modal';
 import { Input, Textarea } from '../../components/forms/FormField';
+import CreatableSelect from '../../components/forms/CreatableSelect';
 import ImageField from '../../components/forms/ImageField';
 import Button from '../../components/common/Button';
 import Alert from '../../components/feedback/Alert';
 import { useToast } from '../../context/ToastContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useApp } from '../../context/AppContext';
-import { createBook, updateBook } from '../../services/bookService';
+import { createBook, updateBook, getBooks } from '../../services/bookService';
 import { applyKindErrors } from '../../utils/validators';
 
 const EMPTY_FORM = { title: '', author: '', category: '', bookCode: '', description: '', totalCopies: '', coverImage: '' };
@@ -46,6 +47,8 @@ export default function BookFormModal({ open, onClose, book, onSaved }) {
   }
 
   const update = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const categoryOptions = [...new Set([...getBooks().map((entry) => entry.category), form.category].filter(Boolean))]
+    .map((category) => ({ value: category, label: category }));
 
   const validate = () => {
     const next = {};
@@ -106,14 +109,14 @@ export default function BookFormModal({ open, onClose, book, onSaved }) {
         <Input kind="alnum" label={t('title')} required value={form.title} onChange={update('title')} error={errors.title} />
         <div className="grid sm:grid-cols-2 gap-4">
           <Input kind="name" label={t('author')} required value={form.author} onChange={update('author')} error={errors.author} />
-          <Input
-            kind="alnum"
+          <CreatableSelect
             label={t('category')}
             required
             value={form.category}
             onChange={update('category')}
             error={errors.category}
-            placeholder={t('enterBookCategory')}
+            options={categoryOptions}
+            addLabel="+ Other"
           />
         </div>
         <div className="grid sm:grid-cols-2 gap-4">

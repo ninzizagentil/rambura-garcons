@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const schema = new mongoose.Schema(
   {
     title: { type: String, required: true },
-    location: { type: String, enum: ['Main Store', 'Kitchen Store', 'ICT Lab Store', 'Admin Store'], required: true },
+    location: { type: String, required: true, trim: true, maxlength: 160 },
     status: { type: String, enum: ['planned', 'in-progress', 'completed', 'pending-approval'], default: 'planned' },
     scheduledDate: { type: Date, required: true },
     startedAt: Date,
