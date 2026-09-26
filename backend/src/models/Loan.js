@@ -4,6 +4,7 @@ const schema = new mongoose.Schema({
   borrower: { type: String, required: true },
   borrowerType: String,
   studentClassYear: { type: String, trim: true },
+  sdmsCode: { type: String, trim: true, uppercase: true, maxlength: 40 },
   borrowDate: { type: Date, required: true },
   dueDate: { type: Date, required: true },
   returnDate: Date,
@@ -14,4 +15,8 @@ const schema = new mongoose.Schema({
 }, { timestamps: true });
 schema.path('dueDate').validate(function (value) { return !this.borrowDate || value >= this.borrowDate; }, 'Due date cannot be before borrow date');
 schema.index({ bookId: 1, status: 1 }); schema.index({ dueDate: 1, status: 1 });
+schema.index(
+  { bookId: 1, sdmsCode: 1 },
+  { unique: true, partialFilterExpression: { borrowerType: 'Student', returnDate: null, sdmsCode: { $type: 'string' } } },
+);
 export default mongoose.model('Loan', schema);

@@ -13,7 +13,7 @@ import { EmptyState } from '../../components/feedback/States';
 import ViewOnlyBanner from '../../components/feedback/ViewOnlyBanner';
 import { useModuleAccess } from '../../hooks/useModuleAccess';
 import { ROLES } from '../../data/roles';
-import { getBooks, fetchBooks, refreshLibrary, createBook, deleteBook } from '../../services/bookService';
+import { getBooks, fetchBooks, refreshLibrary, createBook, requestBookArchive } from '../../services/bookService';
 import { BOOK_CATEGORIES } from '../../data/library';
 import BookFormModal from './BookFormModal';
 import BorrowModal from './BorrowModal';
@@ -83,11 +83,10 @@ export default function Books() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     const target = deleteTarget;
-    setDeleteTarget(null);
-    const result = await deleteBook(target.id);
+    const result = await requestBookArchive(target.id);
     if (!result.success) { showToast(result.error, 'error'); return; }
-    showToast(t('bookArchived'), 'success');
-    refresh();
+    setDeleteTarget(null);
+    showToast(t('bookArchiveRequestSubmitted'), 'success');
   };
 
   const categoryLabel = (category) => t(`bookCategory.${category}`);
@@ -130,7 +129,7 @@ export default function Books() {
             </>
           )}
           {can('library.borrow') && <IconButton icon={BookMarked} label={`${t('borrowBook')} ${b.title}`} onClick={() => setBorrowBook(b)} />}
-          {can('library.books.delete') && <IconButton icon={Trash2} label={`${t('archiveBook')} ${b.title}`} variant="danger" onClick={(event) => { event.stopPropagation(); setDeleteTarget(b); }} />}
+          {can('library.books.archive.request') && !showArchived && b.active !== false && <IconButton icon={Trash2} label={`${t('requestArchiveApproval')} ${b.title}`} variant="danger" onClick={(event) => { event.stopPropagation(); setDeleteTarget(b); }} />}
         </div>
       ),
     },
@@ -197,10 +196,10 @@ export default function Books() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
-        title={t('archiveBook')}
-        message={deleteTarget ? t('confirmArchiveBook', { title: deleteTarget.title }) : ''}
-        confirmLabel={t('archiveBook')}
-        variant="danger"
+        title={t('requestArchiveApproval')}
+        message={deleteTarget ? t('confirmBookArchiveRequest', { title: deleteTarget.title }) : ''}
+        confirmLabel={t('requestArchiveApproval')}
+        variant="primary"
       />
     </div>
   );

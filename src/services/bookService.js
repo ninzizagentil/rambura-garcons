@@ -107,8 +107,8 @@ export async function updateBook(id, updates) {
   try { const payload = await withUploadedCover(updates); await api.put(`/library/books/${id}`, payload); await refreshLibrary({ force: true }); return { success: true }; }
   catch (error) { return { success: false, error: error.message }; }
 }
-export async function deleteBook(id) {
-  try { await api.delete(`/library/books/${id}`); await refreshLibrary({ force: true }); return { success: true }; }
+export async function requestBookArchive(id) {
+  try { await api.post('/library/book-archive-requests', { bookId: id }); await refreshLibrary({ force: true }); return { success: true }; }
   catch (error) { return { success: false, error: error.message }; }
 }
 export async function borrowBook(data) {

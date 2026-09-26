@@ -6,7 +6,7 @@ import { useAuth } from './AuthContext';
 const NotificationContext = createContext(null);
 const SOUND_KEY = 'rg_notification_sound_enabled';
 const MODULE_PERMISSION_MAP = {
-  Library: ['library.view', 'library.books.create', 'library.books.update', 'library.books.delete', 'library.borrow', 'library.return', 'library.reports'],
+  Library: ['library.view', 'library.books.create', 'library.books.update', 'library.books.archive.request', 'library.books.archive.approve', 'library.borrow', 'library.return', 'library.reports'],
   Stock: ['stock.view', 'stock.create', 'stock.update', 'stock.in', 'stock.out', 'stock.adjust', 'stock.transfer', 'stock.damage', 'stock.dispose.request', 'stock.dispose.approve', 'stock.archive.request', 'stock.archive.approve', 'stock.suppliers', 'stock.reports'],
   Admissions: ['applications.view', 'applications.update'],
 };

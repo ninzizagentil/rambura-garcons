@@ -27,16 +27,7 @@ function normalizeCover(payload) {
   return payload;
 }
 export async function createBook(req, res) { const book = await Book.create({ ...normalizeCover({ ...req.body }), totalCopies: Number(req.body.totalCopies), borrowedCopies: 0 }); await recordAudit(req, { action: 'Book created', module: 'Library', resourceType: 'Book', resourceId: book._id, description: `Created book ${book.title}` }); return ok(res, book, 'Book created', 201); }
-export async function updateBook(req, res) { const allowed = ['title', 'author', 'category', 'bookCode', 'description', 'coverImage', 'totalCopies', 'active']; const updates = normalizeCover(Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)))); const current = await Book.findById(req.params.id); if (!current) return fail(res, 'Book not found', 404); if (updates.totalCopies !== undefined && (!Number.isFinite(Number(updates.totalCopies)) || Number(updates.totalCopies) < current.borrowedCopies)) return fail(res, `Total copies cannot be less than borrowed copies (${current.borrowedCopies})`, 422); const book = await Book.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true }); await recordAudit(req, { action: 'Book updated', module: 'Library', resourceType: 'Book', resourceId: book._id, description: `Updated book ${book.title}` }); return ok(res, book, 'Book updated'); }
-export async function deleteBook(req, res) {
-  const book = await Book.findById(req.params.id);
-  if (!book) return fail(res, 'Book not found', 404);
-  book.active = false;
-  await book.save();
-  await recordAudit(req, { action: 'Book archived', module: 'Library', resourceType: 'Book', resourceId: book._id, description: `Archived book ${book.title}`, status: 'warning' });
-  return ok(res, book, 'Book archived');
-}
-
+export async function updateBook(req, res) { const allowed = ['title', 'author', 'category', 'bookCode', 'description', 'coverImage', 'totalCopies']; const updates = normalizeCover(Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)))); const current = await Book.findById(req.params.id); if (!current) return fail(res, 'Book not found', 404); if (updates.totalCopies !== undefined && (!Number.isFinite(Number(updates.totalCopies)) || Number(updates.totalCopies) < current.borrowedCopies)) return fail(res, `Total copies cannot be less than borrowed copies (${current.borrowedCopies})`, 422); const book = await Book.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true }); await recordAudit(req, { action: 'Book updated', module: 'Library', resourceType: 'Book', resourceId: book._id, description: `Updated book ${book.title}` }); return ok(res, book, 'Book updated'); }
 // This deployment does not support multi-document transactions (it rejects
 // retryable writes, which transaction commits require regardless of the
 // retryWrites URI flag). Borrow/return are done as atomic single-document
@@ -45,10 +36,17 @@ export async function borrowBook(req, res) {
   const borrowDate = new Date(req.body.borrowDate);
   const dueDate = new Date(req.body.dueDate);
   if (!req.body.borrower?.trim() || Number.isNaN(borrowDate.getTime()) || Number.isNaN(dueDate.getTime())) return fail(res, 'Borrower and valid borrow/due dates are required', 422);
+  if (req.body.borrowerType === 'Student') {
+    const sdmsCode = String(req.body.sdmsCode || '').trim().toUpperCase();
+    if (!sdmsCode) return fail(res, 'Student SDMS Code is required', 422);
+    req.body.sdmsCode = sdmsCode;
+    const existingLoan = await Loan.exists({ bookId: req.body.bookId, borrowerType: 'Student', sdmsCode, returnDate: null });
+    if (existingLoan) return fail(res, 'This student already has this book. Return it before borrowing it again.', 409);
+  }
   if (borrowDate > new Date()) return fail(res, 'Borrow date cannot be in the future', 422);
   if (dueDate < borrowDate) return fail(res, 'Due date cannot be before borrow date', 422);
   const book = await Book.findOneAndUpdate(
-    { _id: req.body.bookId, active: true, $expr: { $gt: ['$totalCopies', '$borrowedCopies'] } },
+    { _id: req.body.bookId, active: true, archivePending: { $ne: true }, $expr: { $gt: ['$totalCopies', '$borrowedCopies'] } },
     { $inc: { borrowedCopies: 1 } },
     { new: true },
   );
@@ -61,6 +59,9 @@ export async function borrowBook(req, res) {
   } catch (err) {
     // Compensate: the copy was reserved above but the loan record failed, so give it back.
     await Book.findOneAndUpdate({ _id: book._id }, { $inc: { borrowedCopies: -1 } });
+    if (err.code === 11000 && err.keyPattern?.sdmsCode) {
+      return fail(res, 'This student already has this book. Return it before borrowing it again.', 409);
+    }
     throw err;
   }
 }

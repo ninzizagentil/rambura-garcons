@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Filter, Calendar, User, CheckCircle2, AlertCircle, AlertTriangle, Info, Activity as ActivityIcon, RefreshCw } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { TablePagination } from '../../components/tables/DataTable';
@@ -33,9 +33,15 @@ export default function ActivityAudit() {
   const [search, setSearch] = useState('');
   const [moduleFilter, setModuleFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  useEffect(() => {
+    refreshActivity({ fromDate, toDate }).catch(() => {});
+  }, [fromDate, toDate]);
 
   const modules = useMemo(() => [...new Set(activity.map((a) => a.module))], [activity]);
   const statuses = useMemo(() => [...new Set(activity.map((a) => a.status))], [activity]);
@@ -60,7 +66,7 @@ export default function ActivityAudit() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await refreshActivity().catch(() => {});
+    await refreshActivity({ fromDate, toDate }).catch(() => {});
     setRefreshing(false);
   };
 
@@ -276,13 +282,37 @@ export default function ActivityAudit() {
             </select>
           </div>
 
-          {(search || moduleFilter || statusFilter) && (
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-dark-gray)]">
+            {t('fromDate')}
+            <input
+              type="date"
+              value={fromDate}
+              max={toDate || undefined}
+              onChange={(e) => updateFilter(setFromDate)(e.target.value)}
+              className="w-full rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-white)] px-3.5 py-2.5 text-sm font-normal focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)]"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-dark-gray)]">
+            {t('toDate')}
+            <input
+              type="date"
+              value={toDate}
+              min={fromDate || undefined}
+              onChange={(e) => updateFilter(setToDate)(e.target.value)}
+              className="w-full rounded-[var(--radius-control)] border border-[var(--color-border-gray)] bg-[var(--color-white)] px-3.5 py-2.5 text-sm font-normal focus:outline-none focus:ring-2 focus:ring-[var(--color-medium-green)]"
+            />
+          </label>
+
+          {(search || moduleFilter || statusFilter || fromDate || toDate) && (
             <button
               type="button"
               onClick={() => {
                 setSearch('');
                 setModuleFilter('');
                 setStatusFilter('');
+                setFromDate('');
+                setToDate('');
                 setPage(1);
               }}
               className="px-4 py-2.5 rounded-lg bg-[var(--color-off-white)] text-sm font-medium text-[var(--color-dark-gray)] hover:bg-[var(--color-soft-gray)] transition-colors"

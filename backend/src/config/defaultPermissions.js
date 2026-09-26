@@ -6,7 +6,7 @@ export const DEFAULT_ROLE_PERMISSIONS = {
   ],
   librarian: [
     'library.view', 'library.books.create', 'library.books.update',
-    'library.books.delete', 'library.borrow', 'library.return',
+    'library.books.archive.request', 'library.borrow', 'library.return',
     'library.reports', 'events.view',
   ],
   stock_manager: [
@@ -28,7 +28,7 @@ export const DEFAULT_ROLE_PERMISSIONS = {
   management: [
     'applications.view', 'applications.update',
     'reports.view',
-    'library.view', 'library.reports',
+    'library.view', 'library.reports', 'library.books.archive.approve',
     'stock.view', 'stock.reports',
     'stock.dispose.approve',    // approve/reject disposal requests
     'stock.archive.approve',    // approve/reject stock archive requests

@@ -21,7 +21,7 @@ function addDays(dateStr, days) {
 
 function emptyForm() {
   const borrowDate = today();
-  return { borrower: '', borrowerType: 'Student', studentClassYear: '', borrowDate, dueDate: addDays(borrowDate, 14) };
+  return { borrower: '', borrowerType: 'Student', studentClassYear: '', sdmsCode: '', borrowDate, dueDate: addDays(borrowDate, 14) };
 }
 
 // What each field may contain (letters only, numbers only, phone, email…) — see utils/validators.js
@@ -71,6 +71,12 @@ export default function BorrowModal({ open, onClose, book, onBorrowed }) {
     const next = {};
     if (!form.borrower?.trim()) next.borrower = t('borrowerNameRequired');
     if (form.borrowerType === 'Student' && !form.studentClassYear?.trim()) next.studentClassYear = t('classYearRequired');
+    if (form.borrowerType === 'Student' && !form.sdmsCode?.trim()) next.sdmsCode = t('sdmsCodeRequired');
+    if (form.borrowerType === 'Student' && form.sdmsCode?.trim() && getLoans().some((loan) =>
+      loan.status !== 'returned'
+      && loan.bookId === book.id
+      && loan.sdmsCode?.toUpperCase() === form.sdmsCode.trim().toUpperCase()
+    )) next.sdmsCode = t('studentAlreadyHasBook');
     if (!form.dueDate) next.dueDate = t('dueDateRequired');
     if (form.borrowDate && form.dueDate && form.dueDate < form.borrowDate) next.dueDate = t('dueDateBeforeBorrowDate');
     applyKindErrors(next, form, FIELD_KINDS, t);
@@ -129,20 +135,31 @@ export default function BorrowModal({ open, onClose, book, onBorrowed }) {
             value={form.borrowerType}
             onChange={(e) => {
               const nextType = e.target.value;
-              setForm((f) => ({ ...f, borrowerType: nextType, studentClassYear: nextType === 'Student' ? f.studentClassYear : '' }));
+              setForm((f) => ({ ...f, borrowerType: nextType, studentClassYear: nextType === 'Student' ? f.studentClassYear : '', sdmsCode: nextType === 'Student' ? f.sdmsCode : '' }));
             }}
             options={[{ value: 'Student', label: t('student') }, { value: 'Staff', label: t('staff') }]}
           />
           {form.borrowerType === 'Student' && (
-            <CreatableSelect
-              label={t('classLevel')}
-              required
-              value={form.studentClassYear}
-              onChange={update('studentClassYear')}
-              error={errors.studentClassYear}
-              options={classOptions}
-              addLabel="+ Other"
-            />
+            <>
+              <CreatableSelect
+                label={t('classLevel')}
+                required
+                value={form.studentClassYear}
+                onChange={update('studentClassYear')}
+                error={errors.studentClassYear}
+                options={classOptions}
+                addLabel="+ Other"
+              />
+              <Input
+                kind="code"
+                label={t('sdmsCode')}
+                required
+                value={form.sdmsCode}
+                onChange={update('sdmsCode')}
+                error={errors.sdmsCode}
+                placeholder="SDMS Code"
+              />
+            </>
           )}
           <div className="grid sm:grid-cols-2 gap-4">
             <Input label={t('borrowDate')} type="date" value={form.borrowDate} onChange={update('borrowDate')} />
@@ -161,7 +178,10 @@ export default function BorrowModal({ open, onClose, book, onBorrowed }) {
             <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('bookTitle')}</dt><dd className="font-medium">{book.title}</dd></div>
             <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('borrowedBy')}</dt><dd className="font-medium">{form.borrower} ({form.borrowerType === 'Student' ? t('student') : t('staff')})</dd></div>
             {form.borrowerType === 'Student' && (
-              <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('classLevel')}</dt><dd className="font-medium">{form.studentClassYear}</dd></div>
+              <>
+                <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('classLevel')}</dt><dd className="font-medium">{form.studentClassYear}</dd></div>
+                <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('sdmsCode')}</dt><dd className="font-medium">{form.sdmsCode}</dd></div>
+              </>
             )}
             <div className="flex justify-between"><dt className="text-[var(--color-mid-gray)]">{t('dueDate')}</dt><dd className="font-medium">{form.dueDate}</dd></div>
           </dl>

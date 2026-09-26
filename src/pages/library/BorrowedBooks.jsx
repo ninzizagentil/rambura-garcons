@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { RotateCcw } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable from '../../components/tables/DataTable';
-import { SearchBar } from '../../components/common/SearchBar';
+import { FilterDropdown, SearchBar } from '../../components/common/SearchBar';
 import { StatusBadge } from '../../components/common/Badge';
 import IconButton from '../../components/common/IconButton';
 import ConfirmModal from '../../components/modals/ConfirmModal';
@@ -32,6 +32,9 @@ export default function BorrowedBooks() {
   const { viewOnly, can } = useModuleAccess(ROLES.LIBRARIAN, 'library');
   const [loans, setLoans] = useState(() => getLoans().filter((l) => l.status !== 'returned'));
   const [search, setSearch] = useState('');
+  const [classFilter, setClassFilter] = useState('');
+  const [sortKey, setSortKey] = useState('studentClassYear');
+  const [sortDir, setSortDir] = useState('asc');
   const [confirmLoan, setConfirmLoan] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [loadError, setLoadError] = useState(getLibraryError());
@@ -49,10 +52,23 @@ export default function BorrowedBooks() {
   }, []);
 
   const filtered = useMemo(() => {
-    return loans.filter(
-      (l) => !search || l.bookTitle.toLowerCase().includes(search.toLowerCase()) || l.borrower.toLowerCase().includes(search.toLowerCase())
+    const matchingLoans = loans.filter(
+      (l) => (!search || l.bookTitle.toLowerCase().includes(search.toLowerCase()) || l.borrower.toLowerCase().includes(search.toLowerCase()))
+        && (!classFilter || l.studentClassYear === classFilter)
     );
-  }, [loans, search]);
+    return [...matchingLoans].sort((a, b) =>
+      String(a[sortKey] || '').localeCompare(String(b[sortKey] || ''), undefined, { numeric: true, sensitivity: 'base' }) * (sortDir === 'asc' ? 1 : -1)
+    );
+  }, [loans, search, classFilter, sortKey, sortDir]);
+
+  const classOptions = [...new Set(loans.map((loan) => loan.studentClassYear).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+    .map((classLevel) => ({ value: classLevel, label: classLevel }));
+
+  const handleSort = (key) => {
+    if (sortKey === key) setSortDir((direction) => direction === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('asc'); }
+  };
 
   const handleReturn = () => {
     if (!confirmLoan) return;
@@ -74,6 +90,8 @@ export default function BorrowedBooks() {
 
   const columns = [
     { key: 'borrower', header: t('borrowedBy') },
+    { key: 'sdmsCode', header: t('sdmsCode'), render: (loan) => loan.sdmsCode || '—' },
+    { key: 'studentClassYear', header: t('classLevel'), render: (loan) => loan.studentClassYear || '—', sortable: true },
     { key: 'bookTitle', header: t('bookTitle') },
     { key: 'borrowDate', header: t('borrowDate'), render: (l) => formatDateOnly(l.borrowDate) },
     { key: 'dueDate', header: t('dueDate'), render: (l) => formatDateOnly(l.dueDate) },
@@ -96,11 +114,17 @@ export default function BorrowedBooks() {
       />
       {viewOnly && <ViewOnlyBanner module="Library MIS" />}
       {loadError && <Alert type="error" title={t('couldNotLoadBorrowedBooks')} className="mb-4">{loadError}</Alert>}
-      <SearchBar value={search} onChange={setSearch} placeholder={t('searchBorrowerBook')} className="mb-4 max-w-sm" />
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <SearchBar value={search} onChange={setSearch} placeholder={t('searchBorrowerBook')} className="w-full max-w-sm" />
+        <FilterDropdown label={t('classLevel')} value={classFilter} onChange={setClassFilter} options={classOptions} />
+      </div>
       <div className="bg-[var(--color-white)] rounded-[var(--radius-card)] border border-[var(--color-border-gray)]">
         <DataTable
           columns={columns}
           data={filtered}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSort={handleSort}
           emptyState={<EmptyState title={t('noBorrowedBooks')} message={t('allCopiesAvailable')} actionLabel={t('viewBooks')} onAction={() => navigate('/library/books')} />}
         />
       </div>

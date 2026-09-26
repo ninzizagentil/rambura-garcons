@@ -3,6 +3,8 @@ import { api } from './api';
 
 let activity = [];
 let loading;
+let loadingKey;
+let activityRequestId = 0;
 
 // Only administrators and management (permission audit.view) may read the activity log.
 // Other roles used to send this request anyway and got a 403 on every login and every action.
@@ -15,17 +17,31 @@ function canReadActivity() {
   }
 }
 
-export async function refreshActivity() {
-  if (loading) return loading;
+export async function refreshActivity(filters = {}) {
+  const requestKey = JSON.stringify(filters);
+  if (loading && loadingKey === requestKey) return loading;
   if (!canReadActivity()) {
     activity = [];
     return activity;
   }
-  loading = api.get('/activity', { limit: 100 }, { quiet403: true }).then((result) => {
-    activity = result.data || [];
+  const requestId = ++activityRequestId;
+  loadingKey = requestKey;
+  loading = (async () => {
+    const firstPage = await api.get('/activity', { limit: 100, page: 1, ...filters }, { quiet403: true });
+    const totalPages = firstPage.pagination?.totalPages || 1;
+    const remainingPages = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, index) => api.get('/activity', { limit: 100, page: index + 2, ...filters }, { quiet403: true }))
+    );
+    if (requestId !== activityRequestId) return activity;
+    activity = [firstPage, ...remainingPages].flatMap((page) => page.data || []);
     window.dispatchEvent(new Event('rg:activity-updated'));
     return activity;
-  }).finally(() => { loading = null; });
+  })().finally(() => {
+    if (requestId === activityRequestId) {
+      loading = null;
+      loadingKey = null;
+    }
+  });
   return loading;
 }
 

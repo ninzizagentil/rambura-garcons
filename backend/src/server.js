@@ -7,7 +7,7 @@ import Permission from './models/Permission.js';
 import { DEFAULT_ROLE_PERMISSIONS } from './config/defaultPermissions.js';
 
 async function removeObsoletePermissions() {
-	const obsoletePermissions = await Permission.find({ key: { $in: ['audit.management'] } }, { _id: 1 });
+	const obsoletePermissions = await Permission.find({ key: { $in: ['audit.management', 'library.books.delete'] } }, { _id: 1 });
 	if (!obsoletePermissions.length) return;
 	await Role.updateMany(
 		{ permissions: { $in: obsoletePermissions.map((permission) => permission._id) } },

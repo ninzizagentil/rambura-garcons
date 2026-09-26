@@ -3,7 +3,7 @@ import { ROLES } from '../data/roles';
 
 // Permissions that let a user CHANGE data in a module (anything else is read-only).
 const MODULE_MUTATIONS = {
-  library: ['library.books.create', 'library.books.update', 'library.books.delete', 'library.borrow', 'library.return'],
+  library: ['library.books.create', 'library.books.update', 'library.books.archive.request', 'library.borrow', 'library.return'],
   stock: ['stock.create', 'stock.update', 'stock.delete', 'stock.in', 'stock.out', 'stock.adjust', 'stock.transfer', 'stock.damage', 'stock.dispose.request', 'stock.dispose.approve', 'stock.suppliers'],
 };
 

@@ -181,7 +181,7 @@ export const MASTER_NAV = [
       { label: 'Management Insights', to: '/management/insights', icon: LayoutList, permission: 'reports.view' },
     ],
   },
-  { label: 'Approvals', to: '/management/approvals', icon: CheckCircle2, anyPermission: ['stock.dispose.approve', 'equipment.retire.approve', 'stock.archive.approve', 'equipment.archive.approve'] },
+  { label: 'Approvals', to: '/management/approvals', icon: CheckCircle2, anyPermission: ['library.books.archive.approve', 'stock.dispose.approve', 'equipment.retire.approve', 'stock.archive.approve', 'equipment.archive.approve'] },
 ];
 
 // Kept for backwards compatibility with older imports; only the admin menu is static.

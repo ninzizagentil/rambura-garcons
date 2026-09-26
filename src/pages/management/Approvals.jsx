@@ -10,7 +10,7 @@
  * Uses only existing UI components, CSS variables and design patterns.
  */
 import { useState, useEffect, useCallback } from 'react';
-import { CheckCircle2, XCircle, Package, Laptop, Archive, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle2, XCircle, Package, Laptop, Archive, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable from '../../components/tables/DataTable';
 import { Badge } from '../../components/common/Badge';
@@ -25,6 +25,7 @@ import { useApp } from '../../context/AppContext';
 import { api } from '../../services/api';
 
 const TABS = [
+  { id: 'libraryBookArchive', labelKey: 'libraryBookArchiveApprovals', icon: BookOpen, permission: 'library.books.archive.approve' },
   { id: 'stockDisposal',      labelKey: 'stockDisposalApprovals',        icon: Package,  permission: 'stock.dispose.approve'    },
   { id: 'stockArchive',       labelKey: 'stockArchiveApprovals',          icon: Archive,  permission: 'stock.archive.approve'    },
   { id: 'equipmentRetirement',labelKey: 'equipmentRetirementApprovals',   icon: Laptop,   permission: 'equipment.retire.approve' },
@@ -348,6 +349,34 @@ function EquipmentArchiveTab({ t }) {
   );
 }
 
+function LibraryBookArchiveTab({ t }) {
+  const columns = [
+    { key: 'bookTitle', header: t('bookTitle'), render: (request) => <span className="font-semibold">{request.bookTitle}</span> },
+    { key: 'bookCode', header: t('bookCode'), render: (request) => <span className="font-mono text-xs">{request.bookCode}</span> },
+    { key: 'requestedBy', header: t('requestedBy'), render: (request) => request.requestedBy?.fullName || '—' },
+    { key: 'createdAt', header: t('date'), render: (request) => formatDate(request.createdAt) },
+  ];
+  const detail = (request, translate) => (
+    <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
+      <div><dt className="font-semibold text-[var(--color-mid-gray)]">{translate('bookTitle')}</dt><dd className="mt-1">{request.bookTitle}</dd></div>
+      <div><dt className="font-semibold text-[var(--color-mid-gray)]">{translate('bookCode')}</dt><dd className="mt-1 font-mono text-xs">{request.bookCode}</dd></div>
+      <div><dt className="font-semibold text-[var(--color-mid-gray)]">{translate('requestedBy')}</dt><dd className="mt-1">{request.requestedBy?.fullName || '—'}</dd></div>
+      <div><dt className="font-semibold text-[var(--color-mid-gray)]">{translate('date')}</dt><dd className="mt-1">{formatDate(request.createdAt)}</dd></div>
+    </dl>
+  );
+  return (
+    <ApprovalTab t={t}
+      fetchUrl="/library/book-archive-requests"
+      approveUrl={(id) => `/library/book-archive-requests/${id}/approve`}
+      rejectUrl={(id) => `/library/book-archive-requests/${id}/reject`}
+      emptyTitle="noPendingApprovals" emptyDesc="noPendingApprovalsDescription"
+      loadingKey="loading" reviewTitle="reviewBookArchiveRequest"
+      approveWarning="approveBookArchiveWarning" rejectNote="rejectArchiveNote"
+      columns={columns} detailRenderer={detail}
+    />
+  );
+}
+
 // ─── Page root ─────────────────────────────────────────────────────────────────
 export default function Approvals() {
   const { t } = useApp();
@@ -406,6 +435,7 @@ export default function Approvals() {
             </div>
           )}
 
+          {currentTab === 'libraryBookArchive'  && <LibraryBookArchiveTab  t={t} />}
           {currentTab === 'stockDisposal'       && <StockDisposalTab       t={t} />}
           {currentTab === 'stockArchive'         && <StockArchiveTab        t={t} />}
           {currentTab === 'equipmentRetirement'  && <EquipmentRetirementTab t={t} />}
