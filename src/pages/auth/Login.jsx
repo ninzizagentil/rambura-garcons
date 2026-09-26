@@ -30,7 +30,6 @@ const PANEL_MODULES = [
 const SHOW_DEMO_ACCOUNTS = import.meta.env.DEV || import.meta.env.VITE_SHOW_DEMO_ACCOUNTS === 'true';
 const ADMIN_ACCOUNT = SHOW_DEMO_ACCOUNTS ? { identifier: 'admin', password: 'Admin@123', role: 'Administrator' } : null;
 const OTHER_DEMO_ACCOUNTS = SHOW_DEMO_ACCOUNTS ? [
-  { identifier: 'developer', password: 'Developer@123', role: 'Developer', access: 'Developer Panel' },
   { identifier: 'librarian', password: 'Library@123', role: 'Librarian', access: 'Library' },
   { identifier: 'stock', password: 'Stock@123', role: 'Stock Manager', access: 'Inventory + Equipment' },
   { identifier: 'equipment', password: 'Equipment@123', role: 'Equipment MIS', access: 'Equipment & maintenance' },
