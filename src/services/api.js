@@ -1,5 +1,8 @@
 const viteEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
-const API_URL = (viteEnv.VITE_API_URL || '/api').replace(/\/$/, '');
+const configuredApiUrl = (viteEnv.VITE_API_URL || '/api').replace(/\/+$/, '');
+const API_URL = configuredApiUrl === '/api' || configuredApiUrl.endsWith('/api')
+  ? configuredApiUrl
+  : `${configuredApiUrl}/api`;
 const ACCESS_TOKEN_KEY = 'rg_access_token';
 const REFRESH_TOKEN_KEY = 'rg_refresh_token';
 let refreshInFlight = null;
